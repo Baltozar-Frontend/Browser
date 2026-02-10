@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Svinocoin SMART Turbo</title>
+    <style>
+        body { margin: 0; background: #000; color: #fff; font-family: -apple-system; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        header { padding-top: env(safe-area-inset-top); background: #1c1c1e; padding: 10px; display: flex; gap: 10px; }
+        #container { flex: 1; background: #fff; position: relative; }
+        iframe { width: 100%; height: 100%; border: none; }
+        
+        .controls {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px);
+            padding: 20px; border-radius: 30px; border: 1px solid #34c759;
+            width: 80%; z-index: 10000; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .btn-main { 
+            background: #34c759; color: white; border: none; padding: 15px; 
+            border-radius: 15px; font-weight: bold; font-size: 18px; width: 100%;
+        }
+        .btn-main.active { background: #ff3b30; }
+        .status { font-size: 12px; text-align: center; margin-bottom: 10px; color: #34c759; }
+    </style>
+</head>
+<body>
+
+<header>
+    <input type="text" id="urlInput" value="https://baltozar-frontend.github.io" style="flex:1; background:#2c2c2e; border:none; color:#fff; border-radius:8px; padding:10px;">
+    <button onclick="injectAndLoad()" style="background:none; border:none; font-size:22px;">🚀</button>
+</header>
+
+<div id="container"></div>
+
+<div class="controls">
+    <div id="statusLabel" class="status">СТАТУС: ГОТОВ</div>
+    <button id="clickerBtn" class="btn-main" onclick="toggleClicker()">ВКЛЮЧИТЬ SMART TURBO</button>
+</div>
+
+<script>
+    let clicking = false;
+    let frameId = null;
+
+    async function injectAndLoad() {
+        const url = document.getElementById('urlInput').value;
+        const container = document.getElementById('container');
+        container.innerHTML = "<div style='color:#000; padding:20px;'>Инъекция скриптов...</div>";
+
+        try {
+            const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+            const response = await fetch(proxy);
+            const data = await response.json();
+            let html = data.contents;
+
+            const hackScript = `
+                <script>
+                    window.smartClick = function() {
+                        const x = window.innerWidth / 2 + (Math.random() * 10 - 5);
+                        const y = window.innerHeight / 2 + (Math.random() * 10 - 5);
+                        const target = document.elementFromPoint(x, y);
+                        if (!target) return;
+                        const opts = { bubbles: true, cancelable: true, clientX: x, clientY: y, view: window };
+                        target.dispatchEvent(new MouseEvent('click', opts));
+                        target.dispatchEvent(new TouchEvent('touchstart', { bubbles: true }));
+                        target.dispatchEvent(new TouchEvent('touchend', { bubbles: true }));
+                    };
+                <\/script>
+            `;
+            
+            html = html.replace('</body>', hackScript + '</body>');
+            const baseUrl = url.substring(0, url.lastIndexOf('/') + 1);
+            html = html.replace(/(src|href)="(?!\/\/|http)/gi, '$1="' + baseUrl);
+
+            container.innerHTML = '';
+            const iframe = document.createElement('iframe');
+            iframe.id = "targetFrame";
+            iframe.style.width = '100%'; iframe.style.height = '100%'; iframe.style.border = 'none';
+            container.appendChild(iframe);
+            
+            const doc = iframe.contentWindow.document;
+            doc.open(); doc.write(html); doc.close();
+        } catch (e) { container.innerHTML = "Ошибка: " + e.message; }
+    }
+
+    function toggleClicker() {
+        if (!clicking) {
+            start();
+        } else {
+            stop();
+        }
+    }
+
+    function start() {
+        const btn = document.getElementById('clickerBtn');
+        const status = document.getElementById('statusLabel');
+        const iframe = document.getElementById('targetFrame');
+        if (!iframe) return;
+
+        clicking = true;
+        btn.innerText = "ОСТАНОВИТЬ";
+        btn.classList.add('active');
+        status.innerText = "СТАТУС: АКТИВЕН (SMART MODE)";
+
+        // Используем requestAnimationFrame вместо таймера
+        // Это заставляет iOS кликать в такт обновлению экрана
+        function loop() {
+            if (!clicking) return;
+            
+            if (iframe.contentWindow.smartClick) {
+                // Делаем 1-2 клика за кадр (этого достаточно для огромной скорости)
+                iframe.contentWindow.smartClick();
+                if (Math.random() > 0.5) iframe.contentWindow.smartClick();
+            }
+            
+            frameId = requestAnimationFrame(loop);
+        }
+        
+        frameId = requestAnimationFrame(loop);
+    }
+
+    function stop() {
+        clicking = false;
+        cancelAnimationFrame(frameId);
+        const btn = document.getElementById('clickerBtn');
+        const status = document.getElementById('statusLabel');
+        btn.innerText = "ВКЛЮЧИТЬ SMART TURBO";
+        btn.classList.remove('active');
+        status.innerText = "СТАТУС: ПРИОСТАНОВЛЕН";
+    }
+</script>
+</body>
+</html>
