@@ -3,316 +3,312 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>STARK COMM | Secure Terminal</title>
+    <title>STARK OS | Persistent Comm</title>
     <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
+    
     <style>
         :root {
-            --glow: #00f2ff;
+            --accent: #ff3b3b;
             --bg: #050505;
-            --panel: rgba(0, 242, 255, 0.05);
-            --border: rgba(0, 242, 255, 0.2);
-            --text: #b3fdff;
+            --panel: #121212;
+            --text: #e0e0e0;
+            --border: #2a2a2a;
         }
 
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
             background-color: var(--bg);
             color: var(--text);
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             height: 100vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            position: relative;
         }
 
-        /* Эффект сетки и шума */
-        body::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 4px, 3px 100%;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        /* HUD Header */
-        .hud-header {
-            padding: 15px 25px;
+        /* HUD Эффекты */
+        .header {
+            padding: 15px 20px;
+            background: var(--panel);
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: var(--panel);
-            backdrop-filter: blur(10px);
+            z-index: 10;
         }
 
-        .status-tag {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .pulse {
-            width: 8px;
-            height: 8px;
-            background: var(--glow);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--glow);
-            animation: blink 1s infinite;
-        }
-
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-        /* Окно чата */
-        .chat-container {
+        .status { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); }
+        
+        /* Чат */
+        #chat-window {
             flex: 1;
             overflow-y: auto;
             padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            scroll-behavior: smooth;
+            gap: 12px;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #050505 100%);
         }
 
-        .message {
-            max-width: 80%;
-            padding: 10px 15px;
-            border-left: 2px solid var(--glow);
-            background: rgba(0, 242, 255, 0.03);
+        .msg {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 4px;
+            font-size: 15px;
+            line-height: 1.4;
             position: relative;
-            animation: slideIn 0.3s ease-out;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            animation: fadeIn 0.2s ease;
         }
 
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-
-        .message.own {
+        .msg.me {
             align-self: flex-end;
-            border-left: none;
-            border-right: 2px solid #ff0055;
-            background: rgba(255, 0, 85, 0.03);
-            color: #ffb3cc;
+            background: rgba(255, 59, 59, 0.1);
+            border-color: var(--accent);
+            color: #fff;
         }
 
-        .msg-meta {
-            font-size: 10px;
+        .msg-time {
+            font-size: 9px;
             opacity: 0.5;
-            margin-bottom: 5px;
-            text-transform: uppercase;
+            margin-top: 4px;
+            display: block;
+            text-align: right;
         }
 
-        /* Панель ввода */
-        .input-area {
-            padding: 20px;
+        /* Поле ввода */
+        .input-bar {
+            padding: 15px;
             background: var(--panel);
-            border-top: 1px solid var(--border);
             display: flex;
             gap: 10px;
+            border-top: 1px solid var(--border);
         }
 
         input {
             flex: 1;
-            background: rgba(0, 0, 0, 0.5);
+            background: #000;
             border: 1px solid var(--border);
+            color: #fff;
             padding: 12px;
-            color: var(--glow);
-            font-family: inherit;
+            border-radius: 8px;
             outline: none;
+            font-size: 16px;
         }
+
+        input:focus { border-color: var(--accent); }
 
         button {
-            background: var(--glow);
-            color: #000;
+            background: var(--accent);
+            color: #fff;
             border: none;
             padding: 0 20px;
+            border-radius: 8px;
             font-weight: bold;
-            text-transform: uppercase;
             cursor: pointer;
-            transition: 0.2s;
         }
 
-        button:hover {
-            box-shadow: 0 0 20px var(--glow);
-            filter: brightness(1.2);
-        }
-
-        /* Панель подключения */
-        .connection-overlay {
+        /* Окно авторизации (вместо ID) */
+        #auth-overlay {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #000;
-            border: 1px solid var(--glow);
-            padding: 30px;
+            inset: 0;
+            background: var(--bg);
             z-index: 100;
-            width: 350px;
-            box-shadow: 0 0 50px rgba(0, 242, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            text-align: center;
         }
 
-        .id-display {
-            background: var(--panel);
-            padding: 10px;
-            margin: 15px 0;
-            border: 1px dashed var(--glow);
-            text-align: center;
-            cursor: pointer;
-            word-break: break-all;
+        .setup-card {
+            width: 100%;
+            max-width: 320px;
         }
+
+        .setup-card h2 { color: var(--accent); letter-spacing: 3px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div class="hud-header">
-    <div class="status-tag"><div class="pulse"></div> encrypted link: <span id="link-status">waiting</span></div>
-    <div id="connection-controls">
-        <button onclick="toggleOverlay()">COMM SETTINGS</button>
+<div id="auth-overlay">
+    <div class="setup-card">
+        <h2>STARK COMM</h2>
+        <p style="font-size: 12px; opacity: 0.6;">ВВЕДИТЕ НАЗВАНИЕ КАНАЛА И ВАШ ПОЗЫВНОЙ</p>
+        <input type="text" id="room-input" placeholder="Название комнаты" style="margin-bottom: 10px; width: 100%;">
+        <input type="text" id="name-input" placeholder="Ваш позывной" style="margin-bottom: 20px; width: 100%;">
+        <button onclick="initConnection()" style="width: 100%; padding: 15px;">АКТИВИРОВАТЬ КАНАЛ</button>
     </div>
 </div>
 
-<div class="chat-container" id="chat-box">
-    <div class="message">
-        <div class="msg-meta">SYSTEM</div>
-        <div class="msg-text">JARVIS V3.1: Ожидание установки протокола связи...</div>
-    </div>
+<div class="header">
+    <div class="status" id="status-text">OFFLINE</div>
+    <div style="font-size: 12px; font-weight: bold;" id="display-room">NOT CONNECTED</div>
+    <button onclick="clearHistory()" style="background: transparent; border: 1px solid gray; padding: 4px 8px; font-size: 10px;">CLEAR LOG</button>
 </div>
 
-<div class="input-area">
-    <input type="text" id="msg-input" placeholder="Введите пакет данных..." onkeypress="if(event.key==='Enter') sendMsg()">
-    <button onclick="sendMsg()">Send</button>
-</div>
+<div id="chat-window"></div>
 
-<div class="connection-overlay" id="overlay">
-    <h3 style="margin-top:0">NETWORK ADAPTER</h3>
-    <p style="font-size: 11px">ВАШ ПЕРСОНАЛЬНЫЙ ID (нажми, чтобы скопировать):</p>
-    <div class="id-display" id="my-id" onclick="copyId()">Генерация...</div>
-    
-    <p style="font-size: 11px">ПОДКЛЮЧИТЬСЯ К УДАЛЕННОМУ УЗЛУ:</p>
-    <input type="text" id="peer-id-input" placeholder="ID друга" style="width: 100%; margin-bottom: 15px;">
-    <button onclick="connectToPeer()" style="width: 100%; padding: 10px;">Establish Link</button>
-    <br><br>
-    <button onclick="toggleOverlay()" class="own" style="width: 100%; background: transparent; color: var(--glow); border: 1px solid var(--border)">Закрыть</button>
+<div class="input-bar">
+    <input type="text" id="msg-input" placeholder="Введите сообщение..." onkeypress="if(event.key==='Enter') send()">
+    <button onclick="send()">SEND</button>
 </div>
 
 <script>
-    const peer = new Peer();
+    let peer = null;
     let conn = null;
+    let myName = "";
+    let roomName = "";
+    let chatHistory = JSON.parse(localStorage.getItem('stark_chat_v1')) || [];
 
-    // Звуки (синтетические)
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function beep(freq, duration) {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.frequency.value = freq;
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
-    }
+    // Загрузка истории при старте
+    window.onload = () => {
+        renderHistory();
+        if (localStorage.getItem('stark_room')) {
+            document.getElementById('room-input').value = localStorage.getItem('stark_room');
+            document.getElementById('name-input').value = localStorage.getItem('stark_user');
+        }
+    };
 
-    // Инициализация Peer
-    peer.on('open', id => {
-        document.getElementById('my-id').innerText = id;
-        beep(400, 0.1);
-    });
+    function initConnection() {
+        roomName = document.getElementById('room-input').value.trim().toLowerCase();
+        myName = document.getElementById('name-input').value.trim();
 
-    peer.on('connection', (c) => {
-        conn = c;
-        setupConnection();
-    });
+        if (!roomName || !myName) return alert("Заполните данные!");
 
-    function connectToPeer() {
-        const remoteId = document.getElementById('peer-id-input').value;
-        if (!remoteId) return;
-        conn = peer.connect(remoteId);
-        setupConnection();
-    }
+        localStorage.setItem('stark_room', roomName);
+        localStorage.setItem('stark_user', myName);
 
-    function setupConnection() {
-        conn.on('open', () => {
-            document.getElementById('link-status').innerText = "Established";
-            document.getElementById('overlay').classList.add('hidden');
-            addMessage("SYSTEM", "Канал связи защищен. Начинайте обмен данными.", false);
-            beep(800, 0.2);
+        // Создаем Peer с кастомным ID на основе комнаты
+        // Чтобы два человека могли найти друг друга, один будет 'room_A', другой 'room_B'
+        // Для простоты: пробуем подключиться к 'room_name_peer1', если занято — к 'room_name_peer2'
+        
+        peer = new Peer(roomName + '_host'); 
+
+        peer.on('open', (id) => {
+            document.getElementById('auth-overlay').classList.add('hidden');
+            document.getElementById('status-text').innerText = "WAITING FOR PARTNER...";
+            document.getElementById('display-room').innerText = roomName.toUpperCase();
+            
+            // Пытаемся автоматически подключиться к возможному гостю
+            connectToPartner(roomName + '_guest');
         });
 
-        conn.on('data', data => {
-            addMessage("REMOTE USER", data, false);
-            beep(600, 0.1);
+        peer.on('error', (err) => {
+            if (err.type === 'id-taken') {
+                // Если хост занят, заходим как гость
+                peer = new Peer(roomName + '_guest');
+                peer.on('open', () => {
+                    document.getElementById('auth-overlay').classList.add('hidden');
+                    document.getElementById('display-room').innerText = roomName.toUpperCase();
+                    connectToPartner(roomName + '_host');
+                });
+                setupPeerEvents();
+            }
+        });
+
+        setupPeerEvents();
+    }
+
+    function setupPeerEvents() {
+        peer.on('connection', (c) => {
+            conn = c;
+            handleData();
+        });
+    }
+
+    function connectToPartner(partnerId) {
+        const tryConnect = setInterval(() => {
+            if (conn) { clearInterval(tryConnect); return; }
+            let c = peer.connect(partnerId);
+            c.on('open', () => {
+                conn = c;
+                handleData();
+                clearInterval(tryConnect);
+            });
+        }, 3000);
+    }
+
+    function handleData() {
+        document.getElementById('status-text').innerText = "SECURE LINK ACTIVE";
+        document.getElementById('status-text').style.color = "#00ff88";
+
+        conn.on('data', (data) => {
+            saveMessage(data.user, data.text, false);
         });
 
         conn.on('close', () => {
-            document.getElementById('link-status').innerText = "Lost";
-            addMessage("SYSTEM", "Связь разорвана.", false);
+            document.getElementById('status-text').innerText = "LINK LOST - RECONNECTING...";
+            document.getElementById('status-text').style.color = "var(--accent)";
+            conn = null;
+            initConnection(); // Авто-реконнект
         });
     }
 
-    function sendMsg() {
+    function send() {
         const input = document.getElementById('msg-input');
         const text = input.value.trim();
-        if (!text || !conn) return;
+        if (!text) return;
 
-        conn.send(text);
-        addMessage("YOU", text, true);
-        input.value = "";
-        beep(1000, 0.05);
+        if (conn && conn.open) {
+            conn.send({ user: myName, text: text });
+            saveMessage(myName, text, true);
+            input.value = "";
+        } else {
+            alert("Нет связи с собеседником. Ожидайте подключения.");
+        }
     }
 
-    function addMessage(sender, text, isOwn) {
-        const box = document.getElementById('chat-box');
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `message ${isOwn ? 'own' : ''}`;
-        
-        const meta = document.createElement('div');
-        meta.className = 'msg-meta';
-        meta.innerText = `${sender} | ${new Date().toLocaleTimeString()}`;
-        
-        const content = document.createElement('div');
-        content.className = 'msg-text';
-        
-        msgDiv.appendChild(meta);
-        msgDiv.appendChild(content);
-        box.appendChild(msgDiv);
-
-        // Эффект расшифровки текста
-        decodeEffect(content, text);
-        
-        box.scrollTop = box.scrollHeight;
+    function saveMessage(user, text, isMe) {
+        const msgObj = { user, text, isMe, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) };
+        chatHistory.push(msgObj);
+        localStorage.setItem('stark_chat_v1', JSON.stringify(chatHistory));
+        appendMessage(msgObj);
     }
 
-    function decodeEffect(el, finalArea) {
-        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*";
-        let iterations = 0;
-        const interval = setInterval(() => {
-            el.innerText = finalArea.split("")
-                .map((char, index) => {
-                    if (index < iterations) return finalArea[index];
-                    return chars[Math.floor(Math.random() * chars.length)];
-                }).join("");
-            
-            if (iterations >= finalArea.length) clearInterval(interval);
-            iterations += 1/3;
-        }, 30);
+    function renderHistory() {
+        const win = document.getElementById('chat-window');
+        win.innerHTML = "";
+        chatHistory.forEach(m => appendMessage(m));
     }
 
-    function toggleOverlay() {
-        document.getElementById('overlay').classList.toggle('hidden');
+    function appendMessage(m) {
+        const win = document.getElementById('chat-window');
+        const div = document.createElement('div');
+        div.className = `msg ${m.isMe ? 'me' : ''}`;
+        div.innerHTML = `
+            <div style="font-size: 10px; font-weight: bold; margin-bottom: 4px; color: var(--accent)">${m.user}</div>
+            <div>${m.text}</div>
+            <span class="msg-time">${m.time}</span>
+        `;
+        win.appendChild(div);
+        win.scrollTop = win.scrollHeight;
     }
 
-    function copyId() {
-        const id = document.getElementById('my-id').innerText;
-        navigator.clipboard.writeText(id);
-        alert("ID скопирован в буфер обмена");
+    function clearHistory() {
+        if(confirm("Удалить всю историю сообщений?")) {
+            localStorage.removeItem('stark_chat_v1');
+            chatHistory = [];
+            renderHistory();
+        }
+    }
+
+    // Регистрация простого Service Worker для работы оффлайн (PWA)
+    if ('serviceWorker' in navigator) {
+        const swCode = `
+            self.addEventListener('install', e => e.waitUntil(caches.open('stark-v1').then(c => c.addAll(['/']))));
+            self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
+        `;
+        const blob = new Blob([swCode], {type: 'text/javascript'});
+        navigator.serviceWorker.register(URL.createObjectURL(blob));
     }
 </script>
 </body>
