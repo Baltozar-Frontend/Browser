@@ -2,131 +2,317 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Svinocoin SMART Turbo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>STARK COMM | Secure Terminal</title>
+    <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
     <style>
-        body { margin: 0; background: #000; color: #fff; font-family: -apple-system; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        header { padding-top: env(safe-area-inset-top); background: #1c1c1e; padding: 10px; display: flex; gap: 10px; }
-        #container { flex: 1; background: #fff; position: relative; }
-        iframe { width: 100%; height: 100%; border: none; }
-        
-        .controls {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px);
-            padding: 20px; border-radius: 30px; border: 1px solid #34c759;
-            width: 80%; z-index: 10000; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        :root {
+            --glow: #00f2ff;
+            --bg: #050505;
+            --panel: rgba(0, 242, 255, 0.05);
+            --border: rgba(0, 242, 255, 0.2);
+            --text: #b3fdff;
         }
-        .btn-main { 
-            background: #34c759; color: white; border: none; padding: 15px; 
-            border-radius: 15px; font-weight: bold; font-size: 18px; width: 100%;
+
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
         }
-        .btn-main.active { background: #ff3b30; }
-        .status { font-size: 12px; text-align: center; margin-bottom: 10px; color: #34c759; }
+
+        /* Эффект сетки и шума */
+        body::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* HUD Header */
+        .hud-header {
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--panel);
+            backdrop-filter: blur(10px);
+        }
+
+        .status-tag {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: var(--glow);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--glow);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* Окно чата */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-left: 2px solid var(--glow);
+            background: rgba(0, 242, 255, 0.03);
+            position: relative;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+
+        .message.own {
+            align-self: flex-end;
+            border-left: none;
+            border-right: 2px solid #ff0055;
+            background: rgba(255, 0, 85, 0.03);
+            color: #ffb3cc;
+        }
+
+        .msg-meta {
+            font-size: 10px;
+            opacity: 0.5;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        /* Панель ввода */
+        .input-area {
+            padding: 20px;
+            background: var(--panel);
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border);
+            padding: 12px;
+            color: var(--glow);
+            font-family: inherit;
+            outline: none;
+        }
+
+        button {
+            background: var(--glow);
+            color: #000;
+            border: none;
+            padding: 0 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            box-shadow: 0 0 20px var(--glow);
+            filter: brightness(1.2);
+        }
+
+        /* Панель подключения */
+        .connection-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #000;
+            border: 1px solid var(--glow);
+            padding: 30px;
+            z-index: 100;
+            width: 350px;
+            box-shadow: 0 0 50px rgba(0, 242, 255, 0.2);
+        }
+
+        .id-display {
+            background: var(--panel);
+            padding: 10px;
+            margin: 15px 0;
+            border: 1px dashed var(--glow);
+            text-align: center;
+            cursor: pointer;
+            word-break: break-all;
+        }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<header>
-    <input type="text" id="urlInput" value="https://baltozar-frontend.github.io" style="flex:1; background:#2c2c2e; border:none; color:#fff; border-radius:8px; padding:10px;">
-    <button onclick="injectAndLoad()" style="background:none; border:none; font-size:22px;">🚀</button>
-</header>
+<div class="hud-header">
+    <div class="status-tag"><div class="pulse"></div> encrypted link: <span id="link-status">waiting</span></div>
+    <div id="connection-controls">
+        <button onclick="toggleOverlay()">COMM SETTINGS</button>
+    </div>
+</div>
 
-<div id="container"></div>
+<div class="chat-container" id="chat-box">
+    <div class="message">
+        <div class="msg-meta">SYSTEM</div>
+        <div class="msg-text">JARVIS V3.1: Ожидание установки протокола связи...</div>
+    </div>
+</div>
 
-<div class="controls">
-    <div id="statusLabel" class="status">СТАТУС: ГОТОВ</div>
-    <button id="clickerBtn" class="btn-main" onclick="toggleClicker()">ВКЛЮЧИТЬ SMART TURBO</button>
+<div class="input-area">
+    <input type="text" id="msg-input" placeholder="Введите пакет данных..." onkeypress="if(event.key==='Enter') sendMsg()">
+    <button onclick="sendMsg()">Send</button>
+</div>
+
+<div class="connection-overlay" id="overlay">
+    <h3 style="margin-top:0">NETWORK ADAPTER</h3>
+    <p style="font-size: 11px">ВАШ ПЕРСОНАЛЬНЫЙ ID (нажми, чтобы скопировать):</p>
+    <div class="id-display" id="my-id" onclick="copyId()">Генерация...</div>
+    
+    <p style="font-size: 11px">ПОДКЛЮЧИТЬСЯ К УДАЛЕННОМУ УЗЛУ:</p>
+    <input type="text" id="peer-id-input" placeholder="ID друга" style="width: 100%; margin-bottom: 15px;">
+    <button onclick="connectToPeer()" style="width: 100%; padding: 10px;">Establish Link</button>
+    <br><br>
+    <button onclick="toggleOverlay()" class="own" style="width: 100%; background: transparent; color: var(--glow); border: 1px solid var(--border)">Закрыть</button>
 </div>
 
 <script>
-    let clicking = false;
-    let frameId = null;
+    const peer = new Peer();
+    let conn = null;
 
-    async function injectAndLoad() {
-        const url = document.getElementById('urlInput').value;
-        const container = document.getElementById('container');
-        container.innerHTML = "<div style='color:#000; padding:20px;'>Инъекция скриптов...</div>";
-
-        try {
-            const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
-            const response = await fetch(proxy);
-            const data = await response.json();
-            let html = data.contents;
-
-            const hackScript = `
-                <script>
-                    window.smartClick = function() {
-                        const x = window.innerWidth / 2 + (Math.random() * 10 - 5);
-                        const y = window.innerHeight / 2 + (Math.random() * 10 - 5);
-                        const target = document.elementFromPoint(x, y);
-                        if (!target) return;
-                        const opts = { bubbles: true, cancelable: true, clientX: x, clientY: y, view: window };
-                        target.dispatchEvent(new MouseEvent('click', opts));
-                        target.dispatchEvent(new TouchEvent('touchstart', { bubbles: true }));
-                        target.dispatchEvent(new TouchEvent('touchend', { bubbles: true }));
-                    };
-                <\/script>
-            `;
-            
-            html = html.replace('</body>', hackScript + '</body>');
-            const baseUrl = url.substring(0, url.lastIndexOf('/') + 1);
-            html = html.replace(/(src|href)="(?!\/\/|http)/gi, '$1="' + baseUrl);
-
-            container.innerHTML = '';
-            const iframe = document.createElement('iframe');
-            iframe.id = "targetFrame";
-            iframe.style.width = '100%'; iframe.style.height = '100%'; iframe.style.border = 'none';
-            container.appendChild(iframe);
-            
-            const doc = iframe.contentWindow.document;
-            doc.open(); doc.write(html); doc.close();
-        } catch (e) { container.innerHTML = "Ошибка: " + e.message; }
+    // Звуки (синтетические)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function beep(freq, duration) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.value = freq;
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
     }
 
-    function toggleClicker() {
-        if (!clicking) {
-            start();
-        } else {
-            stop();
-        }
+    // Инициализация Peer
+    peer.on('open', id => {
+        document.getElementById('my-id').innerText = id;
+        beep(400, 0.1);
+    });
+
+    peer.on('connection', (c) => {
+        conn = c;
+        setupConnection();
+    });
+
+    function connectToPeer() {
+        const remoteId = document.getElementById('peer-id-input').value;
+        if (!remoteId) return;
+        conn = peer.connect(remoteId);
+        setupConnection();
     }
 
-    function start() {
-        const btn = document.getElementById('clickerBtn');
-        const status = document.getElementById('statusLabel');
-        const iframe = document.getElementById('targetFrame');
-        if (!iframe) return;
+    function setupConnection() {
+        conn.on('open', () => {
+            document.getElementById('link-status').innerText = "Established";
+            document.getElementById('overlay').classList.add('hidden');
+            addMessage("SYSTEM", "Канал связи защищен. Начинайте обмен данными.", false);
+            beep(800, 0.2);
+        });
 
-        clicking = true;
-        btn.innerText = "ОСТАНОВИТЬ";
-        btn.classList.add('active');
-        status.innerText = "СТАТУС: АКТИВЕН (SMART MODE)";
+        conn.on('data', data => {
+            addMessage("REMOTE USER", data, false);
+            beep(600, 0.1);
+        });
 
-        // Используем requestAnimationFrame вместо таймера
-        // Это заставляет iOS кликать в такт обновлению экрана
-        function loop() {
-            if (!clicking) return;
-            
-            if (iframe.contentWindow.smartClick) {
-                // Делаем 1-2 клика за кадр (этого достаточно для огромной скорости)
-                iframe.contentWindow.smartClick();
-                if (Math.random() > 0.5) iframe.contentWindow.smartClick();
-            }
-            
-            frameId = requestAnimationFrame(loop);
-        }
+        conn.on('close', () => {
+            document.getElementById('link-status').innerText = "Lost";
+            addMessage("SYSTEM", "Связь разорвана.", false);
+        });
+    }
+
+    function sendMsg() {
+        const input = document.getElementById('msg-input');
+        const text = input.value.trim();
+        if (!text || !conn) return;
+
+        conn.send(text);
+        addMessage("YOU", text, true);
+        input.value = "";
+        beep(1000, 0.05);
+    }
+
+    function addMessage(sender, text, isOwn) {
+        const box = document.getElementById('chat-box');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${isOwn ? 'own' : ''}`;
         
-        frameId = requestAnimationFrame(loop);
+        const meta = document.createElement('div');
+        meta.className = 'msg-meta';
+        meta.innerText = `${sender} | ${new Date().toLocaleTimeString()}`;
+        
+        const content = document.createElement('div');
+        content.className = 'msg-text';
+        
+        msgDiv.appendChild(meta);
+        msgDiv.appendChild(content);
+        box.appendChild(msgDiv);
+
+        // Эффект расшифровки текста
+        decodeEffect(content, text);
+        
+        box.scrollTop = box.scrollHeight;
     }
 
-    function stop() {
-        clicking = false;
-        cancelAnimationFrame(frameId);
-        const btn = document.getElementById('clickerBtn');
-        const status = document.getElementById('statusLabel');
-        btn.innerText = "ВКЛЮЧИТЬ SMART TURBO";
-        btn.classList.remove('active');
-        status.innerText = "СТАТУС: ПРИОСТАНОВЛЕН";
+    function decodeEffect(el, finalArea) {
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*";
+        let iterations = 0;
+        const interval = setInterval(() => {
+            el.innerText = finalArea.split("")
+                .map((char, index) => {
+                    if (index < iterations) return finalArea[index];
+                    return chars[Math.floor(Math.random() * chars.length)];
+                }).join("");
+            
+            if (iterations >= finalArea.length) clearInterval(interval);
+            iterations += 1/3;
+        }, 30);
+    }
+
+    function toggleOverlay() {
+        document.getElementById('overlay').classList.toggle('hidden');
+    }
+
+    function copyId() {
+        const id = document.getElementById('my-id').innerText;
+        navigator.clipboard.writeText(id);
+        alert("ID скопирован в буфер обмена");
     }
 </script>
 </body>
