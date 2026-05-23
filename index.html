@@ -2,251 +2,303 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>P2P Terraria Clone with Clans</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Terraria P2P Online</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; overflow: hidden; background: #87CEEB; font-family: sans-serif; }
-        canvas { display: block; image-rendering: pixelated; }
-        #ui {
-            position: absolute; top: 10px; left: 10px;
-            background: rgba(0,0,0,0.7); color: white; padding: 15px;
-            border-radius: 8px; pointer-events: auto;
+        :root {
+            --t-blue: rgba(43, 43, 137, 0.9);
+            --t-border: #7d7d7d;
+            --t-gold: #e7c05e;
+            --t-font: 'Press Start 2P', cursive;
         }
-        input, button { margin: 5px 0; padding: 5px; width: 100%; display: block; }
-        .stats { position: absolute; bottom: 10px; left: 10px; color: white; text-shadow: 1px 1px 2px black; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: var(--t-font); }
+        canvas { display: block; image-rendering: pixelated; }
+
+        /* ИНТЕРФЕЙС TERRARIA */
+        .terraria-panel {
+            background: var(--t-blue);
+            border: 4px solid var(--t-border);
+            border-image: ridge;
+            box-shadow: inset 0 0 10px #000;
+            color: white;
+            padding: 10px;
+            position: absolute;
+            z-index: 100;
+        }
+
+        /* ХОТБАР (ВЕРХ СЛЕВА) */
+        #hotbar {
+            top: 10px; left: 10px; display: flex; gap: 4px; border: none; background: none; box-shadow: none;
+        }
+        .slot {
+            width: 46px; height: 46px;
+            background: rgba(60, 60, 160, 0.7);
+            border: 3px solid #333;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 10px; cursor: pointer;
+        }
+        .slot.active { border-color: var(--t-gold); background: rgba(100, 100, 250, 0.8); }
+
+        /* МЕНЮ ПЕРСОНАЖА (ВЕРХ СПРАВА) */
+        #stats-panel { top: 10px; right: 10px; width: 220px; font-size: 8px; line-height: 1.5; }
+        .clan-tag { color: var(--t-gold); text-shadow: 1px 1px #000; }
+
+        /* КЛАН И ЧАТ (СНИЗУ СЛЕВА) */
+        #clan-panel { bottom: 20px; left: 10px; width: 300px; max-height: 200px; display: flex; flex-direction: column; }
+        #chat-area { height: 100px; overflow-y: auto; margin-bottom: 5px; font-size: 7px; background: rgba(0,0,0,0.3); padding: 5px; }
+        .msg { margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+
+        input {
+            background: rgba(0,0,0,0.5); border: 2px solid var(--t-border); color: white;
+            font-family: var(--t-font); font-size: 8px; padding: 5px; width: 100%; box-sizing: border-box;
+        }
+        button {
+            background: #5050b4; border: 2px solid var(--t-gold); color: white;
+            font-family: var(--t-font); font-size: 8px; padding: 5px; cursor: pointer; margin-top: 5px;
+        }
+
+        /* МОБИЛЬНОЕ УПРАВЛЕНИЕ */
+        .mobile-btn {
+            position: absolute; width: 60px; height: 60px; background: rgba(255,255,255,0.2);
+            border-radius: 50%; border: 2px solid white; z-index: 200; display: none;
+            justify-content: center; align-items: center; color: white; font-size: 20px;
+        }
+        @media (max-width: 900px) { .mobile-btn { display: flex; } }
+        #btn-left { bottom: 40px; left: 20px; }
+        #btn-right { bottom: 40px; left: 100px; }
+        #btn-jump { bottom: 40px; right: 40px; width: 80px; height: 80px; }
     </style>
 </head>
 <body>
 
-<div id="ui">
-    <b id="my-id-display">Ваш ID: Загрузка...</b>
-    <input type="text" id="peer-id-input" placeholder="ID друга для подключения">
-    <button onclick="connectToPeer()">Подключиться к другу</button>
-    <hr>
-    <input type="text" id="name-input" placeholder="Ваше имя" value="Игрок">
-    <input type="text" id="clan-input" placeholder="Название клана" value="Бродяги">
-    <p style="font-size: 10px;">ЛКМ - Копать, ПКМ - Строить<br>WASD - Движение</p>
+<!-- Хотбар -->
+<div id="hotbar" class="terraria-panel">
+    <div class="slot active" onclick="setTool(0)">⛏️</div>
+    <div class="slot" onclick="setTool(1)">🧱</div>
+    <div class="slot" onclick="setTool(2)">🗡️</div>
 </div>
 
-<div class="stats" id="stats">Подключено игроков: 1</div>
+<!-- Статус и ID -->
+<div id="stats-panel" class="terraria-panel">
+    <div id="my-id">ID: Загрузка...</div>
+    <div id="clan-info">Клан: <span class="clan-tag" id="cur-clan">Нет</span></div>
+    <input type="text" id="join-id" placeholder="ID друга">
+    <button onclick="connectToFriend()">Присоединиться</button>
+</div>
 
-<canvas id="gameCanvas"></canvas>
+<!-- Клан Панель -->
+<div id="clan-panel" class="terraria-panel">
+    <div style="font-size: 8px; margin-bottom: 5px; color: var(--t-gold);">КЛАНОВЫЙ ЧАТ</div>
+    <div id="chat-area"></div>
+    <input type="text" id="clan-name-input" placeholder="Название клана" onchange="changeClan()" value="Terrarians">
+    <input type="text" id="chat-input" placeholder="Сообщение в клан..." onkeydown="if(event.key==='Enter') sendClanMsg()">
+</div>
+
+<!-- Мобильные кнопки -->
+<div id="btn-left" class="mobile-btn" ontouchstart="move(1)" ontouchend="move(0)">◀</div>
+<div id="btn-right" class="mobile-btn" ontouchstart="move(2)" ontouchend="move(0)">▶</div>
+<div id="btn-jump" class="mobile-btn" ontouchstart="move(3)" ontouchend="move(4)">JUMP</div>
+
+<canvas id="game"></canvas>
 
 <script>
-/** КОНФИГУРАЦИЯ **/
-const canvas = document.getElementById('gameCanvas');
+/** НАСТРОЙКИ МИРА **/
+const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const TILE_SIZE = 32;
-const GRAVITY = 0.5;
-const JUMP_FORCE = -10;
-const SPEED = 4;
-
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-/** МИР **/
-const WORLD_WIDTH = 100;
-const WORLD_HEIGHT = 50;
+const CHUNK_SIZE = 50;
 let world = [];
-
-// Генерация мира
-function generateWorld() {
-    for (let x = 0; x < WORLD_WIDTH; x++) {
-        world[x] = [];
-        for (let y = 0; y < WORLD_HEIGHT; y++) {
-            let type = 0; // 0 - воздух
-            if (y > 20) type = 1; // трава/земля
-            if (y > 25) type = 2; // камень
-            world[x][y] = type;
-        }
-    }
-}
-generateWorld();
+let camera = { x: 0, y: 0 };
 
 /** ИГРОК **/
-let player = {
-    x: 400, y: 100,
-    vx: 0, vy: 0,
-    w: 24, h: 48,
-    grounded: false,
-    name: "Игрок",
-    clan: "Бродяги",
-    color: `hsl(${Math.random() * 360}, 70%, 50%)`
+let me = {
+    x: 200, y: 200, vx: 0, vy: 0, 
+    name: "Player" + Math.floor(Math.random()*100),
+    clan: "Terrarians",
+    tool: 0, // 0 - кирка, 1 - блок
+    w: 20, h: 40
 };
+let players = {}; // Другие игроки
 
-let remotePlayers = {};
-let keys = {};
-
-/** СЕТЕВАЯ ЧАСТЬ (PeerJS) **/
-const peer = new Peer();
+/** СЕТЬ **/
+let peer, conn;
 let connections = [];
 
-peer.on('open', (id) => {
-    document.getElementById('my-id-display').innerText = "Ваш ID: " + id;
-});
-
-// Когда к нам подключаются
-peer.on('connection', (conn) => {
-    setupConnection(conn);
-});
-
-function connectToPeer() {
-    const peerId = document.getElementById('peer-id-input').value;
-    const conn = peer.connect(peerId);
-    setupConnection(conn);
+function initPeer() {
+    peer = new Peer();
+    peer.on('open', id => {
+        document.getElementById('my-id').innerText = "Ваш ID: " + id;
+        console.log("Peer ID:", id);
+    });
+    peer.on('error', err => {
+        alert("Ошибка сети: " + err.type);
+    });
+    peer.on('connection', c => setupConn(c));
 }
 
-function setupConnection(conn) {
-    conn.on('open', () => {
-        connections.push(conn);
-        // Отправляем данные о себе при входе
-        conn.send({ type: 'init_world', world: world });
+function setupConn(c) {
+    c.on('open', () => {
+        connections.push(c);
+        c.send({ type: 'world', data: world });
     });
-
-    conn.on('data', (data) => {
-        if (data.type === 'init_world') {
-            world = data.world; // Синхронизация мира при подключении к хосту
+    c.on('data', data => {
+        if(data.type === 'world') world = data.data;
+        if(data.type === 'move') players[data.id] = data.state;
+        if(data.type === 'block') world[data.x][data.y] = data.val;
+        if(data.type === 'chat' && data.clan === me.clan) {
+            addChatMessage(data.name, data.text);
         }
-        if (data.type === 'update') {
-            remotePlayers[data.id] = data.state;
-        }
-        if (data.type === 'block_change') {
-            world[data.x][data.y] = data.blockType;
-        }
-    });
-
-    conn.on('close', () => {
-        connections = connections.filter(c => c !== conn);
     });
 }
 
-/** УПРАВЛЕНИЕ **/
-window.addEventListener('keydown', e => keys[e.code] = true);
-window.addEventListener('keyup', e => keys[e.code] = false);
+function connectToFriend() {
+    const id = document.getElementById('join-id').value;
+    if(!id) return;
+    const c = peer.connect(id);
+    setupConn(c);
+}
 
-canvas.addEventListener('mousedown', e => {
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    
-    const worldX = Math.floor(mouseX / TILE_SIZE);
-    const worldY = Math.floor(mouseY / TILE_SIZE);
-
-    if (worldX >= 0 && worldX < WORLD_WIDTH && worldY >= 0 && worldY < WORLD_HEIGHT) {
-        const blockType = e.button === 0 ? 0 : 2; // ЛКМ - воздух, ПКМ - камень
-        world[worldX][worldY] = blockType;
-        
-        // Рассылка изменений блока
-        broadcast({ type: 'block_change', x: worldX, y: worldY, blockType: blockType });
+/** ГЕНЕРАЦИЯ МИРА **/
+for(let x=0; x<CHUNK_SIZE; x++) {
+    world[x] = [];
+    for(let y=0; y<CHUNK_SIZE; y++) {
+        world[x][y] = y > 15 ? (y > 20 ? 2 : 1) : 0; // 1-трава, 2-камень
     }
-});
-
-// Отключаем контекстное меню для ПКМ
-canvas.oncontextmenu = (e) => e.preventDefault();
-
-function broadcast(data) {
-    connections.forEach(conn => conn.send(data));
 }
 
-/** ЛОГИКА И ОТРИСОВКА **/
+/** ЛОГИКА ИГРЫ **/
+const keys = {};
+window.onkeydown = e => keys[e.code] = true;
+window.onkeyup = e => keys[e.code] = false;
+
+function changeClan() {
+    me.clan = document.getElementById('clan-name-input').value;
+    document.getElementById('cur-clan').innerText = me.clan;
+    addChatMessage("СИСТЕМА", "Вы вошли в клан " + me.clan);
+}
+
+function sendClanMsg() {
+    const input = document.getElementById('chat-input');
+    if(!input.value) return;
+    const msg = { type: 'chat', clan: me.clan, name: me.name, text: input.value };
+    connections.forEach(c => c.send(msg));
+    addChatMessage(me.name, input.value);
+    input.value = "";
+}
+
+function addChatMessage(name, text) {
+    const area = document.getElementById('chat-area');
+    area.innerHTML += `<div class="msg"><span class="clan-tag">[${name}]:</span> ${text}</div>`;
+    area.scrollTop = area.scrollHeight;
+}
+
+function setTool(id) {
+    me.tool = id;
+    document.querySelectorAll('.slot').forEach((s, i) => s.classList.toggle('active', i === id));
+}
+
+// Мобильное движение
+let mDir = 0;
+function move(dir) {
+    if(dir === 1) keys['KeyA'] = true;
+    if(dir === 2) keys['KeyD'] = true;
+    if(dir === 3) keys['KeyW'] = true;
+    if(dir === 0) { keys['KeyA'] = false; keys['KeyD'] = false; }
+    if(dir === 4) keys['KeyW'] = false;
+}
+
 function update() {
-    // Обновление данных игрока из инпутов
-    player.name = document.getElementById('name-input').value;
-    player.clan = document.getElementById('clan-input').value;
+    // Физика
+    if (keys['KeyA']) me.vx = -4;
+    else if (keys['KeyD']) me.vx = 4;
+    else me.vx *= 0.8;
 
-    // Движение
-    if (keys['KeyA']) player.vx = -SPEED;
-    else if (keys['KeyD']) player.vx = SPEED;
-    else player.vx = 0;
-
-    if (keys['KeyW'] && player.grounded) {
-        player.vy = JUMP_FORCE;
-        player.grounded = false;
+    if (keys['KeyW'] && me.grounded) {
+        me.vy = -10;
+        me.grounded = false;
     }
 
-    player.vy += GRAVITY;
-    player.x += player.vx;
-    player.y += player.vy;
+    me.vy += 0.5; // гравитация
+    me.x += me.vx;
+    me.y += me.vy;
 
-    // Простая коллизия с полом/блоками
-    player.grounded = false;
-    let gridX = Math.floor((player.x + player.w/2) / TILE_SIZE);
-    let gridY = Math.floor((player.y + player.h) / TILE_SIZE);
-
-    if (world[gridX] && world[gridX][gridY] !== 0) {
-        player.y = gridY * TILE_SIZE - player.h;
-        player.vy = 0;
-        player.grounded = true;
+    // Коллизии (упрощенно)
+    let gx = Math.floor((me.x + me.w/2) / TILE_SIZE);
+    let gy = Math.floor((me.y + me.h) / TILE_SIZE);
+    if(world[gx] && world[gx][gy] > 0) {
+        me.y = gy * TILE_SIZE - me.h;
+        me.vy = 0;
+        me.grounded = true;
+    } else {
+        me.grounded = false;
     }
 
-    // Ограничения мира
-    if (player.x < 0) player.x = 0;
-    if (player.x > WORLD_WIDTH * TILE_SIZE - player.w) player.x = WORLD_WIDTH * TILE_SIZE - player.w;
+    // Камера
+    camera.x += (me.x - canvas.width/2 - camera.x) * 0.1;
+    camera.y += (me.y - canvas.height/2 - camera.y) * 0.1;
 
-    // Отправка позиции всем
-    broadcast({
-        type: 'update',
-        id: peer.id,
-        state: { x: player.x, y: player.y, name: player.name, clan: player.clan, color: player.color }
-    });
-
-    document.getElementById('stats').innerText = `Подключено игроков: ${connections.length + 1}`;
+    // Синхронизация
+    const state = { x: me.x, y: me.y, name: me.name, clan: me.clan, tool: me.tool };
+    connections.forEach(c => c.send({ type: 'move', id: peer.id, state }));
 }
 
 function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    ctx.clearRect(0,0, canvas.width, canvas.height);
 
-    // Рисуем мир
-    for (let x = 0; x < WORLD_WIDTH; x++) {
-        for (let y = 0; y < WORLD_HEIGHT; y++) {
-            if (world[x][y] === 1) {
-                ctx.fillStyle = '#4CAF50'; // Трава
-                ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            } else if (world[x][y] === 2) {
-                ctx.fillStyle = '#757575'; // Камень
-                ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            }
+    ctx.save();
+    ctx.translate(-camera.x, -camera.y);
+
+    // Мир
+    for(let x=0; x<CHUNK_SIZE; x++) {
+        for(let y=0; y<CHUNK_SIZE; y++) {
+            if(world[x][y] === 0) continue;
+            ctx.fillStyle = world[x][y] === 1 ? '#3a9d23' : '#777';
+            ctx.fillRect(x*TILE_SIZE, y*TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+            ctx.strokeRect(x*TILE_SIZE, y*TILE_SIZE, TILE_SIZE, TILE_SIZE);
         }
     }
 
-    // Рисуем других игроков
-    for (let id in remotePlayers) {
-        let p = remotePlayers[id];
-        drawPlayer(p);
+    // Другие игроки
+    for(let id in players) {
+        let p = players[id];
+        ctx.fillStyle = "#e57373";
+        ctx.fillRect(p.x, p.y, me.w, me.h);
+        ctx.fillStyle = "white";
+        ctx.font = "6px 'Press Start 2P'";
+        ctx.fillText(p.name, p.x, p.y - 15);
+        ctx.fillStyle = "#ffd700";
+        ctx.fillText(`<${p.clan}>`, p.x, p.y - 5);
     }
 
-    // Рисуем себя
-    drawPlayer(player);
+    // Я
+    ctx.fillStyle = "#4fc3f7";
+    ctx.fillRect(me.x, me.y, me.w, me.h);
 
-    requestAnimationFrame(() => {
-        update();
-        draw();
-    });
+    ctx.restore();
+    update();
+    requestAnimationFrame(draw);
 }
 
-function drawPlayer(p) {
-    // Тело
-    ctx.fillStyle = p.color;
-    ctx.fillRect(p.x, p.y, player.w, player.h);
-    
-    // Имя и Клан
-    ctx.fillStyle = "white";
-    ctx.font = "12px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText(p.name, p.x + player.w/2, p.y - 20);
-    ctx.fillStyle = "#FFD700"; // Золотой цвет для клана
-    ctx.fillText(`[${p.clan}]`, p.x + player.w/2, p.y - 5);
-}
+// Взаимодействие с миром
+canvas.onmousedown = e => {
+    const rx = Math.floor((e.clientX + camera.x) / TILE_SIZE);
+    const ry = Math.floor((e.clientY + camera.y) / TILE_SIZE);
+    if(rx < 0 || ry < 0 || rx >= CHUNK_SIZE || ry >= CHUNK_SIZE) return;
+
+    let val = me.tool === 0 ? 0 : 2; // 0 - копать, 2 - строить камень
+    world[rx][ry] = val;
+    connections.forEach(c => c.send({ type: 'block', x: rx, y: ry, val: val }));
+};
 
 // Запуск
+initPeer();
 draw();
-
-// Подстройка размера окна
-window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-});
+changeClan();
 </script>
-
 </body>
 </html>
