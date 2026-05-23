@@ -2,34 +2,56 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft 3D WebRTC Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Minecraft 3D Ultimate Mobile & PC</title>
     <style>
-        body, html { margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%; font-family: sans-serif; user-select: none; }
-        #canvas-container { width: 100%; height: 100%; display: block; }
+        body, html { margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; -webkit-user-select: none; touch-action: none; }
+        #canvas-container { width: 100%; height: 100%; display: block; position: absolute; top: 0; left: 0; z-index: 1; }
         
-        /* Интерфейс Майнкрафта */
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; }
-        #crosshair { position: absolute; top: 50%; left: 50%; width: 16px; height: 16px; transform: translate(-50%, -50%); color: white; font-size: 20px; font-weight: bold; text-align: center; line-height: 14px; pointer-events: none; }
+        /* Интерфейс */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; display: flex; flex-direction: column; justify-content: space-between; }
+        #crosshair { position: absolute; top: 50%; left: 50%; width: 16px; height: 16px; transform: translate(-50%, -50%); color: white; font-size: 24px; font-weight: 300; text-align: center; line-height: 14px; pointer-events: none; text-shadow: 1px 1px 2px #000; }
         
         /* Меню подключения */
-        #menu { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 8px; color: white; pointer-events: auto; z-index: 100; max-width: 300px; }
-        #menu h3 { margin: 0 0 10px 0; font-size: 16px; text-align: center; }
-        input, button { width: 100%; padding: 8px; margin-bottom: 8px; border: none; border-radius: 4px; box-sizing: border-box; }
-        button { background: #5c8e32; color: white; font-weight: bold; cursor: pointer; }
+        #menu { position: absolute; top: 10px; left: 10px; background: rgba(20,20,20,0.85); padding: 12px; border-radius: 10px; color: white; pointer-events: auto; max-width: 280px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
+        #menu h3 { margin: 0 0 8px 0; font-size: 14px; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+        input, button { width: 100%; padding: 10px; margin-bottom: 6px; border: none; border-radius: 6px; box-sizing: border-box; font-size: 13px; }
+        input { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+        input:focus { outline: none; border-color: #5c8e32; }
+        button { background: #5c8e32; color: white; font-weight: bold; cursor: pointer; transition: background 0.2s; }
         button:hover { background: #4c7528; }
-        #peer-id-display { font-weight: bold; color: #aaffaa; word-break: break-all; margin-bottom: 8px; font-size: 12px; }
+        #peer-id-display { font-weight: bold; color: #aaffaa; word-break: break-all; margin-bottom: 6px; font-size: 11px; text-align: center; background: rgba(0,0,0,0.3); padding: 6px; border-radius: 4px; }
+        #status { font-size: 11px; color: #bbb; margin-top: 4px; text-align: center; }
 
-        /* Хотбар внизу */
-        #hotbar-container { width: 100%; display: flex; justify-content: center; margin-bottom: 20px; }
-        #hotbar { display: flex; background: rgba(0,0,0,0.5); padding: 4px; border: 2px solid #333; border-radius: 4px; pointer-events: auto; }
-        .slot { width: 40px; height: 40px; border: 2px solid #555; margin: 0 2px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; background-size: cover; position: relative; cursor: pointer; }
-        .slot.active { border-color: #fff; background: rgba(255,255,255,0.2); }
-        .slot::after { content: attr(data-key); position: absolute; top: 2px; left: 4px; font-size: 10px; color: #aaa; }
+        /* Хотбар */
+        #hotbar-container { width: 100%; display: flex; justify-content: center; margin-bottom: 15px; }
+        #hotbar { display: flex; background: rgba(30,30,30,0.85); padding: 4px; border: 2px solid #444; border-radius: 6px; pointer-events: auto; box-shadow: 0 5px 10px rgba(0,0,0,0.5); }
+        .slot { width: 45px; height: 45px; border: 2px solid #555; margin: 0 3px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 11px; border-radius: 4px; position: relative; cursor: pointer; text-shadow: 1px 1px 1px #000; }
+        .slot.active { border-color: #fff; background: rgba(255,255,255,0.25); box-shadow: inset 0 0 5px #fff; }
         
-        #instructions { position: absolute; bottom: 80px; left: 20px; color: white; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; font-size: 12px; line-height: 1.5; }
+        /* Мобильное управление */
+        #mobile-ui { display: none; position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        @media (pointer: coarse), (max-width: 800px) {
+            #mobile-ui { display: block; }
+            #instructions { display: none !important; }
+            #menu { max-width: 220px; padding: 8px; font-size: 11px; }
+            #menu h3 { font-size: 12px; }
+            input, button { padding: 8px; font-size: 11px; }
+            .slot { width: 38px; height: 38px; font-size: 9px; }
+        }
+
+        /* Джойстик перемещения */
+        #dpad { position: absolute; bottom: 20px; left: 20px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%; pointer-events: auto; border: 2px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; }
+        #dpad-stick { width: 50px; height: 50px; background: rgba(255,255,255,0.4); border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: transform 0.05s; }
+
+        /* Кнопки действий справа */
+        #action-buttons { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; pointer-events: auto; }
+        .m-btn { width: 60px; height: 60px; background: rgba(0,0,0,0.6); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; color: white; font-weight: bold; font-size: 11px; display: flex; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .m-btn:active { background: rgba(255,255,255,0.3); }
+        #m-btn-mode { background: #3a6da8; border-radius: 10px; width: 75px; height: 45px; }
+
+        #instructions { position: absolute; bottom: 80px; left: 20px; color: white; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 6px; font-size: 12px; line-height: 1.4; border: 1px solid rgba(255,255,255,0.1); }
     </style>
-    <!-- Подключаем Three.js и PeerJS для онлайна через надежные CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
@@ -38,34 +60,40 @@
     <div id="canvas-container"></div>
 
     <div id="ui-layer">
-        <!-- Меню сверху слева -->
         <div id="menu">
-            <h3>Minecraft WebRTC</h3>
+            <h3>Minecraft Online</h3>
             <button id="btn-host">1. Создать мир (Хост)</button>
-            <div id="peer-id-display"></div>
-            <hr style="border-color:#555;">
-            <input type="text" id="join-id" placeholder="Вставь ID друга здесь...">
-            <button id="btn-join" style="background:#3a6da8;">2. Подключиться к другу</button>
-            <div id="status" style="font-size:12px; color:#aaa; margin-top:5px;">Статус: Одиночная игра</div>
+            <div id="peer-id-display" style="display:none;"></div>
+            <input type="text" id="join-id" placeholder="ID друга...">
+            <button id="btn-join" style="background:#3a6da8;">2. Подключиться</button>
+            <div id="status">Одиночная игра</div>
         </div>
 
         <div id="crosshair">+</div>
 
         <div id="instructions">
-            <b>Управление:</b><br>
-            Клик по экрану — захват мыши<br>
-            WASD — Ходить | Space — Прыг<br>
-            Левый клик — Сломать блок<br>
-            Правый клик — Поставить блок<br>
+            <b>Управление (ПК):</b><br>
+            Клик по экрану — обзор мышью<br>
+            WASD — Ходить | Space — Прыгнуть<br>
+            Левый клик — Сломать | Правый — Поставить<br>
             Цифры 1, 2, 3 — Выбор блока
         </div>
 
-        <!-- Нижняя панель выбора блоков -->
+        <div id="mobile-ui">
+            <div id="dpad">
+                <div id="dpad-stick"></div>
+            </div>
+            <div id="action-buttons">
+                <div id="m-btn-mode" class="m-btn">Режим:<br>ЛОМАТЬ</div>
+                <div id="m-btn-jump" class="m-btn">Прыжок</div>
+            </div>
+        </div>
+
         <div id="hotbar-container">
             <div id="hotbar">
-                <div class="slot active" data-key="1" data-type="1" style="background-color: #5c8e32;">Земля</div>
-                <div class="slot" data-key="2" data-type="2" style="background-color: #888888;">Камень</div>
-                <div class="slot" data-key="3" data-type="3" style="background-color: #a06030;">Доски</div>
+                <div class="slot active" data-type="1" style="background-color: #5c8e32;">Земля</div>
+                <div class="slot" data-type="2" style="background-color: #888888;">Камень</div>
+                <div class="slot" data-type="3" style="background-color: #a06030;">Доски</div>
             </div>
         </div>
     </div>
@@ -73,90 +101,94 @@
     <script>
         // --- Настройки игры ---
         const BLOCK_SIZE = 1;
-        const WORLD_SIZE = 16; // Размер острова 16х16 для стабильной производительности
-        let currentBlockType = 1; // 1: Трава, 2: Камень, 3: Доски
+        const WORLD_SIZE = 16;
+        let currentBlockType = 1; 
+        let mobileBuildMode = false; // false = ломать, true = ставить (для мобилок)
         const blockColors = { 1: 0x5c8e32, 2: 0x888888, 3: 0xa06030 };
 
-        // --- Переменные Three.js ---
+        // --- Движок ---
         let scene, camera, renderer;
-        let blocks = {}; // Хранилище блоков мира по координатам "x,y,z"
+        let blocks = {}; 
         let player = {
-            pos: new THREE.Vector3(8, 5, 8),
+            pos: new THREE.Vector3(8, 6, 8),
             vel: new THREE.Vector3(),
-            onGround: false,
-            mesh: null // Сетка для отображения другого игрока
+            onGround: false
         };
         let remotePlayerMesh = null;
 
-        // --- Управление и камера ---
+        // --- Управление ---
         let keys = {};
-        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+        let moveForward = 0, moveBackward = 0, moveLeft = 0, moveRight = 0; // Изменено на числовые значения для плавности джойстика
         let yaw = 0, pitch = 0;
-        const mouseSensitivity = 0.002;
+        const mouseSensitivity = 0.002.5;
 
-        // --- Сетевой код (PeerJS WebRTC) ---
+        // --- Сенсорный ввод (Мобилки) ---
+        let isTouchDevice = false;
+        let lookTouchId = null;
+        let lookStartX = 0, lookStartY = 0;
+        let dpadTouchId = null;
+        let dpadCenter = new THREE.Vector2();
+
+        // --- Сеть (PeerJS + STUN от Google) ---
         let peer = null;
         let connection = null;
         const statusEl = document.getElementById('status');
 
-        // Инициализация графики
         function initEngine() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x7ec0ee); // Небо
-            scene.fog = new THREE.FogExp2(0x7ec0ee, 0.05);
+            scene.background = new THREE.Color(0x7ec0ee); 
+            scene.fog = new THREE.FogExp2(0x7ec0ee, 0.04);
 
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 500);
             
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Оптимизация под Retina/4K экраны телефонов
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-            // Освещение
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-            const sunLight = new THREE.DirectionalLight(0xffffff, 0.6);
-            sunLight.position.set(10, 20, 15);
+            // Свет
+            scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+            const sunLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            sunLight.position.set(20, 40, 20);
             scene.add(sunLight);
 
-            // Генерация начальной карты (плоский мир с небольшими холмами)
             generateWorld();
 
-            // Привязка событий управления
+            // Обработчики событий ПК
             window.addEventListener('resize', onWindowResize);
-            document.addEventListener('keydown', (e) => handleContainerKeys(e, true));
-            document.addEventListener('keyup', (e) => handleContainerKeys(e, false));
-            
-            // Захват мыши при клике по экрану
+            document.addEventListener('keydown', (e) => handleKeys(e, true));
+            document.addEventListener('keyup', (e) => handleKeys(e, false));
             renderer.domElement.addEventListener('click', () => {
-                renderer.domElement.requestPointerLock();
+                if(!isTouchDevice) renderer.domElement.requestPointerLock();
             });
             document.addEventListener('mousemove', onMouseMove);
             document.addEventListener('mousedown', onMouseDown);
 
-            // Хотбар переключение мышед кликом
+            // Обработчики мобильного тача
+            setupMobileControls();
+
+            // Хотбар
             document.querySelectorAll('.slot').forEach(slot => {
-                slot.addEventListener('click', (e) => {
-                    document.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
-                    e.target.classList.add('active');
-                    currentBlockType = parseInt(e.target.dataset.type);
-                });
+                slot.addEventListener('touchstart', (e) => selectSlot(e.target));
+                slot.addEventListener('click', (e) => selectSlot(e.target));
             });
 
-            // Запуск цикла анимации
             animate();
         }
 
-        // --- Генерация вокселей ---
+        function selectSlot(element) {
+            document.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
+            element.classList.add('active');
+            currentBlockType = parseInt(element.dataset.type);
+        }
+
+        // --- Генерация карты ---
         function generateWorld() {
-            const geometry = new THREE.BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-            
             for(let x = 0; x < WORLD_SIZE; x++) {
                 for(let z = 0; z < WORLD_SIZE; z++) {
-                    // Базовая высота земли
-                    let height = Math.floor(Math.sin(x*0.3) * Math.cos(z*0.3) * 2) + 2;
+                    let height = Math.floor(Math.sin(x*0.2) * Math.cos(z*0.2) * 2) + 3;
                     for(let y = 0; y <= height; y++) {
-                        let type = (y === height) ? 1 : 2; // Сверху трава, снизу камень
-                        createBlock(x, y, z, type, false);
+                        createBlock(x, y, z, (y === height) ? 1 : 2, false);
                     }
                 }
             }
@@ -174,7 +206,6 @@
             
             blocks[key] = { mesh: mesh, type: type };
 
-            // Если включена сеть, шлем инфу другу
             if (sync && connection && connection.open) {
                 connection.send({ type: 'PLACE', x, y, z, blockType: type });
             }
@@ -194,53 +225,67 @@
             }
         }
 
-        // --- Логика сети (PeerJS WebRTC) ---
+        // --- НАДЁЖНЫЙ WEB RTC С СЕРВЕРАМИ GOOGLE ---
         function initNetwork(isHost) {
-            // Создаем объект Peer. Он сам подключится к бесплатному серверу сигналов.
-            peer = new Peer();
+            statusEl.innerText = "Запуск сети...";
+            
+            // Конфигурируем соединение через бесплатные STUN сервера Google для обхода NAT
+            const peerConfig = {
+                config: {
+                    'iceServers': [
+                        { 'urls': 'stun:stun.l.google.com:19302' },
+                        { 'urls': 'stun:stun1.l.google.com:19302' },
+                        { 'urls': 'stun:stun2.l.google.com:19302' }
+                    ]
+                }
+            };
+
+            if(peer) peer.destroy();
+
+            peer = new Peer(undefined, peerConfig);
 
             peer.on('open', (id) => {
                 if (isHost) {
-                    document.getElementById('peer-id-display').innerText = "Твой ID комнаты: " + id;
-                    statusEl.innerText = "Статус: Ожидание друга...";
+                    const display = document.getElementById('peer-id-display');
+                    display.innerText = "ID МИРА: " + id;
+                    display.style.display = "block";
+                    statusEl.innerText = "Ждем друга (скинь ему ID)...";
+                    console.log("Peer ID создан: " + id);
+                } else {
+                    const targetId = document.getElementById('join-id').value.trim();
+                    if(!targetId) { statusEl.innerText = "Ошибка: Введи ID"; return; }
+                    statusEl.innerText = "Подключение к " + targetId + "...";
+                    connection = peer.connect(targetId, { reliable: true });
+                    setupConnection();
                 }
             });
 
             peer.on('error', (err) => {
-                alert("Ошибка WebRTC: " + err.type);
-                console.error(err);
+                statusEl.innerText = "Ошибка сети: " + err.type;
+                statusEl.style.color = "#ff8888";
+                console.error("PeerJS Error:", err);
             });
 
             if (isHost) {
-                // Хост ждет входящих подключений
                 peer.on('connection', (conn) => {
                     connection = conn;
                     setupConnection();
                 });
-            } else {
-                // Гость подключается сам
-                const targetId = document.getElementById('join-id').value.trim();
-                if(!targetId) { alert("Введи ID хоста!"); return; }
-                
-                statusEl.innerText = "Подключение...";
-                connection = peer.connect(targetId);
-                setupConnection();
             }
         }
 
         function setupConnection() {
             connection.on('open', () => {
-                statusEl.innerText = "Статус: Успешно подключено к другу!";
+                statusEl.innerText = "ИГРАЕМ ОНЛАЙН!";
                 statusEl.style.color = "#aaffaa";
                 
-                // Создаем 3D куб, который будет представлять нашего друга
-                const geometry = new THREE.BoxGeometry(0.6, 1.8, 0.6);
-                const material = new THREE.MeshLambertMaterial({ color: 0xff0000 });
+                // Создаем тело друга
+                const geometry = new THREE.BoxGeometry(0.5, 1.7, 0.5);
+                const material = new THREE.MeshLambertMaterial({ color: 0x3a6da8 });
                 remotePlayerMesh = new THREE.Mesh(geometry, material);
                 scene.add(remotePlayerMesh);
 
-                // Синхронизируем весь наш мир с зашедшим другом (если мы хост)
-                sendEntireWorld();
+                if (blocks) sendEntireWorld();
             });
 
             connection.on('data', (data) => {
@@ -251,14 +296,13 @@
                 } else if (data.type === 'PLACE') {
                     createBlock(data.x, data.y, data.z, data.blockType, false);
                 } else if (data.type === 'SYNC_WORLD') {
-                    // Полная перезапись мира у гостя при входе
                     clearAllBlocks();
                     data.worldData.forEach(b => createBlock(b.x, b.y, b.z, b.type, false));
                 }
             });
 
             connection.on('close', () => {
-                statusEl.innerText = "Друг отключился.";
+                statusEl.innerText = "Друг отключился";
                 statusEl.style.color = "#ff8888";
                 if(remotePlayerMesh) scene.remove(remotePlayerMesh);
             });
@@ -275,26 +319,21 @@
         }
 
         function clearAllBlocks() {
-            for (let key in blocks) {
-                scene.remove(blocks[key].mesh);
-            }
+            for (let key in blocks) scene.remove(blocks[key].mesh);
             blocks = {};
         }
 
-        // --- Управление персонажем и физика ---
-        function handleContainerKeys(e, isDown) {
+        // --- УПРАВЛЕНИЕ И МОБИЛЬНЫЙ АДАПТИВ ---
+        function handleKeys(e, isDown) {
             keys[e.code] = isDown;
-            if (e.code === 'KeyW') moveForward = isDown;
-            if (e.code === 'KeyS') moveBackward = isDown;
-            if (e.code === 'KeyA') moveLeft = isDown;
-            if (e.code === 'KeyD') moveRight = isDown;
+            if (e.code === 'KeyW') moveForward = isDown ? 1 : 0;
+            if (e.code === 'KeyS') moveBackward = isDown ? 1 : 0;
+            if (e.code === 'KeyA') moveLeft = isDown ? 1 : 0;
+            if (e.code === 'KeyD') moveRight = isDown ? 1 : 0;
             
-            // Выбор блоков на 1, 2, 3
             if (isDown && ['Digit1', 'Digit2', 'Digit3'].includes(e.code)) {
-                document.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
                 let idx = e.code === 'Digit1' ? 0 : e.code === 'Digit2' ? 1 : 2;
-                document.querySelectorAll('.slot')[idx].classList.add('active');
-                currentBlockType = idx + 1;
+                selectSlot(document.querySelectorAll('.slot')[idx]);
             }
         }
 
@@ -302,94 +341,186 @@
             if (document.pointerLockElement !== renderer.domElement) return;
             yaw -= e.movementX * mouseSensitivity;
             pitch -= e.movementY * mouseSensitivity;
-            pitch = Math.max(-Math.PI/2 + 0.01, Math.min(Math.PI/2 - 0.01, pitch));
+            pitch = Math.max(-Math.PI/2 + 0.05, Math.min(Math.PI/2 - 0.05, pitch));
         }
 
-        // Ломание и постановка блоков (Рейкастинг)
+        // Настройка тач-скрина для мобилок
+        function setupMobileControls() {
+            const dpad = document.getElementById('dpad');
+            const stick = document.getElementById('dpad-stick');
+
+            window.addEventListener('touchstart', (e) => {
+                isTouchDevice = true;
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    let t = e.changedTouches[i];
+                    
+                    // Если нажали в левую часть — это джойстик
+                    if (t.clientX < window.innerWidth / 2 && dpadTouchId === null) {
+                        dpadTouchId = t.identifier;
+                        let rect = dpad.getBoundingClientRect();
+                        dpadCenter.set(rect.left + rect.width/2, rect.top + rect.height/2);
+                        handleDpad(t.clientX, t.clientY);
+                    } 
+                    // Если в правую часть экрана — это вращение камеры или разрушение
+                    else if (t.clientX >= window.innerWidth / 2 && lookTouchId === null) {
+                        // Исключаем клики по кнопкам хотбара или прыжка
+                        if(e.target.closest('#action-buttons') || e.target.closest('#hotbar')) continue;
+                        lookTouchId = t.identifier;
+                        lookStartX = t.clientX;
+                        lookStartY = t.clientY;
+                    }
+                }
+            }, { passive: false });
+
+            window.addEventListener('touchmove', (e) => {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    let t = e.changedTouches[i];
+                    if (t.identifier === dpadTouchId) {
+                        handleDpad(t.clientX, t.clientY);
+                    } else if (t.identifier === lookTouchId) {
+                        let dx = t.clientX - lookStartX;
+                        let dy = t.clientY - lookStartY;
+                        yaw -= dx * 0.006;
+                        pitch -= dy * 0.006;
+                        pitch = Math.max(-Math.PI/2 + 0.05, Math.min(Math.PI/2 - 0.05, pitch));
+                        lookStartX = t.clientX;
+                        lookStartY = t.clientY;
+                    }
+                }
+            }, { passive: false });
+
+            const resetDpad = () => {
+                dpadTouchId = null;
+                moveForward = moveBackward = moveLeft = moveRight = 0;
+                stick.style.transform = `translate(0px, 0px)`;
+            };
+
+            window.addEventListener('touchend', (e) => {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    let t = e.changedTouches[i];
+                    if (t.identifier === dpadTouchId) {
+                        resetDpad();
+                    } else if (t.identifier === lookTouchId) {
+                        // Если палец просто тапнул по экрану без сильного движения — выполняем клик в мире
+                        let distance = Math.hypot(t.clientX - lookStartX, t.clientY - lookStartY);
+                        if(distance < 5) handleWorldInteraction(true); // Мобильное действие
+                        lookTouchId = null;
+                    }
+                }
+            });
+
+            function handleDpad(clientX, clientY) {
+                let dir = new THREE.Vector2(clientX - dpadCenter.x, clientY - dpadCenter.y);
+                let maxDist = 40;
+                if (dir.length() > maxDist) dir.setLength(maxDist);
+                stick.style.transform = `translate(${dir.x}px, ${dir.y}px)`;
+
+                // Переводим вектор смещения в WASD команды
+                moveForward = dir.y < -10 ? Math.abs(dir.y)/maxDist : 0;
+                moveBackward = dir.y > 10 ? dir.y/maxDist : 0;
+                moveLeft = dir.x < -10 ? Math.abs(dir.x)/maxDist : 0;
+                moveRight = dir.x > 10 ? dir.x/maxDist : 0;
+            }
+
+            // Кнопка переключения режимов строительства на мобилке
+            const modeBtn = document.getElementById('m-btn-mode');
+            modeBtn.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                mobileBuildMode = !mobileBuildMode;
+                modeBtn.innerHTML = mobileBuildMode ? "Режим:<br>СТАВИТЬ" : "Режим:<br>ЛОМАТЬ";
+                modeBtn.style.background = mobileBuildMode ? "#5c8e32" : "#3a6da8";
+            });
+
+            // Кнопка прыжка на мобилке
+            document.getElementById('m-btn-jump').addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                if (player.onGround) player.vel.y = 0.24;
+            });
+        }
+
+        // Клик в мире (ПК)
         function onMouseDown(e) {
-            if (document.pointerLockElement !== renderer.domElement) return;
+            if (document.pointerLockElement !== renderer.domElement || isTouchDevice) return;
+            handleWorldInteraction(e.button === 2); // true если правый клик
+        }
+
+        // Общая функция взаимодействия для ПК и Смартфонов
+        function handleWorldInteraction(isPlacingMode) {
+            // Если на мобилке, смотрим активный режим переключателя кнопки
+            if (isTouchDevice) isPlacingMode = mobileBuildMode;
 
             const raycaster = new THREE.Raycaster();
-            // Направляем луч строго из центра экрана
             raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-            
-            // Получаем список пересечений со всеми блоками сцены
             const meshes = Object.values(blocks).map(b => b.mesh);
             const intersects = raycaster.intersectObjects(meshes);
 
             if (intersects.length > 0 && intersects[0].distance < 6) {
                 const intersect = intersects[0];
+                const p = intersect.object.position;
                 
-                if (e.button === 0) { // Левый клик — сломать block
-                    const p = intersect.object.position;
+                if (!isPlacingMode) { 
                     removeBlock(p.x, p.y, p.z);
-                } 
-                else if (e.button === 2) { // Правый клик — поставить block
-                    // Вычисляем координату нового куба на основе грани, в которую кликнули
+                } else { 
                     const normal = intersect.face.normal;
-                    const p = intersect.object.position;
-                    const bx = Math.round(p.x + normal.x);
-                    const by = Math.round(p.y + normal.y);
-                    const bz = Math.round(p.z + normal.z);
-                    
-                    createBlock(bx, by, bz, currentBlockType);
+                    createBlock(Math.round(p.x + normal.x), Math.round(p.y + normal.y), Math.round(p.z + normal.z), currentBlockType);
                 }
             }
         }
 
-        // Главный цикл обновлений (60 FPS)
+        // Цикл обновлений кадров
         function animate() {
             requestAnimationFrame(animate);
 
-            // 1. Поворот камеры
+            // Поворот головы
             camera.rotation.set(0, 0, 0);
             camera.rotation.y = yaw;
             camera.rotation.x = pitch;
 
-            // 2. Движение и простая гравитация
-            const speed = 0.1;
+            // Расчет физики движения
+            const speed = 0.09;
             let moveVector = new THREE.Vector3();
 
-            if (moveForward) moveVector.z -= 1;
-            if (moveBackward) moveVector.z += 1;
-            if (moveLeft) moveVector.x -= 1;
-            if (moveRight) moveVector.x += 1;
+            if (moveForward) moveVector.z -= moveForward;
+            if (moveBackward) moveVector.z += moveBackward;
+            if (moveLeft) moveVector.x -= moveLeft;
+            if (moveRight) moveVector.x += moveRight;
+            
             moveVector.normalize();
-            moveVector.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw); // Движение относительно взгляда
+            moveVector.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw); 
 
             player.pos.x += moveVector.x * speed;
             player.pos.z += moveVector.z * speed;
 
-            // Гравитация и прыжок
-            player.vel.y -= 0.015; // Сила тяжести
+            // Гравитация
+            player.vel.y -= 0.013; 
             player.pos.y += player.vel.y;
 
-            // Упрощенная коллизия с землей (Y=1 как пол по умолчанию, если под ногами пусто)
-            let currentBlockKey = `${Math.round(player.pos.x)},${Math.round(player.pos.y - 1.5)},${Math.round(player.pos.z)}`;
+            // Простая коллизия с блоками под ногами
+            let currentBlockKey = `${Math.round(player.pos.x)},${Math.round(player.pos.y - 1.6)},${Math.round(player.pos.z)}`;
             let standingOnBlock = blocks[currentBlockKey];
 
             if (player.pos.y < 2 || standingOnBlock) {
-                player.pos.y = standingOnBlock ? Math.round(player.pos.y - 1.5) + 1.5 : 2;
+                player.pos.y = standingOnBlock ? Math.round(player.pos.y - 1.6) + 1.6 : 2;
                 player.vel.y = 0;
                 player.onGround = true;
             } else {
                 player.onGround = false;
             }
 
+            // Прыжок с клавиатуры ПК
             if (keys['Space'] && player.onGround) {
-                player.vel.y = 0.25; // Сила прыжка
+                player.vel.y = 0.24;
                 player.onGround = false;
             }
 
-            // Обновляем позицию камеры игрока
             camera.position.copy(player.pos);
 
-            // 3. Отправка позиции другу через WebRTC
+            // Синхронизация координат по сети
             if (connection && connection.open) {
                 connection.send({
                     type: 'MOVE',
                     x: player.pos.x,
-                    y: player.pos.y - 0.5, // Смещение куба друга к его "ногам"
+                    y: player.pos.y - 0.5, 
                     z: player.pos.z
                 });
             }
@@ -403,14 +534,10 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        // Блокируем стандартное контекстное меню по правому клику мыши (чтобы ставить кубы без помех)
-        document.addEventListener('contextmenu', event => event.preventDefault());
-
-        // Слушатели кнопок интерфейса сети
+        document.addEventListener('contextmenu', e => e.preventDefault());
         document.getElementById('btn-host').addEventListener('click', () => initNetwork(true));
         document.getElementById('btn-join').addEventListener('click', () => initNetwork(false));
 
-        // Старт движка при загрузке страницы
         window.onload = initEngine;
     </script>
 </body>
