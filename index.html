@@ -3,54 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Minecraft 3D Ultimate Mobile & PC</title>
+    <title>Minecraft 3D Fixed</title>
     <style>
-        body, html { margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; -webkit-user-select: none; touch-action: none; }
+        body, html { margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%; font-family: 'Segoe UI', Tahoma, sans-serif; user-select: none; -webkit-user-select: none; touch-action: none; background-color: #7ec0ee; }
         #canvas-container { width: 100%; height: 100%; display: block; position: absolute; top: 0; left: 0; z-index: 1; }
         
-        /* Интерфейс */
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; display: flex; flex-direction: column; justify-content: space-between; }
-        #crosshair { position: absolute; top: 50%; left: 50%; width: 16px; height: 16px; transform: translate(-50%, -50%); color: white; font-size: 24px; font-weight: 300; text-align: center; line-height: 14px; pointer-events: none; text-shadow: 1px 1px 2px #000; }
+        /* Интерфейс (строго абсолютное позиционирование) */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
         
-        /* Меню подключения */
-        #menu { position: absolute; top: 10px; left: 10px; background: rgba(20,20,20,0.85); padding: 12px; border-radius: 10px; color: white; pointer-events: auto; max-width: 280px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
-        #menu h3 { margin: 0 0 8px 0; font-size: 14px; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
-        input, button { width: 100%; padding: 10px; margin-bottom: 6px; border: none; border-radius: 6px; box-sizing: border-box; font-size: 13px; }
+        #crosshair { position: absolute; top: 50%; left: 50%; width: 20px; height: 20px; transform: translate(-50%, -50%); color: white; font-size: 24px; font-weight: 300; text-align: center; line-height: 18px; pointer-events: none; text-shadow: 1px 1px 2px #000; }
+        
+        /* Меню подключения (Левый верхний угол) */
+        #menu { position: absolute; top: 15px; left: 15px; background: rgba(20,20,20,0.85); padding: 12px; border-radius: 10px; color: white; pointer-events: auto; width: 220px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
+        #menu h3 { margin: 0 0 10px 0; font-size: 14px; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+        input, button { width: 100%; padding: 10px; margin-bottom: 8px; border: none; border-radius: 6px; box-sizing: border-box; font-size: 13px; }
         input { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
         input:focus { outline: none; border-color: #5c8e32; }
-        button { background: #5c8e32; color: white; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        button { background: #5c8e32; color: white; font-weight: bold; cursor: pointer; }
         button:hover { background: #4c7528; }
-        #peer-id-display { font-weight: bold; color: #aaffaa; word-break: break-all; margin-bottom: 6px; font-size: 11px; text-align: center; background: rgba(0,0,0,0.3); padding: 6px; border-radius: 4px; }
-        #status { font-size: 11px; color: #bbb; margin-top: 4px; text-align: center; }
+        #peer-id-display { font-weight: bold; color: #aaffaa; word-break: break-all; margin-bottom: 8px; font-size: 12px; text-align: center; background: rgba(0,0,0,0.4); padding: 6px; border-radius: 4px; }
+        #status { font-size: 12px; color: #bbb; text-align: center; margin-top: 5px; }
 
-        /* Хотбар */
-        #hotbar-container { width: 100%; display: flex; justify-content: center; margin-bottom: 15px; }
-        #hotbar { display: flex; background: rgba(30,30,30,0.85); padding: 4px; border: 2px solid #444; border-radius: 6px; pointer-events: auto; box-shadow: 0 5px 10px rgba(0,0,0,0.5); }
-        .slot { width: 45px; height: 45px; border: 2px solid #555; margin: 0 3px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 11px; border-radius: 4px; position: relative; cursor: pointer; text-shadow: 1px 1px 1px #000; }
+        /* Хотбар (Центр низ) */
+        #hotbar-container { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; pointer-events: auto; }
+        #hotbar { display: flex; background: rgba(30,30,30,0.85); padding: 4px; border: 2px solid #444; border-radius: 6px; box-shadow: 0 5px 10px rgba(0,0,0,0.5); }
+        .slot { width: 45px; height: 45px; border: 2px solid #555; margin: 0 3px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 11px; border-radius: 4px; cursor: pointer; text-shadow: 1px 1px 1px #000; }
         .slot.active { border-color: #fff; background: rgba(255,255,255,0.25); box-shadow: inset 0 0 5px #fff; }
         
         /* Мобильное управление */
-        #mobile-ui { display: none; position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        #mobile-ui { display: none; }
+        
         @media (pointer: coarse), (max-width: 800px) {
             #mobile-ui { display: block; }
             #instructions { display: none !important; }
-            #menu { max-width: 220px; padding: 8px; font-size: 11px; }
-            #menu h3 { font-size: 12px; }
-            input, button { padding: 8px; font-size: 11px; }
-            .slot { width: 38px; height: 38px; font-size: 9px; }
+            #menu { width: 180px; padding: 8px; top: 10px; left: 10px; }
+            #menu h3 { font-size: 12px; margin-bottom: 6px; }
+            input, button { padding: 8px; font-size: 11px; margin-bottom: 5px; }
+            .slot { width: 40px; height: 40px; font-size: 10px; }
+            #hotbar-container { bottom: 10px; }
         }
 
-        /* Джойстик перемещения */
-        #dpad { position: absolute; bottom: 20px; left: 20px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%; pointer-events: auto; border: 2px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; }
-        #dpad-stick { width: 50px; height: 50px; background: rgba(255,255,255,0.4); border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: transform 0.05s; }
+        /* Джойстик (Левый низ, поднят чтобы не мешать) */
+        #dpad { position: absolute; bottom: 80px; left: 20px; width: 110px; height: 110px; background: rgba(255,255,255,0.1); border-radius: 50%; pointer-events: auto; border: 2px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; }
+        #dpad-stick { width: 45px; height: 45px; background: rgba(255,255,255,0.5); border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: transform 0.05s; }
 
-        /* Кнопки действий справа */
-        #action-buttons { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; pointer-events: auto; }
+        /* Кнопки действий (Правый низ) */
+        #action-buttons { position: absolute; bottom: 80px; right: 20px; display: flex; flex-direction: column; gap: 15px; pointer-events: auto; }
         .m-btn { width: 60px; height: 60px; background: rgba(0,0,0,0.6); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; color: white; font-weight: bold; font-size: 11px; display: flex; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .m-btn:active { background: rgba(255,255,255,0.3); }
-        #m-btn-mode { background: #3a6da8; border-radius: 10px; width: 75px; height: 45px; }
+        #m-btn-mode { background: #3a6da8; border-radius: 12px; width: 70px; height: 50px; }
 
-        #instructions { position: absolute; bottom: 80px; left: 20px; color: white; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 6px; font-size: 12px; line-height: 1.4; border: 1px solid rgba(255,255,255,0.1); }
+        #instructions { position: absolute; bottom: 80px; left: 20px; color: white; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 6px; font-size: 12px; line-height: 1.4; pointer-events: none; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
@@ -62,7 +65,7 @@
     <div id="ui-layer">
         <div id="menu">
             <h3>Minecraft Online</h3>
-            <button id="btn-host">1. Создать мир (Хост)</button>
+            <button id="btn-host">1. Создать сервер</button>
             <div id="peer-id-display" style="display:none;"></div>
             <input type="text" id="join-id" placeholder="ID друга...">
             <button id="btn-join" style="background:#3a6da8;">2. Подключиться</button>
@@ -73,16 +76,13 @@
 
         <div id="instructions">
             <b>Управление (ПК):</b><br>
-            Клик по экрану — обзор мышью<br>
+            Клик — обзор мышью<br>
             WASD — Ходить | Space — Прыгнуть<br>
-            Левый клик — Сломать | Правый — Поставить<br>
-            Цифры 1, 2, 3 — Выбор блока
+            ЛКМ — Сломать | ПКМ — Поставить
         </div>
 
         <div id="mobile-ui">
-            <div id="dpad">
-                <div id="dpad-stick"></div>
-            </div>
+            <div id="dpad"><div id="dpad-stick"></div></div>
             <div id="action-buttons">
                 <div id="m-btn-mode" class="m-btn">Режим:<br>ЛОМАТЬ</div>
                 <div id="m-btn-jump" class="m-btn">Прыжок</div>
@@ -99,39 +99,29 @@
     </div>
 
     <script>
-        // --- Настройки игры ---
         const BLOCK_SIZE = 1;
         const WORLD_SIZE = 16;
         let currentBlockType = 1; 
-        let mobileBuildMode = false; // false = ломать, true = ставить (для мобилок)
+        let mobileBuildMode = false; 
         const blockColors = { 1: 0x5c8e32, 2: 0x888888, 3: 0xa06030 };
 
-        // --- Движок ---
         let scene, camera, renderer;
         let blocks = {}; 
-        let player = {
-            pos: new THREE.Vector3(8, 6, 8),
-            vel: new THREE.Vector3(),
-            onGround: false
-        };
+        let player = { pos: new THREE.Vector3(8, 6, 8), vel: new THREE.Vector3(), onGround: false };
         let remotePlayerMesh = null;
 
-        // --- Управление ---
         let keys = {};
-        let moveForward = 0, moveBackward = 0, moveLeft = 0, moveRight = 0; // Изменено на числовые значения для плавности джойстика
+        let moveForward = 0, moveBackward = 0, moveLeft = 0, moveRight = 0; 
         let yaw = 0, pitch = 0;
-        const mouseSensitivity = 0.002.5;
+        
+        // ВОТ ОНА, ТА САМАЯ ОПЕЧАТКА. ИСПРАВЛЕНО НА 0.0025
+        const mouseSensitivity = 0.0025; 
 
-        // --- Сенсорный ввод (Мобилки) ---
         let isTouchDevice = false;
-        let lookTouchId = null;
-        let lookStartX = 0, lookStartY = 0;
-        let dpadTouchId = null;
-        let dpadCenter = new THREE.Vector2();
+        let lookTouchId = null, lookStartX = 0, lookStartY = 0;
+        let dpadTouchId = null, dpadCenter = new THREE.Vector2();
 
-        // --- Сеть (PeerJS + STUN от Google) ---
-        let peer = null;
-        let connection = null;
+        let peer = null, connection = null;
         const statusEl = document.getElementById('status');
 
         function initEngine() {
@@ -143,10 +133,9 @@
             
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Оптимизация под Retina/4K экраны телефонов
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-            // Свет
             scene.add(new THREE.AmbientLight(0xffffff, 0.7));
             const sunLight = new THREE.DirectionalLight(0xffffff, 0.5);
             sunLight.position.set(20, 40, 20);
@@ -154,22 +143,17 @@
 
             generateWorld();
 
-            // Обработчики событий ПК
             window.addEventListener('resize', onWindowResize);
             document.addEventListener('keydown', (e) => handleKeys(e, true));
             document.addEventListener('keyup', (e) => handleKeys(e, false));
-            renderer.domElement.addEventListener('click', () => {
-                if(!isTouchDevice) renderer.domElement.requestPointerLock();
-            });
+            renderer.domElement.addEventListener('click', () => { if(!isTouchDevice) renderer.domElement.requestPointerLock(); });
             document.addEventListener('mousemove', onMouseMove);
             document.addEventListener('mousedown', onMouseDown);
 
-            // Обработчики мобильного тача
             setupMobileControls();
 
-            // Хотбар
             document.querySelectorAll('.slot').forEach(slot => {
-                slot.addEventListener('touchstart', (e) => selectSlot(e.target));
+                slot.addEventListener('touchstart', (e) => { e.preventDefault(); selectSlot(e.target); }, {passive: false});
                 slot.addEventListener('click', (e) => selectSlot(e.target));
             });
 
@@ -182,14 +166,11 @@
             currentBlockType = parseInt(element.dataset.type);
         }
 
-        // --- Генерация карты ---
         function generateWorld() {
             for(let x = 0; x < WORLD_SIZE; x++) {
                 for(let z = 0; z < WORLD_SIZE; z++) {
                     let height = Math.floor(Math.sin(x*0.2) * Math.cos(z*0.2) * 2) + 3;
-                    for(let y = 0; y <= height; y++) {
-                        createBlock(x, y, z, (y === height) ? 1 : 2, false);
-                    }
+                    for(let y = 0; y <= height; y++) createBlock(x, y, z, (y === height) ? 1 : 2, false);
                 }
             }
         }
@@ -197,140 +178,87 @@
         function createBlock(x, y, z, type, sync = true) {
             const key = `${x},${y},${z}`;
             if (blocks[key]) return;
-
-            const geometry = new THREE.BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-            const material = new THREE.MeshLambertMaterial({ color: blockColors[type] });
-            const mesh = new THREE.Mesh(geometry, material);
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE), new THREE.MeshLambertMaterial({ color: blockColors[type] }));
             mesh.position.set(x, y, z);
             scene.add(mesh);
-            
             blocks[key] = { mesh: mesh, type: type };
-
-            if (sync && connection && connection.open) {
-                connection.send({ type: 'PLACE', x, y, z, blockType: type });
-            }
+            if (sync && connection && connection.open) connection.send({ type: 'PLACE', x, y, z, blockType: type });
         }
 
         function removeBlock(x, y, z, sync = true) {
             const key = `${x},${y},${z}`;
             if (!blocks[key]) return;
-
             scene.remove(blocks[key].mesh);
             blocks[key].mesh.geometry.dispose();
             blocks[key].mesh.material.dispose();
             delete blocks[key];
-
-            if (sync && connection && connection.open) {
-                connection.send({ type: 'BREAK', x, y, z });
-            }
+            if (sync && connection && connection.open) connection.send({ type: 'BREAK', x, y, z });
         }
 
-        // --- НАДЁЖНЫЙ WEB RTC С СЕРВЕРАМИ GOOGLE ---
         function initNetwork(isHost) {
-            statusEl.innerText = "Запуск сети...";
-            
-            // Конфигурируем соединение через бесплатные STUN сервера Google для обхода NAT
-            const peerConfig = {
-                config: {
-                    'iceServers': [
-                        { 'urls': 'stun:stun.l.google.com:19302' },
-                        { 'urls': 'stun:stun1.l.google.com:19302' },
-                        { 'urls': 'stun:stun2.l.google.com:19302' }
-                    ]
-                }
-            };
-
+            statusEl.innerText = "Запуск сервера...";
             if(peer) peer.destroy();
 
-            peer = new Peer(undefined, peerConfig);
+            // Стабильные STUN серверы
+            peer = new Peer(undefined, {
+                config: { 'iceServers': [ { 'urls': 'stun:stun.l.google.com:19302' }, { 'urls': 'stun:stun1.l.google.com:19302' } ] }
+            });
 
             peer.on('open', (id) => {
                 if (isHost) {
                     const display = document.getElementById('peer-id-display');
-                    display.innerText = "ID МИРА: " + id;
+                    display.innerText = "ID: " + id;
                     display.style.display = "block";
-                    statusEl.innerText = "Ждем друга (скинь ему ID)...";
-                    console.log("Peer ID создан: " + id);
+                    statusEl.innerText = "Ждем друга (скинь ID)";
                 } else {
                     const targetId = document.getElementById('join-id').value.trim();
-                    if(!targetId) { statusEl.innerText = "Ошибка: Введи ID"; return; }
-                    statusEl.innerText = "Подключение к " + targetId + "...";
+                    if(!targetId) { statusEl.innerText = "Введи ID!"; return; }
+                    statusEl.innerText = "Подключение...";
                     connection = peer.connect(targetId, { reliable: true });
                     setupConnection();
                 }
             });
 
-            peer.on('error', (err) => {
-                statusEl.innerText = "Ошибка сети: " + err.type;
-                statusEl.style.color = "#ff8888";
-                console.error("PeerJS Error:", err);
-            });
+            peer.on('error', (err) => { statusEl.innerText = "Ошибка: " + err.type; statusEl.style.color = "#ff8888"; });
 
-            if (isHost) {
-                peer.on('connection', (conn) => {
-                    connection = conn;
-                    setupConnection();
-                });
-            }
+            if (isHost) peer.on('connection', (conn) => { connection = conn; setupConnection(); });
         }
 
         function setupConnection() {
             connection.on('open', () => {
                 statusEl.innerText = "ИГРАЕМ ОНЛАЙН!";
                 statusEl.style.color = "#aaffaa";
-                
-                // Создаем тело друга
-                const geometry = new THREE.BoxGeometry(0.5, 1.7, 0.5);
-                const material = new THREE.MeshLambertMaterial({ color: 0x3a6da8 });
-                remotePlayerMesh = new THREE.Mesh(geometry, material);
+                remotePlayerMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.7, 0.5), new THREE.MeshLambertMaterial({ color: 0x3a6da8 }));
                 scene.add(remotePlayerMesh);
-
                 if (blocks) sendEntireWorld();
             });
 
             connection.on('data', (data) => {
-                if (data.type === 'MOVE') {
-                    if (remotePlayerMesh) remotePlayerMesh.position.set(data.x, data.y, data.z);
-                } else if (data.type === 'BREAK') {
-                    removeBlock(data.x, data.y, data.z, false);
-                } else if (data.type === 'PLACE') {
-                    createBlock(data.x, data.y, data.z, data.blockType, false);
-                } else if (data.type === 'SYNC_WORLD') {
-                    clearAllBlocks();
+                if (data.type === 'MOVE') { if (remotePlayerMesh) remotePlayerMesh.position.set(data.x, data.y, data.z); } 
+                else if (data.type === 'BREAK') removeBlock(data.x, data.y, data.z, false);
+                else if (data.type === 'PLACE') createBlock(data.x, data.y, data.z, data.blockType, false);
+                else if (data.type === 'SYNC_WORLD') {
+                    for (let key in blocks) scene.remove(blocks[key].mesh);
+                    blocks = {};
                     data.worldData.forEach(b => createBlock(b.x, b.y, b.z, b.type, false));
                 }
             });
 
-            connection.on('close', () => {
-                statusEl.innerText = "Друг отключился";
-                statusEl.style.color = "#ff8888";
-                if(remotePlayerMesh) scene.remove(remotePlayerMesh);
-            });
+            connection.on('close', () => { statusEl.innerText = "Друг вышел"; statusEl.style.color = "#ff8888"; if(remotePlayerMesh) scene.remove(remotePlayerMesh); });
         }
 
         function sendEntireWorld() {
             if (!connection || !connection.open) return;
-            let worldData = [];
-            for (let key in blocks) {
-                let [x, y, z] = key.split(',').map(Number);
-                worldData.push({ x, y, z, type: blocks[key].type });
-            }
+            let worldData = Object.keys(blocks).map(k => { let [x, y, z] = k.split(',').map(Number); return { x, y, z, type: blocks[k].type }; });
             connection.send({ type: 'SYNC_WORLD', worldData });
         }
 
-        function clearAllBlocks() {
-            for (let key in blocks) scene.remove(blocks[key].mesh);
-            blocks = {};
-        }
-
-        // --- УПРАВЛЕНИЕ И МОБИЛЬНЫЙ АДАПТИВ ---
         function handleKeys(e, isDown) {
             keys[e.code] = isDown;
             if (e.code === 'KeyW') moveForward = isDown ? 1 : 0;
             if (e.code === 'KeyS') moveBackward = isDown ? 1 : 0;
             if (e.code === 'KeyA') moveLeft = isDown ? 1 : 0;
             if (e.code === 'KeyD') moveRight = isDown ? 1 : 0;
-            
             if (isDown && ['Digit1', 'Digit2', 'Digit3'].includes(e.code)) {
                 let idx = e.code === 'Digit1' ? 0 : e.code === 'Digit2' ? 1 : 2;
                 selectSlot(document.querySelectorAll('.slot')[idx]);
@@ -344,7 +272,6 @@
             pitch = Math.max(-Math.PI/2 + 0.05, Math.min(Math.PI/2 - 0.05, pitch));
         }
 
-        // Настройка тач-скрина для мобилок
         function setupMobileControls() {
             const dpad = document.getElementById('dpad');
             const stick = document.getElementById('dpad-stick');
@@ -353,21 +280,16 @@
                 isTouchDevice = true;
                 for (let i = 0; i < e.changedTouches.length; i++) {
                     let t = e.changedTouches[i];
-                    
-                    // Если нажали в левую часть — это джойстик
                     if (t.clientX < window.innerWidth / 2 && dpadTouchId === null) {
+                        if(e.target.closest('#menu') || e.target.closest('#hotbar')) continue;
                         dpadTouchId = t.identifier;
                         let rect = dpad.getBoundingClientRect();
                         dpadCenter.set(rect.left + rect.width/2, rect.top + rect.height/2);
                         handleDpad(t.clientX, t.clientY);
-                    } 
-                    // Если в правую часть экрана — это вращение камеры или разрушение
-                    else if (t.clientX >= window.innerWidth / 2 && lookTouchId === null) {
-                        // Исключаем клики по кнопкам хотбара или прыжка
-                        if(e.target.closest('#action-buttons') || e.target.closest('#hotbar')) continue;
+                    } else if (t.clientX >= window.innerWidth / 2 && lookTouchId === null) {
+                        if(e.target.closest('#action-buttons') || e.target.closest('#hotbar') || e.target.closest('#menu')) continue;
                         lookTouchId = t.identifier;
-                        lookStartX = t.clientX;
-                        lookStartY = t.clientY;
+                        lookStartX = t.clientX; lookStartY = t.clientY;
                     }
                 }
             }, { passive: false });
@@ -375,35 +297,23 @@
             window.addEventListener('touchmove', (e) => {
                 for (let i = 0; i < e.changedTouches.length; i++) {
                     let t = e.changedTouches[i];
-                    if (t.identifier === dpadTouchId) {
-                        handleDpad(t.clientX, t.clientY);
-                    } else if (t.identifier === lookTouchId) {
-                        let dx = t.clientX - lookStartX;
-                        let dy = t.clientY - lookStartY;
-                        yaw -= dx * 0.006;
-                        pitch -= dy * 0.006;
+                    if (t.identifier === dpadTouchId) handleDpad(t.clientX, t.clientY);
+                    else if (t.identifier === lookTouchId) {
+                        yaw -= (t.clientX - lookStartX) * 0.006;
+                        pitch -= (t.clientY - lookStartY) * 0.006;
                         pitch = Math.max(-Math.PI/2 + 0.05, Math.min(Math.PI/2 - 0.05, pitch));
-                        lookStartX = t.clientX;
-                        lookStartY = t.clientY;
+                        lookStartX = t.clientX; lookStartY = t.clientY;
                     }
                 }
             }, { passive: false });
-
-            const resetDpad = () => {
-                dpadTouchId = null;
-                moveForward = moveBackward = moveLeft = moveRight = 0;
-                stick.style.transform = `translate(0px, 0px)`;
-            };
 
             window.addEventListener('touchend', (e) => {
                 for (let i = 0; i < e.changedTouches.length; i++) {
                     let t = e.changedTouches[i];
                     if (t.identifier === dpadTouchId) {
-                        resetDpad();
+                        dpadTouchId = null; moveForward = moveBackward = moveLeft = moveRight = 0; stick.style.transform = `translate(0px, 0px)`;
                     } else if (t.identifier === lookTouchId) {
-                        // Если палец просто тапнул по экрану без сильного движения — выполняем клик в мире
-                        let distance = Math.hypot(t.clientX - lookStartX, t.clientY - lookStartY);
-                        if(distance < 5) handleWorldInteraction(true); // Мобильное действие
+                        if(Math.hypot(t.clientX - lookStartX, t.clientY - lookStartY) < 5) handleWorldInteraction(mobileBuildMode);
                         lookTouchId = null;
                     }
                 }
@@ -411,129 +321,67 @@
 
             function handleDpad(clientX, clientY) {
                 let dir = new THREE.Vector2(clientX - dpadCenter.x, clientY - dpadCenter.y);
-                let maxDist = 40;
-                if (dir.length() > maxDist) dir.setLength(maxDist);
+                if (dir.length() > 30) dir.setLength(30);
                 stick.style.transform = `translate(${dir.x}px, ${dir.y}px)`;
-
-                // Переводим вектор смещения в WASD команды
-                moveForward = dir.y < -10 ? Math.abs(dir.y)/maxDist : 0;
-                moveBackward = dir.y > 10 ? dir.y/maxDist : 0;
-                moveLeft = dir.x < -10 ? Math.abs(dir.x)/maxDist : 0;
-                moveRight = dir.x > 10 ? dir.x/maxDist : 0;
+                moveForward = dir.y < -10 ? Math.abs(dir.y)/30 : 0;
+                moveBackward = dir.y > 10 ? dir.y/30 : 0;
+                moveLeft = dir.x < -10 ? Math.abs(dir.x)/30 : 0;
+                moveRight = dir.x > 10 ? dir.x/30 : 0;
             }
 
-            // Кнопка переключения режимов строительства на мобилке
             const modeBtn = document.getElementById('m-btn-mode');
             modeBtn.addEventListener('touchstart', (e) => {
-                e.stopPropagation();
+                e.preventDefault(); e.stopPropagation();
                 mobileBuildMode = !mobileBuildMode;
                 modeBtn.innerHTML = mobileBuildMode ? "Режим:<br>СТАВИТЬ" : "Режим:<br>ЛОМАТЬ";
                 modeBtn.style.background = mobileBuildMode ? "#5c8e32" : "#3a6da8";
-            });
+            }, {passive: false});
 
-            // Кнопка прыжка на мобилке
-            document.getElementById('m-btn-jump').addEventListener('touchstart', (e) => {
-                e.stopPropagation();
-                if (player.onGround) player.vel.y = 0.24;
-            });
+            document.getElementById('m-btn-jump').addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); if (player.onGround) player.vel.y = 0.24; }, {passive: false});
         }
 
-        // Клик в мире (ПК)
-        function onMouseDown(e) {
-            if (document.pointerLockElement !== renderer.domElement || isTouchDevice) return;
-            handleWorldInteraction(e.button === 2); // true если правый клик
-        }
+        function onMouseDown(e) { if (document.pointerLockElement === renderer.domElement && !isTouchDevice) handleWorldInteraction(e.button === 2); }
 
-        // Общая функция взаимодействия для ПК и Смартфонов
-        function handleWorldInteraction(isPlacingMode) {
-            // Если на мобилке, смотрим активный режим переключателя кнопки
-            if (isTouchDevice) isPlacingMode = mobileBuildMode;
-
+        function handleWorldInteraction(isPlacing) {
             const raycaster = new THREE.Raycaster();
             raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-            const meshes = Object.values(blocks).map(b => b.mesh);
-            const intersects = raycaster.intersectObjects(meshes);
-
+            const intersects = raycaster.intersectObjects(Object.values(blocks).map(b => b.mesh));
             if (intersects.length > 0 && intersects[0].distance < 6) {
-                const intersect = intersects[0];
-                const p = intersect.object.position;
-                
-                if (!isPlacingMode) { 
-                    removeBlock(p.x, p.y, p.z);
-                } else { 
-                    const normal = intersect.face.normal;
-                    createBlock(Math.round(p.x + normal.x), Math.round(p.y + normal.y), Math.round(p.z + normal.z), currentBlockType);
-                }
+                const p = intersects[0].object.position;
+                if (!isPlacing) removeBlock(p.x, p.y, p.z);
+                else { const n = intersects[0].face.normal; createBlock(Math.round(p.x + n.x), Math.round(p.y + n.y), Math.round(p.z + n.z), currentBlockType); }
             }
         }
 
-        // Цикл обновлений кадров
         function animate() {
             requestAnimationFrame(animate);
+            camera.rotation.set(0, 0, 0); camera.rotation.y = yaw; camera.rotation.x = pitch;
 
-            // Поворот головы
-            camera.rotation.set(0, 0, 0);
-            camera.rotation.y = yaw;
-            camera.rotation.x = pitch;
-
-            // Расчет физики движения
-            const speed = 0.09;
             let moveVector = new THREE.Vector3();
-
             if (moveForward) moveVector.z -= moveForward;
             if (moveBackward) moveVector.z += moveBackward;
             if (moveLeft) moveVector.x -= moveLeft;
             if (moveRight) moveVector.x += moveRight;
-            
-            moveVector.normalize();
-            moveVector.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw); 
+            moveVector.normalize().applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw); 
 
-            player.pos.x += moveVector.x * speed;
-            player.pos.z += moveVector.z * speed;
+            player.pos.x += moveVector.x * 0.09;
+            player.pos.z += moveVector.z * 0.09;
+            player.vel.y -= 0.013; player.pos.y += player.vel.y;
 
-            // Гравитация
-            player.vel.y -= 0.013; 
-            player.pos.y += player.vel.y;
+            let standing = blocks[`${Math.round(player.pos.x)},${Math.round(player.pos.y - 1.6)},${Math.round(player.pos.z)}`];
+            if (player.pos.y < 2 || standing) {
+                player.pos.y = standing ? Math.round(player.pos.y - 1.6) + 1.6 : 2;
+                player.vel.y = 0; player.onGround = true;
+            } else player.onGround = false;
 
-            // Простая коллизия с блоками под ногами
-            let currentBlockKey = `${Math.round(player.pos.x)},${Math.round(player.pos.y - 1.6)},${Math.round(player.pos.z)}`;
-            let standingOnBlock = blocks[currentBlockKey];
-
-            if (player.pos.y < 2 || standingOnBlock) {
-                player.pos.y = standingOnBlock ? Math.round(player.pos.y - 1.6) + 1.6 : 2;
-                player.vel.y = 0;
-                player.onGround = true;
-            } else {
-                player.onGround = false;
-            }
-
-            // Прыжок с клавиатуры ПК
-            if (keys['Space'] && player.onGround) {
-                player.vel.y = 0.24;
-                player.onGround = false;
-            }
-
+            if (keys['Space'] && player.onGround) { player.vel.y = 0.24; player.onGround = false; }
             camera.position.copy(player.pos);
 
-            // Синхронизация координат по сети
-            if (connection && connection.open) {
-                connection.send({
-                    type: 'MOVE',
-                    x: player.pos.x,
-                    y: player.pos.y - 0.5, 
-                    z: player.pos.z
-                });
-            }
-
+            if (connection && connection.open) connection.send({ type: 'MOVE', x: player.pos.x, y: player.pos.y - 0.5, z: player.pos.z });
             renderer.render(scene, camera);
         }
 
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
+        function onWindowResize() { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); }
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.getElementById('btn-host').addEventListener('click', () => initNetwork(true));
         document.getElementById('btn-join').addEventListener('click', () => initNetwork(false));
