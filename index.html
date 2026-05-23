@@ -2,310 +2,416 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Terraria Online P2P</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft 3D WebRTC Edition</title>
     <style>
-        :root {
-            --t-blue: rgba(45, 50, 140, 0.9);
-            --t-gold: #e7c05e;
-            --t-border: #555;
-            --font: 'Press Start 2P', cursive;
-        }
-        * { box-sizing: border-box; touch-action: none; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #87CEEB; font-family: var(--font); }
+        body, html { margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%; font-family: sans-serif; user-select: none; }
+        #canvas-container { width: 100%; height: 100%; display: block; }
         
-        canvas { display: block; image-rendering: pixelated; }
-
-        /* ИНТЕРФЕЙС TERRARIA 1:1 */
-        .ui-panel {
-            position: absolute; background: var(--t-blue);
-            border: 3px solid var(--t-border); outline: 2px solid #000;
-            color: white; padding: 10px; z-index: 100;
-        }
-
-        /* Хотбар (Инвентарь) */
-        #hotbar {
-            top: 10px; left: 10px; display: flex; gap: 5px;
-            background: none; border: none; outline: none;
-        }
-        .slot {
-            width: 50px; height: 50px; background: rgba(60, 60, 180, 0.6);
-            border: 3px solid #333; display: flex; align-items: center;
-            justify-content: center; font-size: 14px; cursor: pointer;
-        }
-        .slot.active { border-color: var(--t-gold); background: rgba(100, 100, 255, 0.8); }
-
-        /* Панель игрока и онлайн */
-        #online-panel { top: 10px; right: 10px; width: 280px; font-size: 8px; }
-        #my-id-box { color: var(--t-gold); margin-bottom: 10px; cursor: pointer; border-bottom: 1px solid #555; padding-bottom: 5px; }
+        /* Интерфейс Майнкрафта */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; }
+        #crosshair { position: absolute; top: 50%; left: 50%; width: 16px; height: 16px; transform: translate(-50%, -50%); color: white; font-size: 20px; font-weight: bold; text-align: center; line-height: 14px; pointer-events: none; }
         
-        /* Клан и Чат */
-        #clan-panel { bottom: 20px; left: 10px; width: 320px; }
-        #chat-log { 
-            height: 120px; overflow-y: auto; background: rgba(0,0,0,0.3); 
-            padding: 5px; font-size: 8px; margin-bottom: 10px; line-height: 1.4;
-        }
-        .msg-clan { color: var(--t-gold); }
+        /* Меню подключения */
+        #menu { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 8px; color: white; pointer-events: auto; z-index: 100; max-width: 300px; }
+        #menu h3 { margin: 0 0 10px 0; font-size: 16px; text-align: center; }
+        input, button { width: 100%; padding: 8px; margin-bottom: 8px; border: none; border-radius: 4px; box-sizing: border-box; }
+        button { background: #5c8e32; color: white; font-weight: bold; cursor: pointer; }
+        button:hover { background: #4c7528; }
+        #peer-id-display { font-weight: bold; color: #aaffaa; word-break: break-all; margin-bottom: 8px; font-size: 12px; }
 
-        input {
-            background: rgba(0,0,0,0.4); border: 2px solid var(--t-border);
-            color: white; font-family: var(--font); font-size: 8px;
-            padding: 8px; width: 100%; margin: 4px 0;
-        }
-        button {
-            background: #4a4fb1; border: 2px solid var(--t-gold);
-            color: white; font-family: var(--font); font-size: 8px;
-            padding: 8px; width: 100%; cursor: pointer; margin-top: 5px;
-        }
-        button:active { background: #2d328c; }
-
-        /* Мобильное управление */
-        .joy {
-            position: absolute; bottom: 30px; width: 80px; height: 80px;
-            background: rgba(255,255,255,0.2); border: 3px solid #fff;
-            border-radius: 50%; z-index: 200; display: none;
-            align-items: center; justify-content: center; color: white;
-        }
-        @media (max-width: 900px) { .joy { display: flex; } }
-        #btn-l { left: 30px; }
-        #btn-r { left: 130px; }
-        #btn-j { right: 30px; width: 100px; height: 100px; }
+        /* Хотбар внизу */
+        #hotbar-container { width: 100%; display: flex; justify-content: center; margin-bottom: 20px; }
+        #hotbar { display: flex; background: rgba(0,0,0,0.5); padding: 4px; border: 2px solid #333; border-radius: 4px; pointer-events: auto; }
+        .slot { width: 40px; height: 40px; border: 2px solid #555; margin: 0 2px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; background-size: cover; position: relative; cursor: pointer; }
+        .slot.active { border-color: #fff; background: rgba(255,255,255,0.2); }
+        .slot::after { content: attr(data-key); position: absolute; top: 2px; left: 4px; font-size: 10px; color: #aaa; }
+        
+        #instructions { position: absolute; bottom: 80px; left: 20px; color: white; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; font-size: 12px; line-height: 1.5; }
     </style>
+    <!-- Подключаем Three.js и PeerJS для онлайна через надежные CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
 
-<div id="hotbar">
-    <div class="slot active" id="s0" onclick="setTool(0)">⛏️</div>
-    <div class="slot" id="s1" onclick="setTool(1)">🧱</div>
-    <div class="slot" id="s2" onclick="setTool(2)">🌳</div>
-</div>
+    <div id="canvas-container"></div>
 
-<div id="online-panel" class="ui-panel">
-    <div id="my-id-box" onclick="initNetwork()">ID: Загрузка... (нажми если долго)</div>
-    <input type="text" id="remote-id" placeholder="ID друга">
-    <button onclick="connectToPeer()">🔗 ПОДКЛЮЧИТЬСЯ</button>
-    <div style="margin-top:10px;">
-        КЛАН: <input type="text" id="clan-name" value="Terrarians" onchange="updateClan()">
+    <div id="ui-layer">
+        <!-- Меню сверху слева -->
+        <div id="menu">
+            <h3>Minecraft WebRTC</h3>
+            <button id="btn-host">1. Создать мир (Хост)</button>
+            <div id="peer-id-display"></div>
+            <hr style="border-color:#555;">
+            <input type="text" id="join-id" placeholder="Вставь ID друга здесь...">
+            <button id="btn-join" style="background:#3a6da8;">2. Подключиться к другу</button>
+            <div id="status" style="font-size:12px; color:#aaa; margin-top:5px;">Статус: Одиночная игра</div>
+        </div>
+
+        <div id="crosshair">+</div>
+
+        <div id="instructions">
+            <b>Управление:</b><br>
+            Клик по экрану — захват мыши<br>
+            WASD — Ходить | Space — Прыг<br>
+            Левый клик — Сломать блок<br>
+            Правый клик — Поставить блок<br>
+            Цифры 1, 2, 3 — Выбор блока
+        </div>
+
+        <!-- Нижняя панель выбора блоков -->
+        <div id="hotbar-container">
+            <div id="hotbar">
+                <div class="slot active" data-key="1" data-type="1" style="background-color: #5c8e32;">Земля</div>
+                <div class="slot" data-key="2" data-type="2" style="background-color: #888888;">Камень</div>
+                <div class="slot" data-key="3" data-type="3" style="background-color: #a06030;">Доски</div>
+            </div>
+        </div>
     </div>
-</div>
 
-<div id="clan-panel" class="ui-panel">
-    <div id="chat-log"></div>
-    <input type="text" id="chat-input" placeholder="Сообщение клану..." onkeydown="if(event.key==='Enter') sendChat()">
-</div>
+    <script>
+        // --- Настройки игры ---
+        const BLOCK_SIZE = 1;
+        const WORLD_SIZE = 16; // Размер острова 16х16 для стабильной производительности
+        let currentBlockType = 1; // 1: Трава, 2: Камень, 3: Доски
+        const blockColors = { 1: 0x5c8e32, 2: 0x888888, 3: 0xa06030 };
 
-<div id="btn-l" class="joy" ontouchstart="keys.KeyA=true" ontouchend="keys.KeyA=false">◀</div>
-<div id="btn-r" class="joy" ontouchstart="keys.KeyD=true" ontouchend="keys.KeyD=false">▶</div>
-<div id="btn-j" class="joy" ontouchstart="keys.KeyW=true" ontouchend="keys.KeyW=false">JUMP</div>
+        // --- Переменные Three.js ---
+        let scene, camera, renderer;
+        let blocks = {}; // Хранилище блоков мира по координатам "x,y,z"
+        let player = {
+            pos: new THREE.Vector3(8, 5, 8),
+            vel: new THREE.Vector3(),
+            onGround: false,
+            mesh: null // Сетка для отображения другого игрока
+        };
+        let remotePlayerMesh = null;
 
-<canvas id="game"></canvas>
+        // --- Управление и камера ---
+        let keys = {};
+        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+        let yaw = 0, pitch = 0;
+        const mouseSensitivity = 0.002;
 
-<script>
-/** КОНСТАНТЫ **/
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
-const TILE = 32;
-const MAP_SIZE = 64;
-let world = [];
-let camera = { x: 0, y: 0 };
-let keys = {};
+        // --- Сетевой код (PeerJS WebRTC) ---
+        let peer = null;
+        let connection = null;
+        const statusEl = document.getElementById('status');
 
-/** ИГРОК **/
-let me = {
-    x: 500, y: 300, vx: 0, vy: 0,
-    w: 20, h: 42, grounded: false,
-    name: "Игрок" + Math.floor(Math.random()*99),
-    clan: "Terrarians",
-    tool: 0
-};
-let players = {};
+        // Инициализация графики
+        function initEngine() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x7ec0ee); // Небо
+            scene.fog = new THREE.FogExp2(0x7ec0ee, 0.05);
 
-/** СЕТЬ (ОНЛАЙН) **/
-let peer = null;
-let conns = [];
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-function initNetwork() {
-    if(peer) peer.destroy();
-    document.getElementById('my-id-box').innerText = "Генерация ID...";
-    
-    peer = new Peer();
-    
-    peer.on('open', id => {
-        document.getElementById('my-id-box').innerText = "ВАШ ID: " + id;
-        console.log("My ID:", id);
-    });
+            // Освещение
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            const sunLight = new THREE.DirectionalLight(0xffffff, 0.6);
+            sunLight.position.set(10, 20, 15);
+            scene.add(sunLight);
 
-    peer.on('connection', conn => {
-        setupConn(conn);
-    });
+            // Генерация начальной карты (плоский мир с небольшими холмами)
+            generateWorld();
 
-    peer.on('error', err => {
-        console.error(err);
-        document.getElementById('my-id-box').innerText = "ОШИБКА СЕТИ (Нажми)";
-    });
-}
+            // Привязка событий управления
+            window.addEventListener('resize', onWindowResize);
+            document.addEventListener('keydown', (e) => handleContainerKeys(e, true));
+            document.addEventListener('keyup', (e) => handleContainerKeys(e, false));
+            
+            // Захват мыши при клике по экрану
+            renderer.domElement.addEventListener('click', () => {
+                renderer.domElement.requestPointerLock();
+            });
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mousedown', onMouseDown);
 
-function connectToPeer() {
-    const rid = document.getElementById('remote-id').value;
-    if(!rid) return;
-    const conn = peer.connect(rid);
-    setupConn(conn);
-}
+            // Хотбар переключение мышед кликом
+            document.querySelectorAll('.slot').forEach(slot => {
+                slot.addEventListener('click', (e) => {
+                    document.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentBlockType = parseInt(e.target.dataset.type);
+                });
+            });
 
-function setupConn(conn) {
-    conn.on('open', () => {
-        conns.push(conn);
-        addMsg("СИСТЕМА", "Игрок подключен!");
-        conn.send({ type: 'sync_world', world: world });
-    });
-    conn.on('data', data => {
-        if(data.type === 'sync_world') world = data.world;
-        if(data.type === 'pos') players[data.id] = data.data;
-        if(data.type === 'block') world[data.x][data.y] = data.v;
-        if(data.type === 'chat' && data.clan === me.clan) {
-            addMsg(data.name, data.txt, true);
+            // Запуск цикла анимации
+            animate();
         }
-    });
-}
 
-function broadcast(obj) {
-    conns.forEach(c => c.send(obj));
-}
-
-/** МИР **/
-function genWorld() {
-    for(let x=0; x<MAP_SIZE; x++) {
-        world[x] = [];
-        for(let y=0; y<MAP_SIZE; y++) {
-            let type = 0;
-            if(y > 20) type = 1; // трава
-            if(y > 25) type = 2; // камень
-            world[x][y] = type;
+        // --- Генерация вокселей ---
+        function generateWorld() {
+            const geometry = new THREE.BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+            
+            for(let x = 0; x < WORLD_SIZE; x++) {
+                for(let z = 0; z < WORLD_SIZE; z++) {
+                    // Базовая высота земли
+                    let height = Math.floor(Math.sin(x*0.3) * Math.cos(z*0.3) * 2) + 2;
+                    for(let y = 0; y <= height; y++) {
+                        let type = (y === height) ? 1 : 2; // Сверху трава, снизу камень
+                        createBlock(x, y, z, type, false);
+                    }
+                }
+            }
         }
-    }
-}
 
-/** ЛОГИКА **/
-window.onkeydown = e => keys[e.code] = true;
-window.onkeyup = e => keys[e.code] = false;
+        function createBlock(x, y, z, type, sync = true) {
+            const key = `${x},${y},${z}`;
+            if (blocks[key]) return;
 
-function updateClan() {
-    me.clan = document.getElementById('clan-name').value;
-    addMsg("СИСТЕМА", "Вы вошли в клан " + me.clan);
-}
+            const geometry = new THREE.BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+            const material = new THREE.MeshLambertMaterial({ color: blockColors[type] });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.set(x, y, z);
+            scene.add(mesh);
+            
+            blocks[key] = { mesh: mesh, type: type };
 
-function sendChat() {
-    const inp = document.getElementById('chat-input');
-    if(!inp.value) return;
-    broadcast({ type: 'chat', clan: me.clan, name: me.name, txt: inp.value });
-    addMsg(me.name, inp.value, true);
-    inp.value = "";
-}
-
-function addMsg(name, txt, isClan = false) {
-    const log = document.getElementById('chat-log');
-    log.innerHTML += `<div class="${isClan?'msg-clan':''}">[${name}]: ${txt}</div>`;
-    log.scrollTop = log.scrollHeight;
-}
-
-function setTool(id) {
-    me.tool = id;
-    document.querySelectorAll('.slot').forEach((s, i) => s.classList.toggle('active', i === id));
-}
-
-function loop() {
-    // Движение
-    if(keys.KeyA) me.vx = -4;
-    else if(keys.KeyD) me.vx = 4;
-    else me.vx *= 0.8;
-
-    if(keys.KeyW && me.grounded) { me.vy = -10; me.grounded = false; }
-    
-    me.vy += 0.5; // гравитация
-    me.x += me.vx;
-    me.y += me.vy;
-
-    // Коллизии
-    let tx = Math.floor((me.x + me.w/2) / TILE);
-    let ty = Math.floor((me.y + me.h) / TILE);
-    if(world[tx] && world[tx][ty] > 0) {
-        me.y = ty * TILE - me.h;
-        me.vy = 0;
-        me.grounded = true;
-    } else {
-        me.grounded = false;
-    }
-
-    // Камера
-    camera.x += (me.x - canvas.width/2 - camera.x) * 0.1;
-    camera.y += (me.y - canvas.height/2 - camera.y) * 0.1;
-
-    // Сетевая синхронизация
-    if(peer && peer.id) {
-        broadcast({ type: 'pos', id: peer.id, data: { x: me.x, y: me.y, clan: me.clan, name: me.name } });
-    }
-
-    draw();
-    requestAnimationFrame(loop);
-}
-
-function draw() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    ctx.clearRect(0,0, canvas.width, canvas.height);
-
-    ctx.save();
-    ctx.translate(-camera.x, -camera.y);
-
-    // Рисуем блоки
-    for(let x=0; x<MAP_SIZE; x++) {
-        for(let y=0; y<MAP_SIZE; y++) {
-            if(world[x][y] === 0) continue;
-            ctx.fillStyle = world[x][y] === 1 ? '#3a9d23' : '#757575';
-            ctx.fillRect(x*TILE, y*TILE, TILE, TILE);
-            ctx.strokeStyle = 'rgba(0,0,0,0.1)';
-            ctx.strokeRect(x*TILE, y*TILE, TILE, TILE);
+            // Если включена сеть, шлем инфу другу
+            if (sync && connection && connection.open) {
+                connection.send({ type: 'PLACE', x, y, z, blockType: type });
+            }
         }
-    }
 
-    // Другие игроки
-    for(let id in players) {
-        let p = players[id];
-        ctx.fillStyle = "#e57373";
-        ctx.fillRect(p.x, p.y, me.w, me.h);
-        ctx.fillStyle = "white";
-        ctx.font = "8px 'Press Start 2P'";
-        ctx.fillText(p.name, p.x - 10, p.y - 20);
-        ctx.fillStyle = "gold";
-        ctx.fillText(`<${p.clan}>`, p.x - 10, p.y - 8);
-    }
+        function removeBlock(x, y, z, sync = true) {
+            const key = `${x},${y},${z}`;
+            if (!blocks[key]) return;
 
-    // Я
-    ctx.fillStyle = "#4fc3f7";
-    ctx.fillRect(me.x, me.y, me.w, me.h);
-    ctx.strokeStyle = "white";
-    ctx.strokeRect(me.x, me.y, me.w, me.h);
+            scene.remove(blocks[key].mesh);
+            blocks[key].mesh.geometry.dispose();
+            blocks[key].mesh.material.dispose();
+            delete blocks[key];
 
-    ctx.restore();
-}
+            if (sync && connection && connection.open) {
+                connection.send({ type: 'BREAK', x, y, z });
+            }
+        }
 
-// Взаимодействие (Клик)
-canvas.onmousedown = e => {
-    let rx = Math.floor((e.clientX + camera.x) / TILE);
-    let ry = Math.floor((e.clientY + camera.y) / TILE);
-    if(rx < 0 || ry < 0 || rx >= MAP_SIZE || ry >= MAP_SIZE) return;
+        // --- Логика сети (PeerJS WebRTC) ---
+        function initNetwork(isHost) {
+            // Создаем объект Peer. Он сам подключится к бесплатному серверу сигналов.
+            peer = new Peer();
 
-    let val = me.tool === 0 ? 0 : 2;
-    world[rx][ry] = val;
-    broadcast({ type: 'block', x: rx, y: ry, v: val });
-};
+            peer.on('open', (id) => {
+                if (isHost) {
+                    document.getElementById('peer-id-display').innerText = "Твой ID комнаты: " + id;
+                    statusEl.innerText = "Статус: Ожидание друга...";
+                }
+            });
 
-// СТАРТ
-genWorld();
-initNetwork();
-loop();
-</script>
+            peer.on('error', (err) => {
+                alert("Ошибка WebRTC: " + err.type);
+                console.error(err);
+            });
+
+            if (isHost) {
+                // Хост ждет входящих подключений
+                peer.on('connection', (conn) => {
+                    connection = conn;
+                    setupConnection();
+                });
+            } else {
+                // Гость подключается сам
+                const targetId = document.getElementById('join-id').value.trim();
+                if(!targetId) { alert("Введи ID хоста!"); return; }
+                
+                statusEl.innerText = "Подключение...";
+                connection = peer.connect(targetId);
+                setupConnection();
+            }
+        }
+
+        function setupConnection() {
+            connection.on('open', () => {
+                statusEl.innerText = "Статус: Успешно подключено к другу!";
+                statusEl.style.color = "#aaffaa";
+                
+                // Создаем 3D куб, который будет представлять нашего друга
+                const geometry = new THREE.BoxGeometry(0.6, 1.8, 0.6);
+                const material = new THREE.MeshLambertMaterial({ color: 0xff0000 });
+                remotePlayerMesh = new THREE.Mesh(geometry, material);
+                scene.add(remotePlayerMesh);
+
+                // Синхронизируем весь наш мир с зашедшим другом (если мы хост)
+                sendEntireWorld();
+            });
+
+            connection.on('data', (data) => {
+                if (data.type === 'MOVE') {
+                    if (remotePlayerMesh) remotePlayerMesh.position.set(data.x, data.y, data.z);
+                } else if (data.type === 'BREAK') {
+                    removeBlock(data.x, data.y, data.z, false);
+                } else if (data.type === 'PLACE') {
+                    createBlock(data.x, data.y, data.z, data.blockType, false);
+                } else if (data.type === 'SYNC_WORLD') {
+                    // Полная перезапись мира у гостя при входе
+                    clearAllBlocks();
+                    data.worldData.forEach(b => createBlock(b.x, b.y, b.z, b.type, false));
+                }
+            });
+
+            connection.on('close', () => {
+                statusEl.innerText = "Друг отключился.";
+                statusEl.style.color = "#ff8888";
+                if(remotePlayerMesh) scene.remove(remotePlayerMesh);
+            });
+        }
+
+        function sendEntireWorld() {
+            if (!connection || !connection.open) return;
+            let worldData = [];
+            for (let key in blocks) {
+                let [x, y, z] = key.split(',').map(Number);
+                worldData.push({ x, y, z, type: blocks[key].type });
+            }
+            connection.send({ type: 'SYNC_WORLD', worldData });
+        }
+
+        function clearAllBlocks() {
+            for (let key in blocks) {
+                scene.remove(blocks[key].mesh);
+            }
+            blocks = {};
+        }
+
+        // --- Управление персонажем и физика ---
+        function handleContainerKeys(e, isDown) {
+            keys[e.code] = isDown;
+            if (e.code === 'KeyW') moveForward = isDown;
+            if (e.code === 'KeyS') moveBackward = isDown;
+            if (e.code === 'KeyA') moveLeft = isDown;
+            if (e.code === 'KeyD') moveRight = isDown;
+            
+            // Выбор блоков на 1, 2, 3
+            if (isDown && ['Digit1', 'Digit2', 'Digit3'].includes(e.code)) {
+                document.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
+                let idx = e.code === 'Digit1' ? 0 : e.code === 'Digit2' ? 1 : 2;
+                document.querySelectorAll('.slot')[idx].classList.add('active');
+                currentBlockType = idx + 1;
+            }
+        }
+
+        function onMouseMove(e) {
+            if (document.pointerLockElement !== renderer.domElement) return;
+            yaw -= e.movementX * mouseSensitivity;
+            pitch -= e.movementY * mouseSensitivity;
+            pitch = Math.max(-Math.PI/2 + 0.01, Math.min(Math.PI/2 - 0.01, pitch));
+        }
+
+        // Ломание и постановка блоков (Рейкастинг)
+        function onMouseDown(e) {
+            if (document.pointerLockElement !== renderer.domElement) return;
+
+            const raycaster = new THREE.Raycaster();
+            // Направляем луч строго из центра экрана
+            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+            
+            // Получаем список пересечений со всеми блоками сцены
+            const meshes = Object.values(blocks).map(b => b.mesh);
+            const intersects = raycaster.intersectObjects(meshes);
+
+            if (intersects.length > 0 && intersects[0].distance < 6) {
+                const intersect = intersects[0];
+                
+                if (e.button === 0) { // Левый клик — сломать block
+                    const p = intersect.object.position;
+                    removeBlock(p.x, p.y, p.z);
+                } 
+                else if (e.button === 2) { // Правый клик — поставить block
+                    // Вычисляем координату нового куба на основе грани, в которую кликнули
+                    const normal = intersect.face.normal;
+                    const p = intersect.object.position;
+                    const bx = Math.round(p.x + normal.x);
+                    const by = Math.round(p.y + normal.y);
+                    const bz = Math.round(p.z + normal.z);
+                    
+                    createBlock(bx, by, bz, currentBlockType);
+                }
+            }
+        }
+
+        // Главный цикл обновлений (60 FPS)
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // 1. Поворот камеры
+            camera.rotation.set(0, 0, 0);
+            camera.rotation.y = yaw;
+            camera.rotation.x = pitch;
+
+            // 2. Движение и простая гравитация
+            const speed = 0.1;
+            let moveVector = new THREE.Vector3();
+
+            if (moveForward) moveVector.z -= 1;
+            if (moveBackward) moveVector.z += 1;
+            if (moveLeft) moveVector.x -= 1;
+            if (moveRight) moveVector.x += 1;
+            moveVector.normalize();
+            moveVector.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw); // Движение относительно взгляда
+
+            player.pos.x += moveVector.x * speed;
+            player.pos.z += moveVector.z * speed;
+
+            // Гравитация и прыжок
+            player.vel.y -= 0.015; // Сила тяжести
+            player.pos.y += player.vel.y;
+
+            // Упрощенная коллизия с землей (Y=1 как пол по умолчанию, если под ногами пусто)
+            let currentBlockKey = `${Math.round(player.pos.x)},${Math.round(player.pos.y - 1.5)},${Math.round(player.pos.z)}`;
+            let standingOnBlock = blocks[currentBlockKey];
+
+            if (player.pos.y < 2 || standingOnBlock) {
+                player.pos.y = standingOnBlock ? Math.round(player.pos.y - 1.5) + 1.5 : 2;
+                player.vel.y = 0;
+                player.onGround = true;
+            } else {
+                player.onGround = false;
+            }
+
+            if (keys['Space'] && player.onGround) {
+                player.vel.y = 0.25; // Сила прыжка
+                player.onGround = false;
+            }
+
+            // Обновляем позицию камеры игрока
+            camera.position.copy(player.pos);
+
+            // 3. Отправка позиции другу через WebRTC
+            if (connection && connection.open) {
+                connection.send({
+                    type: 'MOVE',
+                    x: player.pos.x,
+                    y: player.pos.y - 0.5, // Смещение куба друга к его "ногам"
+                    z: player.pos.z
+                });
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Блокируем стандартное контекстное меню по правому клику мыши (чтобы ставить кубы без помех)
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Слушатели кнопок интерфейса сети
+        document.getElementById('btn-host').addEventListener('click', () => initNetwork(true));
+        document.getElementById('btn-join').addEventListener('click', () => initNetwork(false));
+
+        // Старт движка при загрузке страницы
+        window.onload = initEngine;
+    </script>
 </body>
 </html>
