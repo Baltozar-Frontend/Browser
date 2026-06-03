@@ -3,59 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P2P Надежный Чат</title>
-    <!-- Иконки и библиотека PeerJS для прямого P2P соединения -->
+    <title>TG Private Clone v2</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     
-    <!-- PWA Manifest -->
-    <link rel="manifest" href='data:application/manifest+json,{"name":"P2P Чат","short_name":"P2P","start_url":".","display":"standalone","background_color":"#0e1621","theme_color":"#17212b","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/2525/2525779.png","sizes":"512x512","type":"image/png"}]}'>
+    <link rel="manifest" href='data:application/manifest+json,{"name":"Наш Мессенджер","short_name":"Чат","start_url":".","display":"standalone","background_color":"#0e1621","theme_color":"#17212b","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/2525/2525779.png","sizes":"512x512","type":"image/png"}]}'>
 </head>
 <body>
 
 <div class="app-container">
-    <!-- Сайдбар (Контакты) -->
     <aside class="sidebar">
-        <div class="header">
-            <h3>Контакты</h3>
-            <button onclick="connectToPeer()" title="Подключиться к другу"><i class="fas fa-user-plus"></i></button>
+        <div class="sidebar-header">
+            <h3>Группы / Комнаты</h3>
+            <button onclick="joinRoom()" title="Войти в комнату"><i class="fas fa-plus"></i></button>
         </div>
-        <div class="contacts-list" id="contactsList">
-            <!-- Сюда будут падать активные диалоги -->
-        </div>
-        <div class="user-profile">
-            <div class="profile-meta">
-                <span class="user-label">Ваш Ник: <b id="myNickDisplay">Юзер</b> <i class="fas fa-edit edit-nick" onclick="changeNickname()"></i></span>
-                <span class="user-id-text" onclick="copyMyId()" title="Кликни, чтобы скопировать">
-                    ID: <span id="myIdDisplay">Генерация...</span> <i class="far fa-copy"></i>
-                </span>
+        
+        <div class="rooms-list" id="roomsList">
             </div>
+
+        <div class="profile-zone">
+            <div class="profile-info">
+                <div class="my-avatar" id="myAvatar">U</div>
+                <div class="profile-meta">
+                    <span id="myNickDisplay">Загрузка...</span>
+                    <small onclick="changeNickname()">Сменить ник <i class="fas fa-pen"></i></small>
+                </div>
+            </div>
+            <div class="status-indicator" id="netStatus" title="Статус подключения"></div>
         </div>
     </aside>
 
-    <!-- Чат -->
     <main class="chat-area">
-        <div class="chat-header">
-            <div class="chat-info">
-                <h3 id="chatTitle">Выберите собеседника</h3>
-                <p id="chatStatus">Статус: нет соединения</p>
+        <div class="chat-header" id="chatHeader" style="display: none;">
+            <div class="chat-title-info">
+                <h3 id="currentRoomTitle">Название комнаты</h3>
+                <p id="currentRoomKey">Ключ: ...</p>
             </div>
         </div>
 
         <div class="messages-container" id="messagesContainer">
-            <div class="welcome-msg">
-                <i class="fas fa-shield-alt" style="font-size: 3rem; color: var(--accent); margin-bottom: 15px;"></i>
-                <br>
-                <b>Это полностью прямой P2P-мессенджер.</b><br><br>
-                1. Скопируйте ваш ID в левом нижнем углу и отправьте другу.<br>
-                2. Или нажмите на плюс сверху и введите ID друга.<br>
-                Сообщения идут напрямую между устройствами.
+            <div class="intro-screen">
+                <i class="fas fa-paper-plane plane-icon"></i>
+                <h2>Наш приватный чат</h2>
+                <p>1. Нажмите на <b>плюсик</b> слева.</p>
+                <p>2. Придумайте секретное имя комнаты (например: <code>bratva777</code>).</p>
+                <p>3. Скажите это имя друзьям — они войдут и вы сразу в сети!</p>
             </div>
         </div>
 
-        <form class="input-area" onsubmit="sendMessage(event)">
-            <input type="text" id="messageInput" placeholder="Напишите сообщение..." autocomplete="off" disabled>
-            <button type="submit" id="sendBtn" disabled><i class="fas fa-paper-plane"></i></button>
+        <form class="input-form" onsubmit="handleSend(event)">
+            <input type="text" id="msgInput" placeholder="Напишите сообщение..." autocomplete="off" disabled>
+            <button type="submit" id="sendBtn" disabled><i class="fas fa-arrow-up"></i></button>
         </form>
     </main>
 </div>
@@ -64,300 +61,283 @@
     :root {
         --bg-main: #0e1621;
         --bg-sidebar: #17212b;
-        --bg-chat: #182533;
-        --text-color: #f5f5f5;
-        --text-muted: #7f91a4;
+        --bg-chat: #0f172a;
+        --text: #f5f5f5;
+        --text-muted: #6c7a89;
         --accent: #2481cc;
-        --accent-hover: #2f93de;
         --msg-out: #2b5278;
         --msg-in: #182533;
         --border: #101924;
-        --status-online: #4ade80;
-        --status-offline: #f87171;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-    body { background-color: var(--bg-main); color: var(--text-color); height: 100vh; overflow: hidden; }
+    body { background: var(--bg-main); color: var(--text); height: 100vh; overflow: hidden; }
+    
     .app-container { display: flex; height: 100vh; width: 100vw; }
 
     /* Сайдбар */
     .sidebar { width: 300px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
-    .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-    .header button { background: var(--accent); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; transition: 0.2s; }
-    .header button:hover { background: var(--accent-hover); }
+    .sidebar-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+    .sidebar-header button { background: var(--accent); border: none; color: white; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; }
     
-    .contacts-list { flex: 1; overflow-y: auto; }
-    .contact-item { padding: 15px 20px; display: flex; align-items: center; cursor: pointer; border-bottom: 1px solid var(--border); gap: 12px; }
-    .contact-item:hover, .contact-item.active { background: #202b36; }
-    .contact-avatar { width: 40px; height: 40px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-    .contact-info { flex: 1; }
-    .contact-info h4 { font-size: 0.95rem; font-weight: 500; }
-    .contact-info p { font-size: 0.8rem; color: var(--text-muted); }
-
-    .user-profile { padding: 15px 20px; border-top: 1px solid var(--border); background: #111921; }
-    .profile-meta { display: flex; flex-direction: column; gap: 5px; }
-    .user-label { font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
-    .edit-nick { cursor: pointer; color: var(--text-muted); }
-    .edit-nick:hover { color: white; }
-    .user-id-text { font-size: 0.75rem; color: var(--text-muted); cursor: pointer; background: #182533; padding: 6px; border-radius: 4px; border: 1px solid var(--border); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .user-id-text:hover { color: white; background: #1c2a3a; }
+    .rooms-list { flex: 1; overflow-y: auto; }
+    .room-item { padding: 15px 20px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 12px; }
+    .room-item:hover, .room-item.active { background: #202b36; }
+    .room-icon { width: 40px; height: 40px; background: #2e3b4e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    
+    .profile-zone { padding: 15px 20px; background: #111921; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .profile-info { display: flex; align-items: center; gap: 10px; }
+    .my-avatar { width: 35px; height: 35px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    .profile-meta { display: flex; flex-direction: column; }
+    .profile-meta small { color: var(--accent); cursor: pointer; font-size: 0.75rem; margin-top: 2px; }
+    .status-indicator { width: 12px; height: 12px; border-radius: 50%; background: #ef4444; transition: 0.3s; }
+    .status-indicator.online { background: #10b981; box-shadow: 0 0 8px #10b981; }
 
     /* Чат */
     .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-chat); }
     .chat-header { padding: 15px 20px; background: var(--bg-sidebar); border-bottom: 1px solid var(--border); }
-    .chat-info h3 { font-size: 1.05rem; }
-    .chat-info p { font-size: 0.8rem; color: var(--text-muted); }
+    .chat-title-info h3 { font-size: 1.05rem; }
+    .chat-title-info p { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
 
-    .messages-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-    .welcome-msg { text-align: center; color: var(--text-muted); margin: auto; max-width: 400px; line-height: 1.5; }
-    
-    .msg { max-width: 65%; padding: 10px 14px; border-radius: 12px; position: relative; animation: fadeIn 0.15s ease; word-break: break-word; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
-    
-    .msg.incoming { background: var(--msg-in); align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid var(--border); }
-    .msg.outgoing { background: var(--msg-out); align-self: flex-end; border-bottom-right-radius: 4px; }
-    
-    .msg .text { font-size: 0.95rem; }
-    .msg .meta-box { display: flex; justify-content: flex-end; align-items: center; gap: 5px; margin-top: 4px; }
-    .msg .time { font-size: 0.65rem; color: var(--text-muted); }
-    .msg .status-icon { font-size: 0.65rem; color: #4ade80; }
+    .messages-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+    .intro-screen { margin: auto; text-align: center; max-width: 350px; color: var(--text-muted); }
+    .plane-icon { font-size: 3.5rem; color: var(--accent); margin-bottom: 15px; }
+    .intro-screen h2 { color: white; margin-bottom: 10px; font-size: 1.4rem; }
+    .intro-screen p { font-size: 0.9rem; text-align: left; margin-bottom: 6px; }
 
-    .input-area { padding: 15px 20px; background: var(--bg-sidebar); display: flex; gap: 10px; }
-    .input-area input { flex: 1; background: var(--bg-main); border: 1px solid var(--border); padding: 12px 15px; border-radius: 8px; color: white; font-size: 1rem; outline: none; }
-    .input-area input:focus { border-color: var(--accent); }
-    .input-area button { background: var(--accent); border: none; color: white; width: 45px; height: 45px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-    .input-area button:disabled { background: #202b36; color: var(--text-muted); cursor: not-allowed; }
+    /* Стиль бабблов сообщений */
+    .message-row { display: flex; width: 100%; margin-bottom: 2px; }
+    .message-row.out { justify-content: flex-end; }
+    .message-row.in { justify-content: flex-start; }
 
-    @media (max-width: 600px) {
+    .message-bubble { max-width: 65%; padding: 8px 14px; border-radius: 14px; position: relative; display: flex; flex-direction: column; }
+    .message-row.out .message-bubble { background: var(--msg-out); border-bottom-right-radius: 2px; }
+    .message-row.in .message-bubble { background: var(--msg-in); border-bottom-left-radius: 2px; }
+
+    .msg-author { font-size: 0.8rem; font-weight: bold; margin-bottom: 3px; }
+    .msg-text { font-size: 0.95rem; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
+    
+    .msg-meta { display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-top: 3px; font-size: 0.65rem; color: var(--text-muted); }
+    .msg-meta i { color: #10b981; }
+
+    /* Поле ввода */
+    .input-form { padding: 15px 20px; background: var(--bg-sidebar); display: flex; gap: 10px; }
+    .input-form input { flex: 1; background: var(--bg-main); border: 1px solid var(--border); padding: 12px 15px; border-radius: 8px; color: white; font-size: 1rem; outline: none; }
+    .input-form input:focus { border-color: var(--accent); }
+    .input-form button { background: var(--accent); border: none; color: white; width: 44px; height: 44px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; }
+    .input-form button:disabled { background: #202b36; color: var(--text-muted); cursor: not-allowed; }
+
+    @media (max-width: 650px) {
         .app-container { flex-direction: column; }
-        .sidebar { width: 100%; height: 40%; }
-        .chat-area { height: 60%; }
+        .sidebar { width: 100%; height: 35%; }
+        .chat-area { height: 65%; }
     }
 </style>
 
 <script>
-    let peer = null;
-    let connections = {}; // Хранилище активных P2P соединений
-    let activePeerId = null;
-    let myNickname = localStorage.getItem('p2p_nick') || 'Бро_' + Math.floor(Math.random() * 100);
-    let chatHistory = JSON.parse(localStorage.getItem('p2p_history')) || {};
+    // Используем ультра-стабильный публичный WebSocket сервер
+    const WS_SERVER = "wss://iot.eclipseorg.io/ws"; 
+    const CHAT_PREFIX = "tg_pvt_v2_";
+
+    let ws = null;
+    let myNickname = localStorage.getItem('tg_v2_nick') || 'Бро_' + Math.floor(100 + Math.random() * 900);
+    let activeRoom = null;
+    let rooms = JSON.parse(localStorage.getItem('tg_v2_rooms')) || {};
 
     window.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('myNickDisplay').innerText = myNickname;
-        initPeer();
+        updateProfileUI();
+        connectWebSocket();
+        renderRooms();
     });
 
-    // Инициализация P2P узла
-    function initPeer() {
-        // Создаем случайный короткий ID для удобства передачи
-        const customId = 'tgx-' + Math.random().toString(36).substring(2, 10);
-        peer = new Peer(customId);
-
-        peer.on('open', (id) => {
-            document.getElementById('myIdDisplay').innerText = id;
-            renderContacts();
-        });
-
-        // Слушаем входящие подключения от друзей
-        peer.on('connection', (conn) => {
-            setupConnectionHandlers(conn);
-        });
-
-        peer.on('error', (err) => {
-            console.error('Ошибка Сети P2P:', err);
-            alert('Ошибка сети: ' + err.type);
-        });
-    }
-
-    // Подключение к другу по его ID
-    function connectToPeer() {
-        const targetId = prompt("Введите P2P ID вашего друга:");
-        if (!targetId || targetId.trim() === "") return;
-        const cleanId = targetId.trim();
-
-        if (connections[cleanId]) {
-            selectContact(cleanId);
-            return;
-        }
-
-        // Инициируем прямое подключение
-        const conn = peer.connect(cleanId, {
-            metadata: { nickname: myNickname },
-            reliable: true // Включает гарантированную доставку пакетов
-        });
+    function connectWebSocket() {
+        // Создаем чистое WebSocket подключение по протоколу MQTT-over-WS
+        ws = new WebSocket(WS_SERVER, 'mqtt');
         
-        setupConnectionHandlers(conn);
-    }
-
-    // Настройка обработчиков событий для конкретного соединения
-    function setupConnectionHandlers(conn) {
-        conn.on('open', () => {
-            connections[conn.peer] = conn;
-            
-            // Если друг передал свой ник в метаданных, запишем его
-            const friendNick = conn.metadata?.nickname || 'Друг';
-            if (!chatHistory[conn.peer]) {
-                chatHistory[conn.peer] = { nickname: friendNick, messages: [] };
-            } else {
-                chatHistory[conn.peer].nickname = friendNick;
-            }
-
-            // Отправляем свой ник в ответ, чтобы у него обновилось имя
-            conn.send({ type: 'SYSTEM_NICK', nickname: myNickname });
-
-            saveHistory();
-            renderContacts();
-            selectContact(conn.peer);
-        });
-
-        // Прилетели данные от друга
-        conn.on('data', (data) => {
-            if (data.type === 'SYSTEM_NICK') {
-                if (chatHistory[conn.peer]) {
-                    chatHistory[conn.peer].nickname = data.nickname;
-                    renderContacts();
-                    if(activePeerId === conn.peer) {
-                        document.getElementById('chatTitle').innerText = data.nickname;
-                    }
-                }
-                return;
-            }
-
-            if (data.type === 'TEXT') {
-                if (!chatHistory[conn.peer]) {
-                    chatHistory[conn.peer] = { nickname: 'Друг', messages: [] };
-                }
-                
-                const newMsg = {
-                    id: data.id,
-                    sender: 'incoming',
-                    text: data.text,
-                    time: data.time
-                };
-                
-                chatHistory[conn.peer].messages.push(newMsg);
-                saveHistory();
-
-                // Отправляем сигнал подтверждения: "Я получил сообщение!"
-                conn.send({ type: 'ACK', id: data.id });
-
-                if (activePeerId === conn.peer) {
-                    appendMessage(newMsg);
-                } else {
-                    renderContacts(); // Чтобы обновить последнее сообщение в списке
-                }
-            }
-
-            // Пришло подтверждение доставки (ACK)
-            if (data.type === 'ACK') {
-                if (chatHistory[conn.peer]) {
-                    const msg = chatHistory[conn.peer].messages.find(m => m.id === data.id);
-                    if (msg) {
-                        msg.delivered = true;
-                        saveHistory();
-                        if (activePeerId === conn.peer) {
-                            renderMessages(); // Перерисовываем чат, чтобы появилась галочка
-                        }
-                    }
-                }
-            }
-        });
-
-        // Если друг закрыл вкладку или пропал интернет
-        conn.on('close', () => {
-            delete connections[conn.peer];
-            renderContacts();
-            if (activePeerId === conn.peer) {
-                document.getElementById('chatStatus').innerText = "Статус: Офлайн";
-                document.getElementById('messageInput').disabled = true;
-                document.getElementById('sendBtn').disabled = true;
-            }
-        });
-    }
-
-    function sendMessage(e) {
-        e.preventDefault();
-        const input = document.getElementById('messageInput');
-        const text = input.value.trim();
-        if (!text || !activePeerId) return;
-
-        const conn = connections[activePeerId];
-        if (!conn) {
-            alert("Собеседник сейчас не в сети. Отправка невозможна.");
-            return;
-        }
-
-        const msgId = Math.random().toString(36).substring(2, 11);
-        const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        
-        const msgData = {
-            id: msgId,
-            text: text,
-            time: time
+        ws.onopen = () => {
+            document.getElementById('netStatus').className = "status-indicator online";
+            // Посылаем базовый MQTT пакет Connect
+            ws.send(new Uint8Array([0x10, 12, 0, 4, 77, 81, 84, 84, 4, 2, 0, 60, 0, 0]));
+            // Переподписываемся на наши комнаты
+            Object.keys(rooms).forEach(roomName => subscribeToRoom(roomName));
         };
 
-        // Записываем себе в историю (пока без галочки доставлено)
-        const localMsg = {
-            id: msgId,
-            sender: 'outgoing',
+        ws.onmessage = (event) => {
+            if (event.data instanceof Blob) {
+                const reader = new FileReader();
+                reader.onload = () => parseMqttPacket(new Uint8Array(reader.result));
+                reader.readAsArrayBuffer(event.data);
+            }
+        };
+
+        ws.onclose = () => {
+            document.getElementById('netStatus').className = "status-indicator";
+            setTimeout(connectWebSocket, 3000); // Авто-реконнект если пропала сеть
+        };
+    }
+
+    function parseMqttPacket(data) {
+        // Простейший парсер входящих сообщений MQTT Publish
+        if ((data[0] & 0xF0) === 0x30) { 
+            let idx = 1;
+            let len = 0;
+            let multiplier = 1;
+            // Читаем длину пакета
+            do {
+                len += (data[idx] & 127) * multiplier;
+                multiplier *= 128;
+            } while ((data[idx++] & 128) != 0);
+
+            const topicLen = (data[idx] << 8) + data[idx+1];
+            idx += 2;
+            const topic = new TextDecoder().decode(data.subarray(idx, idx + topicLen));
+            idx += topicLen;
+            
+            // Если в пакете есть Message ID (QoS 1)
+            if ((data[0] & 0x06) > 0) idx += 2;
+
+            const payloadStr = new TextDecoder().decode(data.subarray(idx));
+            
+            try {
+                const packet = JSON.parse(payloadStr);
+                handleIncomingJson(topic, packet);
+            } catch(e){}
+        }
+    }
+
+    function handleIncomingJson(topic, data) {
+        const roomName = topic.replace(CHAT_PREFIX, '');
+        if (!rooms[roomName]) return;
+
+        // 1. Получен ТЕКСТ
+        if (data.type === 'MSG') {
+            // Проверка на дубликаты
+            if (rooms[roomName].messages.some(m => m.id === data.id)) return;
+
+            rooms[roomName].messages.push(data);
+            saveData();
+
+            // Отправляем автоматическое подтверждение доставки (ACK) другу
+            if (data.sender !== myNickname) {
+                sendJson(roomName, { type: 'ACK', id: data.id });
+            }
+
+            if (activeRoom === roomName) {
+                appendMessage(data);
+            } else {
+                renderRooms();
+            }
+        }
+
+        // 2. Получено ПОДТВЕРЖДЕНИЕ ДОСТАВКИ (ACK)
+        if (data.type === 'ACK') {
+            const targetMsg = rooms[roomName].messages.find(m => m.id === data.id);
+            if (targetMsg) {
+                targetMsg.delivered = true;
+                saveData();
+                if (activeRoom === roomName) {
+                    renderMessages(); // Обновляем экран, рисуем галочку
+                }
+            }
+        }
+    }
+
+    function subscribeToRoom(roomName) {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        const topic = CHAT_PREFIX + roomName;
+        const encoder = new TextEncoder();
+        const topicBytes = encoder.encode(topic);
+        const packet = new Uint8Array([0x82, 5 + topicBytes.length, 0, 1, 0, topicBytes.length, ...topicBytes, 0]);
+        ws.send(packet);
+    }
+
+    function sendJson(roomName, obj) {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        const topic = CHAT_PREFIX + roomName;
+        const encoder = new TextEncoder();
+        const topicBytes = encoder.encode(topic);
+        const payloadBytes = encoder.encode(JSON.stringify(obj));
+        
+        // Сборка MQTT пакета Publish
+        const remainLen = 2 + topicBytes.length + payloadBytes.length;
+        const packet = new Uint8Array([0x30, remainLen, 0, topicBytes.length, ...topicBytes, ...payloadBytes]);
+        ws.send(packet);
+    }
+
+    function joinRoom() {
+        const roomName = prompt("Введите секретное имя/ключ комнаты (английскими буквами без пробелов):");
+        if (!roomName) return;
+        const cleanName = roomName.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (!cleanName) return;
+
+        if (!rooms[cleanName]) {
+            rooms[cleanName] = { name: cleanName, messages: [] };
+        }
+        
+        subscribeToRoom(cleanName);
+        saveData();
+        renderRooms();
+        selectRoom(cleanName);
+    }
+
+    function selectRoom(name) {
+        activeRoom = name;
+        
+        document.getElementById('chatHeader').style.display = "block";
+        document.getElementById('currentRoomTitle').innerText = `Комната: #${rooms[name].name}`;
+        document.getElementById('currentRoomKey').innerText = `Передайте это имя друзьям для входа`;
+
+        document.getElementById('msgInput').disabled = false;
+        document.getElementById('sendBtn').disabled = false;
+
+        renderMessages();
+        renderRooms();
+    }
+
+    function handleSend(e) {
+        e.preventDefault();
+        const input = document.getElementById('msgInput');
+        const text = input.value.trim();
+        if (!text || !activeRoom) return;
+
+        const msgData = {
+            id: 'm-' + Math.random().toString(36).substring(2, 11),
+            type: 'MSG',
+            sender: myNickname,
             text: text,
-            time: time,
+            time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
             delivered: false
         };
 
-        chatHistory[activePeerId].messages.push(localMsg);
-        saveHistory();
-        appendMessage(localMsg);
+        // Записываем себе в историю
+        rooms[activeRoom].messages.push(msgData);
+        saveData();
+        appendMessage(msgData);
 
-        // Пуляем по прямому каналу
-        conn.send({
-            type: 'TEXT',
-            id: msgId,
-            text: text,
-            time: time
-        });
-
+        // Отправляем в сеть
+        sendJson(activeRoom, msgData);
+        
         input.value = '';
     }
 
-    function selectContact(peerId) {
-        activePeerId = peerId;
-        const target = chatHistory[peerId];
-        if (!target) return;
-
-        document.getElementById('chatTitle').innerText = target.nickname;
-        
-        const isOnline = !!connections[peerId];
-        document.getElementById('chatStatus').innerText = isOnline ? "Статус: В сети (Прямое P2P)" : "Статус: Офлайн";
-        
-        document.getElementById('messageInput').disabled = !isOnline;
-        document.getElementById('sendBtn').disabled = !isOnline;
-
-        renderMessages();
-        renderContacts();
-    }
-
-    function renderContacts() {
-        const list = document.getElementById('contactsList');
+    function renderRooms() {
+        const list = document.getElementById('roomsList');
         list.innerHTML = '';
-
-        Object.keys(chatHistory).forEach(peerId => {
-            const chat = chatHistory[peerId];
-            const isOnline = !!connections[peerId];
+        
+        Object.keys(rooms).forEach(k => {
+            const r = rooms[k];
             const div = document.createElement('div');
-            div.className = `contact-item ${activePeerId === peerId ? 'active' : ''}`;
-            div.onclick = () => selectContact(peerId);
-
-            const lastMsg = chat.messages[chat.messages.length - 1];
-            const lastTxt = lastMsg ? lastMsg.text : 'Нет сообщений';
+            div.className = `room-item ${activeRoom === k ? 'active' : ''}`;
+            div.onclick = () => selectRoom(k);
+            
+            const lastMsg = r.messages[r.messages.length - 1];
+            const lastText = lastMsg ? `${lastMsg.sender}: ${lastMsg.text}` : 'Нет сообщений';
 
             div.innerHTML = `
-                <div class="contact-avatar" style="background: ${isOnline ? 'var(--accent)' : '#475569'}">
-                    ${chat.nickname.substring(0,2).toUpperCase()}
-                </div>
-                <div class="contact-info">
-                    <h4>${chat.nickname} ${isOnline ? '🟢' : '🔴'}</h4>
-                    <p>${lastTxt}</p>
+                <div class="room-icon">${r.name.substring(0,2).toUpperCase()}</div>
+                <div style="flex:1; overflow:hidden;">
+                    <h4 style="font-size:0.95rem;">#${r.name}</h4>
+                    <p style="font-size:0.8rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${lastText}</p>
                 </div>
             `;
             list.appendChild(div);
@@ -367,76 +347,73 @@
     function renderMessages() {
         const container = document.getElementById('messagesContainer');
         container.innerHTML = '';
-        
-        if (!activePeerId || !chatHistory[activePeerId].messages.length) {
-            container.innerHTML = `<div class="welcome-msg">Чат пуст. Напишите что-нибудь!</div>`;
+        if (!activeRoom || !rooms[activeRoom].messages.length) {
+            container.innerHTML = '<div class="intro-screen">Никто еще не писал в этот чат. Будь первым!</div>';
             return;
         }
-
-        chatHistory[activePeerId].messages.forEach(msg => appendMessage(msg));
+        rooms[activeRoom].messages.forEach(m => appendMessage(m));
     }
 
     function appendMessage(msg) {
         const container = document.getElementById('messagesContainer');
-        const welcome = container.querySelector('.welcome-msg');
-        if(welcome) welcome.remove();
+        const intro = container.querySelector('.intro-screen');
+        if (intro) intro.remove();
 
-        const isMe = msg.sender === 'outgoing';
-        const div = document.createElement('div');
-        div.className = `msg ${isMe ? 'outgoing' : 'incoming'}`;
-        
-        // Галочка доставки только для наших исходящих сообщений
-        const statusHtml = (isMe && msg.delivered) ? `<i class="fas fa-check status-icon" title="Доставлено на устройство"></i>` : '';
+        const isMe = msg.sender === myNickname;
+        const row = document.createElement('div');
+        row.className = `message-row ${isMe ? 'out' : 'in'}`;
 
-        div.innerHTML = `
-            <div class="text">${escapeHTML(msg.text)}</div>
-            <div class="meta-box">
-                <span class="time">${msg.time}</span>
-                ${statusHtml}
+        // Генерируем красивый уникальный цвет для ника собеседника
+        const nameColor = stringToColor(msg.sender);
+        const checkIcon = (isMe && msg.delivered) ? '<i class="fas fa-check"></i>' : '';
+
+        row.innerHTML = `
+            <div class="message-bubble">
+                ${!isMe ? `<span class="msg-author" style="color: ${nameColor}">${escapeHTML(msg.sender)}</span>` : ''}
+                <div class="msg-text">${escapeHTML(msg.text)}</div>
+                <div class="msg-meta">
+                    <span>${msg.time}</span>
+                    ${checkIcon}
+                </div>
             </div>
         `;
-        
-        container.appendChild(div);
+
+        container.appendChild(row);
         container.scrollTop = container.scrollHeight;
     }
 
+    // Хэш-функция для генерации уникального цвета никнейма (как в TG)
+    function stringToColor(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const colors = ['#34d399', '#60a5fa', '#f43f5e', '#fbbf24', '#a78bfa', '#fb7185', '#38bdf8', '#f472b6'];
+        return colors[Math.abs(hash) % colors.length];
+    }
+
     function changeNickname() {
-        const n = prompt("Ваш новый никнейм:", myNickname);
-        if(n && n.trim() !== "") {
+        const n = prompt("Придумайте новый никнейм:", myNickname);
+        if (n && n.trim() !== "") {
             myNickname = n.trim();
-            localStorage.setItem('p2p_nick', myNickname);
-            document.getElementById('myNickDisplay').innerText = myNickname;
-            // Рассылаем всем активным контактам инфу о смене ника
-            Object.values(connections).forEach(conn => {
-                conn.send({ type: 'SYSTEM_NICK', nickname: myNickname });
-            });
+            localStorage.setItem('tg_v2_nick', myNickname);
+            updateProfileUI();
+            if(activeRoom) renderMessages();
         }
     }
 
-    function copyMyId() {
-        const id = document.getElementById('myIdDisplay').innerText;
-        if(id && id !== "Генерация...") {
-            navigator.clipboard.writeText(id);
-            alert("Ваш P2P ID скопирован! Отправьте его другу.");
-        }
+    function updateProfileUI() {
+        document.getElementById('myNickDisplay').innerText = myNickname;
+        document.getElementById('myAvatar').innerText = myNickname.substring(0,1).toUpperCase();
+        document.getElementById('myAvatar').style.background = stringToColor(myNickname);
     }
 
-    function saveHistory() {
-        localStorage.setItem('p2p_history', JSON.stringify(chatHistory));
+    function saveData() {
+        localStorage.setItem('tg_v2_rooms', JSON.stringify(rooms));
     }
 
     function escapeHTML(str) {
         return str.replace(/[&<>'"]/g, t => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[t] || t));
-    }
-
-    // Регистрация Сервис Воркера для PWA
-    if ('serviceWorker' in navigator) {
-        const swText = `
-            self.addEventListener('install', e => self.skipWaiting());
-            self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
-        `;
-        const blob = new Blob([swText], { type: 'application/javascript' });
-        navigator.serviceWorker.register(URL.createObjectURL(blob));
     }
 </script>
 </body>
