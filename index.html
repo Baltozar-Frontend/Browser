@@ -3,22 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Братский Чат v4 (Realtime Cloud)</title>
+    <title>TG Private Cloud v5</title>
+    
+    <!-- ПОДКЛЮЧЕНИЕ ИКОНОК И КРИТИЧЕСКИ ВАЖНОЙ БИБЛИОТЕКИ SUPABASE -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.8/dist/umd/supabase.js"></script>
     
+    <!-- PWA НАСТРОЙКИ -->
     <meta name="theme-color" content="#17212b">
     <link rel="manifest" href='data:application/manifest+json,{"name":"Наш TG","short_name":"TG","start_url":".","display":"standalone","background_color":"#0e1621","theme_color":"#17212b","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/2525/2525779.png","sizes":"512x512","type":"image/png"}]}'>
 </head>
 <body>
 
 <div class="app-container">
+    <!-- Левая панель (Сайдбар) -->
     <aside class="sidebar">
         <div class="sidebar-header">
-            <h3 onclick="showTab('rooms')"><i class="fas fa-comments"></i> Комнаты</h3>
-            <h3 onclick="showTab('profile')"><i class="fas fa-user-cog"></i> Профиль</h3>
+            <h3 id="btnTabRooms" class="active" onclick="showTab('rooms')"><i class="fas fa-comments"></i> Комнаты</h3>
+            <h3 id="btnTabProfile" onclick="showTab('profile')"><i class="fas fa-user-cog"></i> Профиль</h3>
         </div>
         
+        <!-- Вкладка комнат -->
         <div id="roomsTab" class="tab-content active">
             <div class="action-bar">
                 <button onclick="createOrJoinRoom()"><i class="fas fa-plus"></i> Создать / Войти</button>
@@ -26,6 +31,7 @@
             <div class="rooms-list" id="roomsList"></div>
         </div>
 
+        <!-- Вкладка профиля -->
         <div id="profileTab" class="tab-content">
             <div class="profile-editor">
                 <div class="avatar-big" id="profAvatar">U</div>
@@ -37,11 +43,12 @@
                     <label>О себе (Статус):</label>
                     <input type="text" id="inputBio" placeholder="Например: На связи 24/7">
                 </div>
-                <button onclick="saveProfile()" class="save-btn"><i class="fas fa-save"></i> Сохранить профиль</button>
+                <button type="button" onclick="saveProfile()" class="save-btn"><i class="fas fa-save"></i> Сохранить профиль</button>
             </div>
         </div>
     </aside>
 
+    <!-- Основная зона чата -->
     <main class="chat-area">
         <div class="chat-header" id="chatHeader" style="visibility: hidden;">
             <div class="chat-title-info">
@@ -51,21 +58,24 @@
             <button class="members-btn" onclick="toggleMembersList()" title="Участники группы"><i class="fas fa-users"></i></button>
         </div>
 
+        <!-- Контейнер для сообщений -->
         <div class="messages-container" id="messagesContainer">
             <div class="intro-screen">
                 <i class="fas fa-user-shield plane-icon"></i>
-                <h2>TG Private Cloud v4</h2>
-                <p>1. Перейдите во вкладку <b>Профиль</b> и настройте свой аккаунт.</p>
-                <p>2. Вернитесь в <b>Комнаты</b>, создайте секретный код (например: <code>patcany_2026</code>).</p>
-                <p>3. Сообщения и список участников обновляются <b>мгновенно в реальном времени</b>.</p>
+                <h2>TG Private Cloud v5</h2>
+                <p>1. Перейдите во вкладку <b>Профиль</b>, настройте ник и нажмите кнопку «Сохранить».</p>
+                <p>2. Вернитесь в <b>Комнаты</b>, нажмите «Создать / Войти» и введите секретный код.</p>
+                <p>3. Теперь всё работает мгновенно и железно сохраняется!</p>
             </div>
         </div>
 
+        <!-- Список участников -->
         <div class="members-sidebar" id="membersSidebar">
             <h4>Пацаны в чате:</h4>
             <div id="membersList"></div>
         </div>
 
+        <!-- Форма отправки -->
         <form class="input-form" onsubmit="handleSend(event)">
             <input type="text" id="msgInput" placeholder="Напишите сообщение..." autocomplete="off" disabled>
             <button type="submit" id="sendBtn" disabled><i class="fas fa-arrow-up"></i></button>
@@ -88,45 +98,41 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
     body { background: var(--bg-main); color: var(--text); height: 100vh; overflow: hidden; }
-    
     .app-container { display: flex; height: 100vh; width: 100vw; position: relative; }
 
-    /* Сайдбар и вкладки */
+    /* Сайдбар */
     .sidebar { width: 320px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
     .sidebar-header { display: flex; border-bottom: 1px solid var(--border); background: #111921; }
     .sidebar-header h3 { flex: 1; text-align: center; padding: 15px 0; font-size: 0.95rem; cursor: pointer; color: var(--text-muted); transition: 0.2s; }
-    .sidebar-header h3:hover { color: white; }
     .sidebar-header h3.active { color: var(--accent); border-bottom: 2px solid var(--accent); background: var(--bg-sidebar); }
     
     .tab-content { display: none; flex: 1; flex-direction: column; overflow-y: auto; }
     .tab-content.active { display: flex; }
-
     .action-bar { padding: 15px; }
-    .action-bar button { width: 100%; background: var(--accent); border: none; color: white; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    .action-bar button { width: 100%; background: var(--accent); border: none; color: white; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
 
-    /* Список комнат */
+    /* Комнаты */
     .rooms-list { flex: 1; }
     .room-item { padding: 15px 20px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 12px; }
     .room-item:hover, .room-item.active { background: #202b36; }
     .room-icon { width: 40px; height: 40px; background: #2e3b4e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 
-    /* Редактор профиля */
+    /* Профиль */
     .profile-editor { padding: 25px 20px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
     .avatar-big { width: 80px; height: 80px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold; }
     .input-group { width: 100%; display: flex; flex-direction: column; gap: 6px; }
     .input-group label { font-size: 0.85rem; color: var(--text-muted); }
-    .input-group input { background: var(--bg-main); border: 1px solid var(--border); padding: 10px; border-radius: 6px; color: white; outline: none; }
+    .input-group input { background: var(--bg-main); border: 1px solid var(--border); padding: 12px; border-radius: 6px; color: white; outline: none; font-size: 1rem; }
     .input-group input:focus { border-color: var(--accent); }
-    .save-btn { width: 100%; background: #10b981; border: none; color: white; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+    .save-btn { width: 100%; background: #10b981; border: none; color: white; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; font-size: 1rem; }
 
-    /* Чат трек */
+    /* Чат */
     .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-chat); position: relative; }
     .chat-header { padding: 15px 20px; background: var(--bg-sidebar); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
     .chat-title-info h3 { font-size: 1.05rem; }
     .chat-title-info p { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
     .members-btn { background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; }
-    .members-btn:hover { color: white; }
-
+    
     .messages-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
     .intro-screen { margin: auto; text-align: center; max-width: 380px; color: var(--text-muted); line-height: 1.5; }
     .plane-icon { font-size: 3.5rem; color: var(--accent); margin-bottom: 15px; }
@@ -143,7 +149,7 @@
     .msg-meta { display: flex; align-items: center; justify-content: flex-end; gap: 5px; margin-top: 4px; font-size: 0.65rem; color: var(--text-muted); }
     .msg-meta i { color: #38bdf8; }
 
-    /* Панель пацанов */
+    /* Список участников */
     .members-sidebar { position: absolute; right: -250px; top: 70px; bottom: 74px; width: 250px; background: var(--bg-sidebar); border-left: 1px solid var(--border); padding: 15px; transition: 0.3s; overflow-y: auto; z-index: 5; }
     .members-sidebar.open { right: 0; }
     .members-sidebar h4 { font-size: 0.9rem; margin-bottom: 15px; color: var(--text-muted); }
@@ -166,17 +172,20 @@
 </style>
 
 <script>
-    // Подключение к выделенному облаку Supabase для пацанов
+    // Инициализация правильного клиента Supabase через глобальный объект window
     const SUPABASE_URL = "https://wzdxwexbvsjshgffbggu.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6ZHh3ZXhidXNqc2hnZmZiZ2d1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTAzODQwMDAsImV4cCI6MjAyNjA0MDYwMH0.3vX7_d7gUX9HWh4g7f7z7_p2y4z_x89aW_X_X7x8_99";
-    const supabase = lib.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // Безопасное создание инстанса
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // Достаем данные из локальной памяти (чтобы ничего не пропадало при перезагрузке)
     let userId = localStorage.getItem('tg_v4_uid') || 'u-' + Math.random().toString(36).substring(2, 11);
     let myNickname = localStorage.getItem('tg_v4_nick') || 'Бро_' + Math.floor(100 + Math.random() * 900);
     let myBio = localStorage.getItem('tg_v4_bio') || 'На связи!';
+    let localRooms = JSON.parse(localStorage.getItem('tg_v4_my_rooms')) || [];
     
     let activeRoom = null;
-    let localRooms = JSON.parse(localStorage.getItem('tg_v4_my_rooms')) || [];
     let messageChannel = null;
 
     localStorage.setItem('tg_v4_uid', userId);
@@ -184,19 +193,21 @@
     window.addEventListener('DOMContentLoaded', () => {
         initProfileForm();
         renderRoomsList();
-        syncProfileWithCloud();
+        syncProfileWithCloud(); // Фоновая отправка в базу
     });
 
     // --- УПРАВЛЕНИЕ ВКЛАДКАМИ ---
     function showTab(tabName) {
-        document.querySelectorAll('.sidebar-header h3').forEach(h => h.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.getElementById('btnTabRooms').classList.remove('active');
+        document.getElementById('btnTabProfile').classList.remove('active');
+        document.getElementById('roomsTab').classList.remove('active');
+        document.getElementById('profileTab').classList.remove('active');
         
         if(tabName === 'rooms') {
-            document.querySelector('.sidebar-header h3:nth-child(1)').classList.add('active');
+            document.getElementById('btnTabRooms').classList.add('active');
             document.getElementById('roomsTab').classList.add('active');
         } else {
-            document.querySelector('.sidebar-header h3:nth-child(2)').classList.add('active');
+            document.getElementById('btnTabProfile').classList.add('active');
             document.getElementById('profileTab').classList.add('active');
         }
     }
@@ -209,20 +220,28 @@
     }
 
     async function saveProfile() {
-        myNickname = document.getElementById('inputNick').value.trim() || myNickname;
-        myBio = document.getElementById('inputBio').value.trim() || myBio;
+        const targetNick = document.getElementById('inputNick').value.trim();
+        const targetBio = document.getElementById('inputBio').value.trim();
         
+        myNickname = targetNick || myNickname;
+        myBio = targetBio || 'На связи!';
+        
+        // Железно пишем в память браузера
         localStorage.setItem('tg_v4_nick', myNickname);
         localStorage.setItem('tg_v4_bio', myBio);
+        
         updateAvatarUI();
         
-        await syncProfileWithCloud();
-        alert('Профиль сохранен на сервере!');
-        if(activeRoom) loadRoomMembers(); // Обновить список участников у себя
+        // Пуляем в облако
+        try {
+            await syncProfileWithCloud();
+        } catch(e) { console.log('Облако недоступно, сохранено локально'); }
+        
+        alert('Профиль сохранен!');
+        if(activeRoom) loadRoomMembers();
     }
 
     async function syncProfileWithCloud() {
-        // Записываем данные юзера в облачную таблицу профилей
         await supabase.from('profiles').upsert({
             id: userId,
             nickname: myNickname,
@@ -239,7 +258,7 @@
 
     // --- КОМНАТЫ ---
     function createOrJoinRoom() {
-        const rName = prompt("Введите имя/ключ секретной комнаты (только латиница и цифры):");
+        const rName = prompt("Введите имя/ключ секретной комнаты (английские буквы и цифры):");
         if(!rName) return;
         const cleanName = rName.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
         if(!cleanName) return;
@@ -261,13 +280,13 @@
             div.onclick = () => selectRoom(r);
             div.innerHTML = `
                 <div class="room-icon" style="background:${stringToColor(r)}">#</div>
-                <div><h4>${r}</h4><p style="font-size:0.75rem;color:var(--text-muted)">Нажмите, чтобы войти</p></div>
+                <div><h4>${r}</h4><p style="font-size:0.75rem;color:var(--text-muted)">Войти в чат</p></div>
             `;
             list.appendChild(div);
         });
     }
 
-    // --- ВХОД В КОМНАТУ И REALTIME СТАТУСЫ ---
+    // --- РАБОТА С ЧАТОМ (REALTIME) ---
     async function selectRoom(roomName) {
         activeRoom = roomName;
         renderRoomsList();
@@ -278,24 +297,24 @@
         document.getElementById('sendBtn').disabled = false;
         document.getElementById('messagesContainer').innerHTML = '';
 
-        // Отмечаем, что мы зашли в эту комнату (для списка участников)
-        await supabase.from('room_members').upsert({ room_id: activeRoom, user_id: userId });
+        // Фиксируем участие в БД
+        try {
+            await supabase.from('room_members').upsert({ room_id: activeRoom, user_id: userId });
+        } catch(e){}
 
-        // Загружаем историю старых сообщений из БД
         loadMessagesHistory();
-        // Загружаем список пацанов в комнате
         loadRoomMembers();
 
-        // Отключаем старый канал веб-сокетов, если он был активен
+        // Сброс старого веб-сокет соединения
         if (messageChannel) supabase.removeChannel(messageChannel);
 
-        // Включаем ультра-быстрый Realtime канал на веб-сокетах для этой комнаты
+        // Включение мгновенного Realtime прослушивания
         messageChannel = supabase.channel(`room_${activeRoom}`)
-            .on('postgres_changes', { event: 'INSERT', scheme: 'public', table: 'messages', filter: `room_id=eq.${activeRoom}` }, payload => {
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${activeRoom}` }, payload => {
                 appendMessage(payload.new);
             })
-            .on('postgres_changes', { event: 'INSERT', scheme: 'public', table: 'room_members' }, () => {
-                loadRoomMembers(); // Если зашел новый кент, обновляем список участников
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'room_members' }, () => {
+                loadRoomMembers();
             })
             .subscribe();
     }
@@ -308,11 +327,10 @@
     }
 
     async function loadRoomMembers() {
-        // Тянем всех участников и их профили через связи баз данных
         const { data } = await supabase.from('room_members').select('user_id, profiles(nickname, bio)').eq('room_id', activeRoom);
         
         if(data) {
-            document.getElementById('currentRoomStatus').innerText = `${data.length} пацанов в сети`;
+            document.getElementById('currentRoomStatus').innerText = `${data.length} пацанов в группе`;
             const mList = document.getElementById('membersList');
             mList.innerHTML = '';
             
@@ -332,14 +350,12 @@
         }
     }
 
-    // --- ОТПРАВКА СООБЩЕНИЙ ---
     async function handleSend(e) {
         e.preventDefault();
         const input = document.getElementById('msgInput');
         const text = input.value.trim();
         if(!text || !activeRoom) return;
 
-        // Кидаем сообщение напрямую в облачную базу данных. Веб-сокет мгновенно раздаст его всем
         await supabase.from('messages').insert({
             room_id: activeRoom,
             user_id: userId,
@@ -369,7 +385,7 @@
                 <div class="msg-text">${escapeHTML(msg.text)}</div>
                 <div class="msg-meta">
                     <span>${msg.time_str}</span>
-                    ${isMe ? '<i class="fas fa-check-double" title="Прочитано пацанами"></i>' : ''}
+                    ${isMe ? '<i class="fas fa-check-double" title="Доставлено"></i>' : ''}
                 </div>
             </div>
         `;
@@ -378,7 +394,6 @@
         container.scrollTop = container.scrollHeight;
     }
 
-    // --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
     function toggleMembersList() {
         document.getElementById('membersSidebar').classList.toggle('open');
     }
@@ -392,15 +407,6 @@
 
     function escapeHTML(str) {
         return str.replace(/[&<>'"]/g, t => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[t] || t));
-    }
-
-    if ('serviceWorker' in navigator) {
-        const swText = `
-            self.addEventListener('install', e => self.skipWaiting());
-            self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
-        `;
-        const blob = new Blob([swText], { type: 'application/javascript' });
-        navigator.serviceWorker.register(URL.createObjectURL(blob));
     }
 </script>
 </body>
