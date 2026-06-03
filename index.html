@@ -2,528 +2,442 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Survival: Winter Crash</title>
-    <style>
-        body, html { margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%; font-family: 'Segoe UI', Tahoma, sans-serif; background: #111; user-select: none; -webkit-user-select: none; touch-action: none; }
-        #canvas-container { width: 100%; height: 100%; display: block; position: absolute; top: 0; left: 0; z-index: 1; }
-        
-        #ui-layer { position: absolute; top: 15px; left: 15px; right: 15px; z-index: 10; pointer-events: none; display: flex; justify-content: space-between; transition: opacity 0.5s; }
-        .panel { background: rgba(10, 15, 25, 0.85); color: white; padding: 12px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 5px 15px rgba(0,0,0,0.5); backdrop-filter: blur(4px); pointer-events: auto; }
-        h1 { margin: 0 0 5px 0; font-size: 12px; color: #88aaff; text-transform: uppercase; letter-spacing: 1px; }
-        .res-container { display: flex; gap: 15px; }
-        .res { font-size: 18px; font-weight: bold; color: #fff; display: flex; align-items: center; gap: 5px; }
-        
-        #fire-bar-bg { width: 120px; height: 10px; background: #333; border-radius: 5px; overflow: hidden; margin-top: 5px; }
-        #fire-bar-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff3b30, #ff9500); transition: width 0.3s; }
-
-        #cinematic-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; display: flex; flex-direction: column; justify-content: space-between; align-items: center; opacity: 0; transition: opacity 0.5s; }
-        .cine-bar { width: 100%; height: 12%; background: black; transition: height 0.5s; }
-        #cine-text { color: #fff; font-size: 24px; font-weight: bold; text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 0 10px rgba(255,0,0,0.8), 0 2px 5px black; opacity: 0; transition: opacity 0.5s; text-align: center; padding: 20px; margin-top: auto; margin-bottom: auto; }
-
-        #mobile-controls { position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; transition: opacity 0.5s; }
-        #joystick-zone { position: absolute; bottom: 30px; left: 30px; width: 130px; height: 130px; background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.2) 100%); border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); pointer-events: auto; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
-        #joystick-stick { width: 50px; height: 50px; background: rgba(255,255,255,0.8); border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.5); pointer-events: none; }
-        #action-btn { position: absolute; bottom: 45px; right: 30px; width: 90px; height: 90px; background: linear-gradient(135deg, #ff5e3a, #ff2a68); border: 4px solid rgba(255,255,255,0.3); border-radius: 50%; pointer-events: auto; display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; font-size: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.6); text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-        #action-btn:active { transform: scale(0.9); filter: brightness(1.2); }
-
-        #death-screen { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(5, 10, 20, 0.95); z-index: 100; display: none; flex-direction: column; justify-content: center; align-items: center; color: white; pointer-events: auto; }
-        #death-screen h2 { color: #ff3b30; font-size: 32px; margin-bottom: 10px; }
-        .btn-restart { margin-top: 20px; padding: 12px 30px; background: #ff9500; color: #fff; border: none; border-radius: 20px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-    </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P Надежный Чат</title>
+    <!-- Иконки и библиотека PeerJS для прямого P2P соединения -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href='data:application/manifest+json,{"name":"P2P Чат","short_name":"P2P","start_url":".","display":"standalone","background_color":"#0e1621","theme_color":"#17212b","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/2525/2525779.png","sizes":"512x512","type":"image/png"}]}'>
 </head>
 <body>
 
-    <div id="canvas-container"></div>
-
-    <div id="ui-layer">
-        <div class="panel">
-            <h1>Рюкзак</h1>
-            <div class="res-container">
-                <div class="res" title="Дерево">🪵 <span id="wood-count">0</span></div>
-                <div class="res" title="Металл">⚙️ <span id="metal-count">0</span></div>
-                <div class="res" title="Ткань">🩹 <span id="cloth-count">0</span></div>
+<div class="app-container">
+    <!-- Сайдбар (Контакты) -->
+    <aside class="sidebar">
+        <div class="header">
+            <h3>Контакты</h3>
+            <button onclick="connectToPeer()" title="Подключиться к другу"><i class="fas fa-user-plus"></i></button>
+        </div>
+        <div class="contacts-list" id="contactsList">
+            <!-- Сюда будут падать активные диалоги -->
+        </div>
+        <div class="user-profile">
+            <div class="profile-meta">
+                <span class="user-label">Ваш Ник: <b id="myNickDisplay">Юзер</b> <i class="fas fa-edit edit-nick" onclick="changeNickname()"></i></span>
+                <span class="user-id-text" onclick="copyMyId()" title="Кликни, чтобы скопировать">
+                    ID: <span id="myIdDisplay">Генерация...</span> <i class="far fa-copy"></i>
+                </span>
             </div>
         </div>
-        <div class="panel" style="text-align: right;">
-            <h1>Тепло костра</h1>
-            <div id="fire-bar-bg"><div id="fire-bar-fill"></div></div>
+    </aside>
+
+    <!-- Чат -->
+    <main class="chat-area">
+        <div class="chat-header">
+            <div class="chat-info">
+                <h3 id="chatTitle">Выберите собеседника</h3>
+                <p id="chatStatus">Статус: нет соединения</p>
+            </div>
         </div>
-    </div>
 
-    <div id="cinematic-overlay">
-        <div class="cine-bar"></div>
-        <div id="cine-text">ЧТО-ТО ПАДАЕТ С НЕБА...</div>
-        <div class="cine-bar"></div>
-    </div>
+        <div class="messages-container" id="messagesContainer">
+            <div class="welcome-msg">
+                <i class="fas fa-shield-alt" style="font-size: 3rem; color: var(--accent); margin-bottom: 15px;"></i>
+                <br>
+                <b>Это полностью прямой P2P-мессенджер.</b><br><br>
+                1. Скопируйте ваш ID в левом нижнем углу и отправьте другу.<br>
+                2. Или нажмите на плюс сверху и введите ID друга.<br>
+                Сообщения идут напрямую между устройствами.
+            </div>
+        </div>
 
-    <div id="mobile-controls">
-        <div id="joystick-zone"><div id="joystick-stick"></div></div>
-        <div id="action-btn">Рубить</div>
-    </div>
+        <form class="input-area" onsubmit="sendMessage(event)">
+            <input type="text" id="messageInput" placeholder="Напишите сообщение..." autocomplete="off" disabled>
+            <button type="submit" id="sendBtn" disabled><i class="fas fa-paper-plane"></i></button>
+        </form>
+    </main>
+</div>
 
-    <div id="death-screen">
-        <h2>Замерзли насмерть...</h2>
-        <p>Огонь костра угас, и ледяная буря забрала вас.</p>
-        <button class="btn-restart" onclick="location.reload()">Начать заново</button>
-    </div>
+<style>
+    :root {
+        --bg-main: #0e1621;
+        --bg-sidebar: #17212b;
+        --bg-chat: #182533;
+        --text-color: #f5f5f5;
+        --text-muted: #7f91a4;
+        --accent: #2481cc;
+        --accent-hover: #2f93de;
+        --msg-out: #2b5278;
+        --msg-in: #182533;
+        --border: #101924;
+        --status-online: #4ade80;
+        --status-offline: #f87171;
+    }
 
-    <script>
-        // --- ПРОЦЕДУРНЫЕ ТЕКСТУРЫ ---
-        function generateTexture(type) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256; canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-            if (type === 'wood') {
-                ctx.fillStyle = '#4a3018'; ctx.fillRect(0, 0, 256, 256);
-                for(let i=0; i<100; i++) { ctx.fillStyle = Math.random() > 0.5 ? '#3a2010' : '#5c4028'; ctx.fillRect(Math.random()*256, Math.random()*256, 2+Math.random()*4, 20+Math.random()*50); }
-            } else if (type === 'snow') {
-                ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 256, 256);
-                for(let i=0; i<500; i++) { ctx.fillStyle = '#e0f0ff'; ctx.beginPath(); ctx.arc(Math.random()*256, Math.random()*256, Math.random()*3, 0, Math.PI*2); ctx.fill(); }
-            } else if (type === 'leaves') {
-                ctx.fillStyle = '#1e4d2e'; ctx.fillRect(0, 0, 256, 256);
-                for(let i=0; i<300; i++) { ctx.fillStyle = Math.random() > 0.5 ? '#153820' : '#27633a'; ctx.beginPath(); ctx.arc(Math.random()*256, Math.random()*256, 4+Math.random()*8, 0, Math.PI*2); ctx.fill(); }
-            } else if (type === 'crate') {
-                ctx.fillStyle = '#8b5a2b'; ctx.fillRect(0, 0, 256, 256);
-                ctx.strokeStyle = '#5c4033'; ctx.lineWidth = 10; ctx.strokeRect(10, 10, 236, 236);
-                ctx.beginPath(); ctx.moveTo(10, 10); ctx.lineTo(246, 246); ctx.stroke();
-            }
-            const tex = new THREE.CanvasTexture(canvas);
-            tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
-            return tex;
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: var(--bg-main); color: var(--text-color); height: 100vh; overflow: hidden; }
+    .app-container { display: flex; height: 100vh; width: 100vw; }
+
+    /* Сайдбар */
+    .sidebar { width: 300px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+    .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+    .header button { background: var(--accent); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; transition: 0.2s; }
+    .header button:hover { background: var(--accent-hover); }
+    
+    .contacts-list { flex: 1; overflow-y: auto; }
+    .contact-item { padding: 15px 20px; display: flex; align-items: center; cursor: pointer; border-bottom: 1px solid var(--border); gap: 12px; }
+    .contact-item:hover, .contact-item.active { background: #202b36; }
+    .contact-avatar { width: 40px; height: 40px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    .contact-info { flex: 1; }
+    .contact-info h4 { font-size: 0.95rem; font-weight: 500; }
+    .contact-info p { font-size: 0.8rem; color: var(--text-muted); }
+
+    .user-profile { padding: 15px 20px; border-top: 1px solid var(--border); background: #111921; }
+    .profile-meta { display: flex; flex-direction: column; gap: 5px; }
+    .user-label { font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
+    .edit-nick { cursor: pointer; color: var(--text-muted); }
+    .edit-nick:hover { color: white; }
+    .user-id-text { font-size: 0.75rem; color: var(--text-muted); cursor: pointer; background: #182533; padding: 6px; border-radius: 4px; border: 1px solid var(--border); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .user-id-text:hover { color: white; background: #1c2a3a; }
+
+    /* Чат */
+    .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-chat); }
+    .chat-header { padding: 15px 20px; background: var(--bg-sidebar); border-bottom: 1px solid var(--border); }
+    .chat-info h3 { font-size: 1.05rem; }
+    .chat-info p { font-size: 0.8rem; color: var(--text-muted); }
+
+    .messages-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .welcome-msg { text-align: center; color: var(--text-muted); margin: auto; max-width: 400px; line-height: 1.5; }
+    
+    .msg { max-width: 65%; padding: 10px 14px; border-radius: 12px; position: relative; animation: fadeIn 0.15s ease; word-break: break-word; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .msg.incoming { background: var(--msg-in); align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid var(--border); }
+    .msg.outgoing { background: var(--msg-out); align-self: flex-end; border-bottom-right-radius: 4px; }
+    
+    .msg .text { font-size: 0.95rem; }
+    .msg .meta-box { display: flex; justify-content: flex-end; align-items: center; gap: 5px; margin-top: 4px; }
+    .msg .time { font-size: 0.65rem; color: var(--text-muted); }
+    .msg .status-icon { font-size: 0.65rem; color: #4ade80; }
+
+    .input-area { padding: 15px 20px; background: var(--bg-sidebar); display: flex; gap: 10px; }
+    .input-area input { flex: 1; background: var(--bg-main); border: 1px solid var(--border); padding: 12px 15px; border-radius: 8px; color: white; font-size: 1rem; outline: none; }
+    .input-area input:focus { border-color: var(--accent); }
+    .input-area button { background: var(--accent); border: none; color: white; width: 45px; height: 45px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+    .input-area button:disabled { background: #202b36; color: var(--text-muted); cursor: not-allowed; }
+
+    @media (max-width: 600px) {
+        .app-container { flex-direction: column; }
+        .sidebar { width: 100%; height: 40%; }
+        .chat-area { height: 60%; }
+    }
+</style>
+
+<script>
+    let peer = null;
+    let connections = {}; // Хранилище активных P2P соединений
+    let activePeerId = null;
+    let myNickname = localStorage.getItem('p2p_nick') || 'Бро_' + Math.floor(Math.random() * 100);
+    let chatHistory = JSON.parse(localStorage.getItem('p2p_history')) || {};
+
+    window.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('myNickDisplay').innerText = myNickname;
+        initPeer();
+    });
+
+    // Инициализация P2P узла
+    function initPeer() {
+        // Создаем случайный короткий ID для удобства передачи
+        const customId = 'tgx-' + Math.random().toString(36).substring(2, 10);
+        peer = new Peer(customId);
+
+        peer.on('open', (id) => {
+            document.getElementById('myIdDisplay').innerText = id;
+            renderContacts();
+        });
+
+        // Слушаем входящие подключения от друзей
+        peer.on('connection', (conn) => {
+            setupConnectionHandlers(conn);
+        });
+
+        peer.on('error', (err) => {
+            console.error('Ошибка Сети P2P:', err);
+            alert('Ошибка сети: ' + err.type);
+        });
+    }
+
+    // Подключение к другу по его ID
+    function connectToPeer() {
+        const targetId = prompt("Введите P2P ID вашего друга:");
+        if (!targetId || targetId.trim() === "") return;
+        const cleanId = targetId.trim();
+
+        if (connections[cleanId]) {
+            selectContact(cleanId);
+            return;
         }
 
-        const texWood = generateTexture('wood'), texSnow = generateTexture('snow'), texLeaves = generateTexture('leaves'), texCrate = generateTexture('crate');
-
-        // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ---
-        let scene, camera, renderer, clock;
-        let playerGroup, leftArm, rightArm, leftLeg, rightLeg;
-        let trees = [], crates = [], particles = [], snowParticles;
-        let woodCount = 0, metalCount = 0, clothCount = 0;
-        let campfireFuel = 100, isGameOver = false;
-        let campfireLight, campfireMesh;
+        // Инициируем прямое подключение
+        const conn = peer.connect(cleanId, {
+            metadata: { nickname: myNickname },
+            reliable: true // Включает гарантированную доставку пакетов
+        });
         
-        // Управление персонажем
-        let joyX = 0, joyY = 0, joyTouchId = null, joyCenter = { x: 0, y: 0 };
-        let walkTime = 0, isChopping = false, chopTime = 0;
-        let dayTime = 0;
+        setupConnectionHandlers(conn);
+    }
 
-        // ** Свободная орбитальная камера **
-        let camAngleX = 0;           
-        let camAngleY = Math.PI / 4; 
-        let camRadius = 12;          
-        let isDraggingCam = false;
-        let prevCamTouch = { x: 0, y: 0 };
-        let camTouchId = null;
-
-        // Событие падения самолета
-        let timeElapsed = 0;
-        let crashEventTriggered = false;
-        let isCinematic = false;
-        let planeGroup;
-        let planeVelocity = new THREE.Vector3(0, 0, 0);
-        let crashPoint = new THREE.Vector3(-25, 0, -25); // Точка падения самолета
-
-        function init() {
-            clock = new THREE.Clock();
-            scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0xd0e0f0, 0.025);
-
-            camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 200);
+    // Настройка обработчиков событий для конкретного соединения
+    function setupConnectionHandlers(conn) {
+        conn.on('open', () => {
+            connections[conn.peer] = conn;
             
-            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            document.getElementById('canvas-container').appendChild(renderer.domElement);
-
-            const ambient = new THREE.AmbientLight(0x405060, 0.5);
-            scene.add(ambient);
-
-            const sun = new THREE.DirectionalLight(0xffeedd, 0.8);
-            sun.position.set(20, 40, 20);
-            sun.castShadow = true;
-            sun.shadow.camera.left = -40; sun.shadow.camera.right = 40;
-            sun.shadow.camera.top = 40; sun.shadow.camera.bottom = -40;
-            scene.add(sun);
-            scene.sunLight = sun; 
-
-            texSnow.repeat.set(20, 20);
-            const ground = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), new THREE.MeshStandardMaterial({ map: texSnow, roughness: 0.9 }));
-            ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true;
-            scene.add(ground);
-
-            createCampfire();
-            createPlayer();
-            generateForest();
-            createSnow();
-            createPlane(); 
-            setupMobileControls();
-
-            window.addEventListener('resize', onWindowResize);
-            animate();
-        }
-
-        // --- ЛОГИКА САМОЛЕТА ---
-        function createPlane() {
-            planeGroup = new THREE.Group();
-            const metalMat = new THREE.MeshStandardMaterial({ color: 0xddeeff, metalness: 0.7, roughness: 0.2 });
-            const darkMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
-
-            const body = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 10, 16), metalMat);
-            body.rotation.z = Math.PI / 2; body.castShadow = true;
-            planeGroup.add(body);
-
-            const wings = new THREE.Mesh(new THREE.BoxGeometry(3, 0.2, 12), metalMat);
-            wings.position.set(-1, 0, 0); wings.castShadow = true;
-            planeGroup.add(wings);
-
-            const tailV = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.5, 0.2), metalMat);
-            tailV.position.set(4.2, 1.2, 0); tailV.rotation.z = -0.2;
-            planeGroup.add(tailV);
-
-            planeGroup.position.set(100, 80, 100);
-            planeGroup.visible = false;
-            scene.add(planeGroup);
-        }
-
-        function triggerCrashEvent() {
-            crashEventTriggered = true;
-            isCinematic = true;
-
-            // Скрываем интерфейс игры для киноэффекта
-            document.getElementById('ui-layer').style.opacity = '0';
-            document.getElementById('mobile-controls').style.opacity = '0';
-            
-            const overlay = document.getElementById('cinematic-overlay');
-            overlay.style.opacity = '1';
-            const txt = document.getElementById('cine-text');
-            txt.innerText = "ЧТО-ТО ПАДАЕТ С НЕБА...";
-            txt.style.opacity = '1';
-
-            planeGroup.visible = true;
-            // Спавним самолет высоко в небе
-            planeGroup.position.set(50, 45, 60); 
-            planeGroup.lookAt(crashPoint); 
-            
-            // Направление вектора скорости падения
-            planeVelocity.subVectors(crashPoint, planeGroup.position).normalize().multiplyScalar(28); 
-        }
-
-        function explodePlane() {
-            planeGroup.visible = false;
-            
-            // Взрывные частицы
-            for(let i=0; i<45; i++) {
-                const explMat = new THREE.MeshBasicMaterial({ color: Math.random() > 0.4 ? 0xffaa00 : 0x222222, transparent: true });
-                const explP = new THREE.Mesh(new THREE.SphereGeometry(Math.random()*1.5 + 0.5, 8, 8), explMat);
-                explP.position.copy(crashPoint);
-                explP.position.y += Math.random() * 2;
-                explP.velocity = new THREE.Vector3((Math.random()-0.5)*18, Math.random()*15 + 2, (Math.random()-0.5)*18);
-                explP.life = 2.5;
-                explP.isExplosion = true;
-                scene.add(explP);
-                particles.push(explP);
-            }
-
-            document.getElementById('cine-text').innerText = "КРУШЕНИЕ САМОЛЕТА! НАЙДИТЕ ОБЛОМКИ!";
-
-            // Спавним ценные ящики вокруг места взрыва
-            spawnLootCrates(crashPoint);
-
-            // ФИКС ЗАВИСАНИЯ: Через 4 секунды возвращаем управление игроку!
-            setTimeout(() => {
-                isCinematic = false; // Выключаем синематик режим камеры
-                document.getElementById('ui-layer').style.opacity = '1';
-                document.getElementById('mobile-controls').style.opacity = '1';
-                document.getElementById('cinematic-overlay').style.opacity = '0';
-                document.getElementById('cine-text').style.opacity = '0';
-            }, 4000);
-        }
-
-        function spawnLootCrates(pos) {
-            const crateMat = new THREE.MeshStandardMaterial({ map: texCrate });
-            for(let i=0; i<4; i++) {
-                let cx = pos.x + (Math.random()-0.5)*12;
-                let cz = pos.z + (Math.random()-0.5)*12;
-                
-                const crate = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.3, 1.3), crateMat);
-                crate.position.set(cx, 0.65, cz);
-                crate.rotation.y = Math.random() * Math.PI;
-                crate.castShadow = true;
-                scene.add(crate);
-                
-                crates.push({ mesh: crate, hp: 3, x: cx, z: cz });
-            }
-        }
-
-        // --- СОЗДАНИЕ МИРА И ПЕРСОНАЖА ---
-        function createCampfire() {
-            const fireGroup = new THREE.Group();
-            const rockMat = new THREE.MeshStandardMaterial({color: 0x666666, roughness: 0.9});
-            for(let i=0; i<8; i++) { const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.3, 0), rockMat); rock.position.set(Math.cos(i/8*Math.PI*2)*0.8, 0.1, Math.sin(i/8*Math.PI*2)*0.8); fireGroup.add(rock); }
-            const logMat = new THREE.MeshStandardMaterial({map: texWood});
-            for(let i=0; i<3; i++) { const log = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1), logMat); log.position.y = 0.2; log.rotation.x = Math.PI/2; log.rotation.z = (i/3)*Math.PI; fireGroup.add(log); }
-            campfireMesh = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 8), new THREE.MeshBasicMaterial({color: 0xff5500, transparent: true, opacity: 0.85}));
-            campfireMesh.position.y = 0.5; fireGroup.add(campfireMesh);
-            campfireLight = new THREE.PointLight(0xff7700, 2, 18); campfireLight.position.y = 1; campfireLight.castShadow = true; fireGroup.add(campfireLight);
-            scene.add(fireGroup);
-        }
-
-        function createPlayer() {
-            playerGroup = new THREE.Group(); playerGroup.position.set(0, 0, 4); scene.add(playerGroup);
-            const coatMat = new THREE.MeshStandardMaterial({ color: 0x336699, roughness: 0.7 }); 
-            const pantsMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9 });
-            const gloveMat = new THREE.MeshStandardMaterial({ color: 0x111111 }); 
-
-            const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.2, 0.4), coatMat); body.position.y = 1.2; body.castShadow = true; playerGroup.add(body);
-            const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshStandardMaterial({color: 0xffddbb})); head.position.y = 2.05; head.castShadow = true; playerGroup.add(head);
-            
-            leftLeg = new THREE.Group(); leftLeg.position.set(-0.25, 0.6, 0); const lLegMesh = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.6, 0.32), pantsMat); lLegMesh.position.y = -0.3; leftLeg.add(lLegMesh); playerGroup.add(leftLeg);
-            rightLeg = new THREE.Group(); rightLeg.position.set(0.25, 0.6, 0); const rLegMesh = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.6, 0.32), pantsMat); rLegMesh.position.y = -0.3; rightLeg.add(rLegMesh); playerGroup.add(rightLeg);
-            leftArm = new THREE.Group(); leftArm.position.set(-0.55, 1.6, 0); const lArmMesh = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.8, 0.28), coatMat); lArmMesh.position.y = -0.4; leftArm.add(lArmMesh); playerGroup.add(leftArm);
-            rightArm = new THREE.Group(); rightArm.position.set(0.55, 1.6, 0); const rArmMesh = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.8, 0.28), coatMat); rArmMesh.position.y = -0.4; rightArm.add(rArmMesh); playerGroup.add(rightArm);
-
-            const fallbackGlove = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.25, 0.32), gloveMat); fallbackGlove.position.y = -0.8;
-            const fGloveL = fallbackGlove.clone(), fGloveR = fallbackGlove.clone(); leftArm.add(fGloveL); rightArm.add(fGloveR);
-
-            // ЗАГРУЗКА GLB ГОРЯЧИХ ПЕРЧАТОК ИЗ СОХРАНЕННОЙ ИНФОРМАЦИИ
-            const loader = new THREE.GLTFLoader();
-            loader.load('Glolves.glb', (gltf) => {
-                fGloveL.visible = false; fGloveR.visible = false;
-                const modelL = gltf.scene.clone(); modelL.scale.set(0.45, 0.45, 0.45); modelL.position.y = -0.8; leftArm.add(modelL);
-                const modelR = gltf.scene.clone(); modelR.scale.set(0.45, 0.45, 0.45); modelR.position.y = -0.8; rightArm.add(modelR);
-            });
-
-            const axe = new THREE.Group(); axe.position.set(0, -0.7, 0.2); axe.rotation.x = Math.PI / 2;
-            const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.8), new THREE.MeshStandardMaterial({color: 0x5c4033})); axe.add(handle);
-            const blade = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.25, 0.35), new THREE.MeshStandardMaterial({color: 0xcccccc, metalness: 0.85, roughness: 0.2})); blade.position.set(0, 0.3, 0.12); axe.add(blade);
-            rightArm.add(axe);
-        }
-
-        function generateForest() {
-            const trunkMat = new THREE.MeshStandardMaterial({ map: texWood, roughness: 0.9 });
-            const leafMat = new THREE.MeshStandardMaterial({ map: texLeaves, roughness: 0.8 });
-            for(let i = 0; i < 65; i++) {
-                let x = (Math.random() - 0.5) * 110, z = (Math.random() - 0.5) * 110;
-                if (Math.sqrt(x*x + z*z) < 7 || Math.sqrt((x-crashPoint.x)**2 + (z-crashPoint.z)**2) < 10) continue; 
-                const tree = new THREE.Group(); tree.position.set(x, 0, z);
-                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.4, 2.5), trunkMat); trunk.position.y = 1.25; trunk.castShadow = true; tree.add(trunk);
-                for(let j=0; j<3; j++) { const leaves = new THREE.Mesh(new THREE.ConeGeometry(2 - j*0.5, 2.3, 5), leafMat); leaves.position.y = 2.4 + j*1.1; leaves.castShadow = true; tree.add(leaves); }
-                scene.add(tree); trees.push({ mesh: tree, hp: 3, x: x, z: z });
-            }
-        }
-
-        function createSnow() {
-            const snowGeo = new THREE.BufferGeometry(); const posArray = new Float32Array(1500 * 3);
-            for(let i=0; i<4500; i++) posArray[i] = (Math.random() - 0.5) * 80;
-            snowGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-            snowParticles = new THREE.Points(snowGeo, new THREE.PointsMaterial({ size: 0.15, color: 0xffffff, transparent: true, opacity: 0.8 }));
-            scene.add(snowParticles);
-        }
-
-        function spawnChips(x, y, z, color) {
-            const chipMat = new THREE.MeshStandardMaterial({ color: color });
-            for(let i=0; i<6; i++) {
-                const p = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.15), chipMat);
-                p.position.set(x, y + 0.8, z);
-                p.velocity = new THREE.Vector3((Math.random()-0.5)*5, Math.random()*5 + 2, (Math.random()-0.5)*5);
-                p.life = 0.8; scene.add(p); particles.push(p);
-            }
-        }
-
-        // --- УПРАВЛЕНИЕ И СВАЙПЫ КАМЕРЫ ---
-        function setupMobileControls() {
-            const zone = document.getElementById('joystick-zone'), stick = document.getElementById('joystick-stick'), actionBtn = document.getElementById('action-btn');
-            
-            zone.addEventListener('touchstart', (e) => { e.preventDefault(); let touch = e.changedTouches[0]; joyTouchId = touch.identifier; let rect = zone.getBoundingClientRect(); joyCenter.x = rect.left + rect.width / 2; joyCenter.y = rect.top + rect.height / 2; updateJoystick(touch.clientX, touch.clientY); }, { passive: false });
-            zone.addEventListener('touchmove', (e) => { e.preventDefault(); for (let i=0; i<e.changedTouches.length; i++) if (e.changedTouches[i].identifier === joyTouchId) updateJoystick(e.changedTouches[i].clientX, e.changedTouches[i].clientY); }, { passive: false });
-            zone.addEventListener('touchend', (e) => { e.preventDefault(); for (let i=0; i<e.changedTouches.length; i++) if (e.changedTouches[i].identifier === joyTouchId) { joyTouchId = null; joyX = 0; joyY = 0; stick.style.transform = `translate(0px, 0px)`; } }, { passive: false });
-            function updateJoystick(cx, cy) { let dx = cx - joyCenter.x, dy = cy - joyCenter.y, dist = Math.sqrt(dx*dx + dy*dy); if (dist > 40) { dx = (dx/dist)*40; dy = (dy/dist)*40; } stick.style.transform = `translate(${dx}px, ${dy}px)`; joyX = dx / 40; joyY = dy / 40; }
-            
-            actionBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startChop(); }, { passive: false });
-
-            // Свайпы свободной камеры по свободному экрану
-            document.addEventListener('touchstart', (e) => {
-                if (e.target.closest('#joystick-zone') || e.target.closest('#action-btn') || e.target.closest('.panel')) return;
-                let touch = e.changedTouches[0];
-                camTouchId = touch.identifier; isDraggingCam = true;
-                prevCamTouch.x = touch.clientX; prevCamTouch.y = touch.clientY;
-            }, { passive: false });
-
-            document.addEventListener('touchmove', (e) => {
-                if (!isDraggingCam) return;
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    let touch = e.changedTouches[i];
-                    if (touch.identifier === camTouchId) {
-                        let deltaX = touch.clientX - prevCamTouch.x;
-                        let deltaY = touch.clientY - prevCamTouch.y;
-                        camAngleX -= deltaX * 0.007; 
-                        camAngleY -= deltaY * 0.007;
-                        camAngleY = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, camAngleY)); // Лимиты высоты
-                        prevCamTouch.x = touch.clientX; prevCamTouch.y = touch.clientY;
-                    }
-                }
-            }, { passive: false });
-
-            document.addEventListener('touchend', (e) => {
-                for (let i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === camTouchId) { isDraggingCam = false; camTouchId = null; }
-            }, { passive: false });
-        }
-
-        function startChop() {
-            if (!isChopping && !isGameOver && !isCinematic) { isChopping = true; chopTime = 0; checkHit(); }
-        }
-
-        function checkHit() {
-            let hit = false;
-            // Проверка попадания по деревьям
-            for (let i = 0; i < trees.length; i++) {
-                let t = trees[i], dx = t.x - playerGroup.position.x, dz = t.z - playerGroup.position.z;
-                if (Math.sqrt(dx*dx + dz*dz) < 2.4) {
-                    t.hp -= 1; spawnChips(t.x, 0.5, t.z, 0x6e4722);
-                    if (t.hp <= 0) {
-                        scene.remove(t.mesh); trees.splice(i, 1);
-                        woodCount += 3; document.getElementById('wood-count').innerText = woodCount;
-                    }
-                    hit = true; break;
-                }
-            }
-            if (hit) return;
-            // Проверка попадания по авиа-ящикам
-            for (let i = 0; i < crates.length; i++) {
-                let c = crates[i], dx = c.x - playerGroup.position.x, dz = c.z - playerGroup.position.z;
-                if (Math.sqrt(dx*dx + dz*dz) < 2.4) {
-                    c.hp -= 1; spawnChips(c.x, 0.3, c.z, 0x998877);
-                    if (c.hp <= 0) {
-                        scene.remove(c.mesh); crates.splice(i, 1);
-                        metalCount += Math.floor(Math.random()*3)+2; 
-                        clothCount += Math.floor(Math.random()*2)+1;
-                        document.getElementById('metal-count').innerText = metalCount;
-                        document.getElementById('cloth-count').innerText = clothCount;
-                    }
-                    break;
-                }
-            }
-        }
-
-        // --- ИГРОВОЙ ЦИКЛ (ОБНОВЛЕНИЕ) ---
-        function animate() {
-            requestAnimationFrame(animate);
-            let delta = clock.getDelta();
-            if (isGameOver) return renderer.render(scene, camera);
-
-            timeElapsed += delta;
-            // Запуск крушения строго на 12-й секунде игры
-            if (timeElapsed >= 12 && !crashEventTriggered) {
-                triggerCrashEvent();
-            }
-
-            // Полет самолета по вектору к точке взрыва
-            if (isCinematic && crashEventTriggered && planeGroup.visible) {
-                planeGroup.position.addScaledVector(planeVelocity, delta);
-                planeGroup.rotation.z += 2.0 * delta; 
-                if (planeGroup.position.y <= 1) {
-                    explodePlane();
-                }
-            }
-
-            // Симуляция времени суток и угасания костра
-            dayTime += delta * 0.03; 
-            let dayCycle = Math.sin(dayTime); 
-            let skyColor = new THREE.Color().lerpColors(new THREE.Color(0x060a14), new THREE.Color(0x7ec0ee), (dayCycle + 1) / 2);
-            scene.background = skyColor; scene.fog.color = skyColor;
-            scene.sunLight.intensity = Math.max(0.1, dayCycle * 0.8);
-            
-            // Расход дров костра
-            campfireFuel -= delta * 1.8;
-            if (playerGroup.position.length() < 2.5 && woodCount > 0 && campfireFuel < 85 && !isCinematic) { 
-                woodCount--; campfireFuel += 20; 
-                document.getElementById('wood-count').innerText = woodCount; 
-            }
-            if (campfireFuel <= 0) { isGameOver = true; document.getElementById('death-screen').style.display = 'flex'; }
-
-            let fireScale = Math.max(0.1, campfireFuel / 100);
-            campfireMesh.scale.set(fireScale, fireScale, fireScale);
-            campfireLight.intensity = 2.5 * fireScale; 
-            document.getElementById('fire-bar-fill').style.width = Math.min(100, campfireFuel) + '%';
-
-            // Частицы взрыва и щепки
-            for(let i=particles.length-1; i>=0; i--) {
-                let p = particles[i]; p.position.addScaledVector(p.velocity, delta);
-                if (p.isExplosion) { p.material.opacity = p.life / 2.5; p.scale.multiplyScalar(1.01); } 
-                else { p.velocity.y -= 12 * delta; }
-                p.life -= delta; if(p.life <= 0) { scene.remove(p); particles.splice(i, 1); }
-            }
-
-            // Движение снега относительно игрока
-            let positions = snowParticles.geometry.attributes.position.array;
-            for(let i=1; i<positions.length; i+=3) {
-                positions[i] -= delta * 5;
-                if(positions[i] < 0) { positions[i] = 35; positions[i-1] = playerGroup.position.x + (Math.random()-0.5)*70; positions[i+1] = playerGroup.position.z + (Math.random()-0.5)*70; }
-            }
-            snowParticles.geometry.attributes.position.needsUpdate = true;
-
-            // Физика перемещения игрока
-            if (!isCinematic) {
-                let moveSpeed = 5.5 * delta;
-                let isMoving = (Math.abs(joyX) > 0.05 || Math.abs(joyY) > 0.05);
-
-                if (isMoving) {
-                    playerGroup.position.x += joyX * moveSpeed;
-                    playerGroup.position.z += joyY * moveSpeed;
-                    
-                    let angle = Math.atan2(joyX, joyY);
-                    let diff = angle - playerGroup.rotation.y;
-                    while (diff < -Math.PI) diff += Math.PI * 2;
-                    while (diff > Math.PI) diff -= Math.PI * 2;
-                    playerGroup.rotation.y += diff * 14 * delta;
-                    
-                    walkTime += delta * 14;
-                    leftLeg.rotation.x = Math.sin(walkTime) * 0.65; rightLeg.rotation.x = -Math.sin(walkTime) * 0.65;
-                    if (!isChopping) { leftArm.rotation.x = -Math.sin(walkTime) * 0.65; rightArm.rotation.x = Math.sin(walkTime) * 0.65; }
-                } else {
-                    leftLeg.rotation.x *= 0.8; rightLeg.rotation.x *= 0.8;
-                    if (!isChopping) { leftArm.rotation.x *= 0.8; rightArm.rotation.x *= 0.8; }
-                    walkTime = 0;
-                }
-            }
-
-            if (isChopping) {
-                chopTime += delta * 20;
-                if (chopTime < Math.PI) rightArm.rotation.x = -Math.sin(chopTime) * 1.7;
-                else { isChopping = false; rightArm.rotation.x = 0; }
-            }
-
-            // --- ИДЕАЛЬНАЯ РАБОТА ОРБИТАЛЬНОЙ КАМЕРЫ ---
-            let camOffsetX = Math.sin(camAngleX) * Math.cos(camAngleY) * camRadius;
-            let camOffsetY = Math.sin(camAngleY) * camRadius;
-            let camOffsetZ = Math.cos(camAngleX) * Math.cos(camAngleY) * camRadius;
-
-            let targetCamPos = new THREE.Vector3(
-                playerGroup.position.x + camOffsetX,
-                playerGroup.position.y + camOffsetY,
-                playerGroup.position.z + camOffsetZ
-            );
-
-            // Плавный фокус камеры
-            camera.position.lerp(targetCamPos, 0.12);
-
-            if (isCinematic && crashEventTriggered && planeGroup.visible) {
-                // Камера следит строго за падающим самолетом, позволяя тебе вращать её пальцем!
-                camera.lookAt(planeGroup.position);
+            // Если друг передал свой ник в метаданных, запишем его
+            const friendNick = conn.metadata?.nickname || 'Друг';
+            if (!chatHistory[conn.peer]) {
+                chatHistory[conn.peer] = { nickname: friendNick, messages: [] };
             } else {
-                // Возврат фокуса на игрока (включая момент после взрыва)
-                camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.2, playerGroup.position.z);
+                chatHistory[conn.peer].nickname = friendNick;
             }
 
-            renderer.render(scene, camera);
+            // Отправляем свой ник в ответ, чтобы у него обновилось имя
+            conn.send({ type: 'SYSTEM_NICK', nickname: myNickname });
+
+            saveHistory();
+            renderContacts();
+            selectContact(conn.peer);
+        });
+
+        // Прилетели данные от друга
+        conn.on('data', (data) => {
+            if (data.type === 'SYSTEM_NICK') {
+                if (chatHistory[conn.peer]) {
+                    chatHistory[conn.peer].nickname = data.nickname;
+                    renderContacts();
+                    if(activePeerId === conn.peer) {
+                        document.getElementById('chatTitle').innerText = data.nickname;
+                    }
+                }
+                return;
+            }
+
+            if (data.type === 'TEXT') {
+                if (!chatHistory[conn.peer]) {
+                    chatHistory[conn.peer] = { nickname: 'Друг', messages: [] };
+                }
+                
+                const newMsg = {
+                    id: data.id,
+                    sender: 'incoming',
+                    text: data.text,
+                    time: data.time
+                };
+                
+                chatHistory[conn.peer].messages.push(newMsg);
+                saveHistory();
+
+                // Отправляем сигнал подтверждения: "Я получил сообщение!"
+                conn.send({ type: 'ACK', id: data.id });
+
+                if (activePeerId === conn.peer) {
+                    appendMessage(newMsg);
+                } else {
+                    renderContacts(); // Чтобы обновить последнее сообщение в списке
+                }
+            }
+
+            // Пришло подтверждение доставки (ACK)
+            if (data.type === 'ACK') {
+                if (chatHistory[conn.peer]) {
+                    const msg = chatHistory[conn.peer].messages.find(m => m.id === data.id);
+                    if (msg) {
+                        msg.delivered = true;
+                        saveHistory();
+                        if (activePeerId === conn.peer) {
+                            renderMessages(); // Перерисовываем чат, чтобы появилась галочка
+                        }
+                    }
+                }
+            }
+        });
+
+        // Если друг закрыл вкладку или пропал интернет
+        conn.on('close', () => {
+            delete connections[conn.peer];
+            renderContacts();
+            if (activePeerId === conn.peer) {
+                document.getElementById('chatStatus').innerText = "Статус: Офлайн";
+                document.getElementById('messageInput').disabled = true;
+                document.getElementById('sendBtn').disabled = true;
+            }
+        });
+    }
+
+    function sendMessage(e) {
+        e.preventDefault();
+        const input = document.getElementById('messageInput');
+        const text = input.value.trim();
+        if (!text || !activePeerId) return;
+
+        const conn = connections[activePeerId];
+        if (!conn) {
+            alert("Собеседник сейчас не в сети. Отправка невозможна.");
+            return;
         }
 
-        function onWindowResize() { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); }
-        window.onload = init;
-    </script>
+        const msgId = Math.random().toString(36).substring(2, 11);
+        const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        
+        const msgData = {
+            id: msgId,
+            text: text,
+            time: time
+        };
+
+        // Записываем себе в историю (пока без галочки доставлено)
+        const localMsg = {
+            id: msgId,
+            sender: 'outgoing',
+            text: text,
+            time: time,
+            delivered: false
+        };
+
+        chatHistory[activePeerId].messages.push(localMsg);
+        saveHistory();
+        appendMessage(localMsg);
+
+        // Пуляем по прямому каналу
+        conn.send({
+            type: 'TEXT',
+            id: msgId,
+            text: text,
+            time: time
+        });
+
+        input.value = '';
+    }
+
+    function selectContact(peerId) {
+        activePeerId = peerId;
+        const target = chatHistory[peerId];
+        if (!target) return;
+
+        document.getElementById('chatTitle').innerText = target.nickname;
+        
+        const isOnline = !!connections[peerId];
+        document.getElementById('chatStatus').innerText = isOnline ? "Статус: В сети (Прямое P2P)" : "Статус: Офлайн";
+        
+        document.getElementById('messageInput').disabled = !isOnline;
+        document.getElementById('sendBtn').disabled = !isOnline;
+
+        renderMessages();
+        renderContacts();
+    }
+
+    function renderContacts() {
+        const list = document.getElementById('contactsList');
+        list.innerHTML = '';
+
+        Object.keys(chatHistory).forEach(peerId => {
+            const chat = chatHistory[peerId];
+            const isOnline = !!connections[peerId];
+            const div = document.createElement('div');
+            div.className = `contact-item ${activePeerId === peerId ? 'active' : ''}`;
+            div.onclick = () => selectContact(peerId);
+
+            const lastMsg = chat.messages[chat.messages.length - 1];
+            const lastTxt = lastMsg ? lastMsg.text : 'Нет сообщений';
+
+            div.innerHTML = `
+                <div class="contact-avatar" style="background: ${isOnline ? 'var(--accent)' : '#475569'}">
+                    ${chat.nickname.substring(0,2).toUpperCase()}
+                </div>
+                <div class="contact-info">
+                    <h4>${chat.nickname} ${isOnline ? '🟢' : '🔴'}</h4>
+                    <p>${lastTxt}</p>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    function renderMessages() {
+        const container = document.getElementById('messagesContainer');
+        container.innerHTML = '';
+        
+        if (!activePeerId || !chatHistory[activePeerId].messages.length) {
+            container.innerHTML = `<div class="welcome-msg">Чат пуст. Напишите что-нибудь!</div>`;
+            return;
+        }
+
+        chatHistory[activePeerId].messages.forEach(msg => appendMessage(msg));
+    }
+
+    function appendMessage(msg) {
+        const container = document.getElementById('messagesContainer');
+        const welcome = container.querySelector('.welcome-msg');
+        if(welcome) welcome.remove();
+
+        const isMe = msg.sender === 'outgoing';
+        const div = document.createElement('div');
+        div.className = `msg ${isMe ? 'outgoing' : 'incoming'}`;
+        
+        // Галочка доставки только для наших исходящих сообщений
+        const statusHtml = (isMe && msg.delivered) ? `<i class="fas fa-check status-icon" title="Доставлено на устройство"></i>` : '';
+
+        div.innerHTML = `
+            <div class="text">${escapeHTML(msg.text)}</div>
+            <div class="meta-box">
+                <span class="time">${msg.time}</span>
+                ${statusHtml}
+            </div>
+        `;
+        
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function changeNickname() {
+        const n = prompt("Ваш новый никнейм:", myNickname);
+        if(n && n.trim() !== "") {
+            myNickname = n.trim();
+            localStorage.setItem('p2p_nick', myNickname);
+            document.getElementById('myNickDisplay').innerText = myNickname;
+            // Рассылаем всем активным контактам инфу о смене ника
+            Object.values(connections).forEach(conn => {
+                conn.send({ type: 'SYSTEM_NICK', nickname: myNickname });
+            });
+        }
+    }
+
+    function copyMyId() {
+        const id = document.getElementById('myIdDisplay').innerText;
+        if(id && id !== "Генерация...") {
+            navigator.clipboard.writeText(id);
+            alert("Ваш P2P ID скопирован! Отправьте его другу.");
+        }
+    }
+
+    function saveHistory() {
+        localStorage.setItem('p2p_history', JSON.stringify(chatHistory));
+    }
+
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, t => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[t] || t));
+    }
+
+    // Регистрация Сервис Воркера для PWA
+    if ('serviceWorker' in navigator) {
+        const swText = `
+            self.addEventListener('install', e => self.skipWaiting());
+            self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
+        `;
+        const blob = new Blob([swText], { type: 'application/javascript' });
+        navigator.serviceWorker.register(URL.createObjectURL(blob));
+    }
+</script>
 </body>
 </html>
