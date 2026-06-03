@@ -3,27 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TG Private Cloud v5</title>
-    
-    <!-- ПОДКЛЮЧЕНИЕ ИКОНОК И КРИТИЧЕСКИ ВАЖНОЙ БИБЛИОТЕКИ SUPABASE -->
+    <title>Братский Чат v7 (Без Бэкенда)</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.8/dist/umd/supabase.js"></script>
-    
-    <!-- PWA НАСТРОЙКИ -->
     <meta name="theme-color" content="#17212b">
-    <link rel="manifest" href='data:application/manifest+json,{"name":"Наш TG","short_name":"TG","start_url":".","display":"standalone","background_color":"#0e1621","theme_color":"#17212b","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/2525/2525779.png","sizes":"512x512","type":"image/png"}]}'>
 </head>
 <body>
 
 <div class="app-container">
-    <!-- Левая панель (Сайдбар) -->
     <aside class="sidebar">
         <div class="sidebar-header">
             <h3 id="btnTabRooms" class="active" onclick="showTab('rooms')"><i class="fas fa-comments"></i> Комнаты</h3>
             <h3 id="btnTabProfile" onclick="showTab('profile')"><i class="fas fa-user-cog"></i> Профиль</h3>
         </div>
         
-        <!-- Вкладка комнат -->
         <div id="roomsTab" class="tab-content active">
             <div class="action-bar">
                 <button onclick="createOrJoinRoom()"><i class="fas fa-plus"></i> Создать / Войти</button>
@@ -31,7 +23,6 @@
             <div class="rooms-list" id="roomsList"></div>
         </div>
 
-        <!-- Вкладка профиля -->
         <div id="profileTab" class="tab-content">
             <div class="profile-editor">
                 <div class="avatar-big" id="profAvatar">U</div>
@@ -48,34 +39,30 @@
         </div>
     </aside>
 
-    <!-- Основная зона чата -->
     <main class="chat-area">
         <div class="chat-header" id="chatHeader" style="visibility: hidden;">
             <div class="chat-title-info">
                 <h3 id="currentRoomTitle">#комната</h3>
-                <p id="currentRoomStatus">Загрузка участников...</p>
+                <p id="currentRoomStatus">0 пацанов в группе</p>
             </div>
-            <button class="members-btn" onclick="toggleMembersList()" title="Участники группы"><i class="fas fa-users"></i></button>
+            <button class="members-btn" onclick="toggleMembersList()" title="Пацаны в комнате"><i class="fas fa-users"></i></button>
         </div>
 
-        <!-- Контейнер для сообщений -->
         <div class="messages-container" id="messagesContainer">
             <div class="intro-screen">
-                <i class="fas fa-user-shield plane-icon"></i>
-                <h2>TG Private Cloud v5</h2>
-                <p>1. Перейдите во вкладку <b>Профиль</b>, настройте ник и нажмите кнопку «Сохранить».</p>
-                <p>2. Вернитесь в <b>Комнаты</b>, нажмите «Создать / Войти» и введите секретный код.</p>
-                <p>3. Теперь всё работает мгновенно и железно сохраняется!</p>
+                <i class="fas fa-bolt plane-icon"></i>
+                <h2>Братский Чат v7</h2>
+                <p>Никаких регистраций и баз данных. Чистый код, который летает сам по себе.</p>
+                <p>1. Зайди в <b>Профиль</b>, настрой ник, статус «О себе» и нажми Сохранить.</p>
+                <p>2. Создай комнату по секретному ключу и позови друзей.</p>
             </div>
         </div>
 
-        <!-- Список участников -->
         <div class="members-sidebar" id="membersSidebar">
             <h4>Пацаны в чате:</h4>
             <div id="membersList"></div>
         </div>
 
-        <!-- Форма отправки -->
         <form class="input-form" onsubmit="handleSend(event)">
             <input type="text" id="msgInput" placeholder="Напишите сообщение..." autocomplete="off" disabled>
             <button type="submit" id="sendBtn" disabled><i class="fas fa-arrow-up"></i></button>
@@ -95,29 +82,21 @@
         --msg-in: #182533;
         --border: #101924;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
     body { background: var(--bg-main); color: var(--text); height: 100vh; overflow: hidden; }
     .app-container { display: flex; height: 100vh; width: 100vw; position: relative; }
-
-    /* Сайдбар */
     .sidebar { width: 320px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
     .sidebar-header { display: flex; border-bottom: 1px solid var(--border); background: #111921; }
     .sidebar-header h3 { flex: 1; text-align: center; padding: 15px 0; font-size: 0.95rem; cursor: pointer; color: var(--text-muted); transition: 0.2s; }
     .sidebar-header h3.active { color: var(--accent); border-bottom: 2px solid var(--accent); background: var(--bg-sidebar); }
-    
     .tab-content { display: none; flex: 1; flex-direction: column; overflow-y: auto; }
     .tab-content.active { display: flex; }
     .action-bar { padding: 15px; }
     .action-bar button { width: 100%; background: var(--accent); border: none; color: white; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-
-    /* Комнаты */
     .rooms-list { flex: 1; }
     .room-item { padding: 15px 20px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 12px; }
     .room-item:hover, .room-item.active { background: #202b36; }
     .room-icon { width: 40px; height: 40px; background: #2e3b4e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-
-    /* Профиль */
     .profile-editor { padding: 25px 20px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
     .avatar-big { width: 80px; height: 80px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold; }
     .input-group { width: 100%; display: flex; flex-direction: column; gap: 6px; }
@@ -125,19 +104,14 @@
     .input-group input { background: var(--bg-main); border: 1px solid var(--border); padding: 12px; border-radius: 6px; color: white; outline: none; font-size: 1rem; }
     .input-group input:focus { border-color: var(--accent); }
     .save-btn { width: 100%; background: #10b981; border: none; color: white; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; font-size: 1rem; }
-
-    /* Чат */
     .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-chat); position: relative; }
     .chat-header { padding: 15px 20px; background: var(--bg-sidebar); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
     .chat-title-info h3 { font-size: 1.05rem; }
     .chat-title-info p { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
     .members-btn { background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; }
-    
     .messages-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
     .intro-screen { margin: auto; text-align: center; max-width: 380px; color: var(--text-muted); line-height: 1.5; }
     .plane-icon { font-size: 3.5rem; color: var(--accent); margin-bottom: 15px; }
-
-    /* Сообщения */
     .message-row { display: flex; width: 100%; }
     .message-row.out { justify-content: flex-end; }
     .message-row.in { justify-content: flex-start; }
@@ -148,8 +122,6 @@
     .msg-text { font-size: 0.95rem; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
     .msg-meta { display: flex; align-items: center; justify-content: flex-end; gap: 5px; margin-top: 4px; font-size: 0.65rem; color: var(--text-muted); }
     .msg-meta i { color: #38bdf8; }
-
-    /* Список участников */
     .members-sidebar { position: absolute; right: -250px; top: 70px; bottom: 74px; width: 250px; background: var(--bg-sidebar); border-left: 1px solid var(--border); padding: 15px; transition: 0.3s; overflow-y: auto; z-index: 5; }
     .members-sidebar.open { right: 0; }
     .members-sidebar h4 { font-size: 0.9rem; margin-bottom: 15px; color: var(--text-muted); }
@@ -157,52 +129,130 @@
     .member-avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; }
     .member-info { display: flex; flex-direction: column; }
     .member-info small { font-size: 0.7rem; color: var(--text-muted); }
-
-    /* Поле ввода */
     .input-form { padding: 15px 20px; background: var(--bg-sidebar); display: flex; gap: 10px; z-index: 6; }
     .input-form input { flex: 1; background: var(--bg-main); border: 1px solid var(--border); padding: 12px 15px; border-radius: 8px; color: white; font-size: 1rem; outline: none; }
     .input-form button { background: var(--accent); border: none; color: white; width: 44px; height: 44px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
-
-    @media (max-width: 650px) {
-        .app-container { flex-direction: column; }
-        .sidebar { width: 100%; height: 35%; }
-        .chat-area { height: 65%; }
-        .members-sidebar { top: 50px; bottom: 60px; }
-    }
+    @media (max-width: 650px) { .app-container { flex-direction: column; } .sidebar { width: 100%; height: 35%; } .chat-area { height: 65%; } .members-sidebar { top: 50px; bottom: 60px; } }
 </style>
 
 <script>
-    // Инициализация правильного клиента Supabase через глобальный объект window
-    const SUPABASE_URL = "https://wzdxwexbvsjshgffbggu.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6ZHh3ZXhidXNqc2hnZmZiZ2d1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTAzODQwMDAsImV4cCI6MjAyNjA0MDYwMH0.3vX7_d7gUX9HWh4g7f7z7_p2y4z_x89aW_X_X7x8_99";
-    
-    // Безопасное создание инстанса
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const WS_SERVER = "wss://iot.eclipseorg.io/ws"; 
+    const CHAT_PREFIX = "tg_bratva_v7_";
 
-    // Достаем данные из локальной памяти (чтобы ничего не пропадало при перезагрузке)
-    let userId = localStorage.getItem('tg_v4_uid') || 'u-' + Math.random().toString(36).substring(2, 11);
-    let myNickname = localStorage.getItem('tg_v4_nick') || 'Бро_' + Math.floor(100 + Math.random() * 900);
-    let myBio = localStorage.getItem('tg_v4_bio') || 'На связи!';
-    let localRooms = JSON.parse(localStorage.getItem('tg_v4_my_rooms')) || [];
+    let ws = null;
+    let userId = localStorage.getItem('tg_v7_uid') || 'u-' + Math.random().toString(36).substring(2, 9);
+    let myNickname = localStorage.getItem('tg_v7_nick') || 'Бро_' + Math.floor(100 + Math.random() * 900);
+    let myBio = localStorage.getItem('tg_v7_bio') || 'На связи!';
+    let localRooms = JSON.parse(localStorage.getItem('tg_v7_my_rooms')) || [];
     
     let activeRoom = null;
-    let messageChannel = null;
+    let roomMembers = {}; // Тут временно храним активных участников
+    let roomMessages = {}; // Локальная история сообщений, пока открыта вкладка
 
-    localStorage.setItem('tg_v4_uid', userId);
+    localStorage.setItem('tg_v7_uid', userId);
 
     window.addEventListener('DOMContentLoaded', () => {
         initProfileForm();
         renderRoomsList();
-        syncProfileWithCloud(); // Фоновая отправка в базу
+        connectWebSocket();
+        
+        // Каждые 10 секунд пингуем чат своим профилем, чтобы другие видели, что мы онлайн
+        setInterval(broadcastMyPresence, 10000);
     });
 
-    // --- УПРАВЛЕНИЕ ВКЛАДКАМИ ---
+    function connectWebSocket() {
+        ws = new WebSocket(WS_SERVER, 'mqtt');
+        ws.onopen = () => {
+            // MQTT коннект пакет
+            ws.send(new Uint8Array([0x10, 12, 0, 4, 77, 81, 84, 84, 4, 2, 0, 60, 0, 0]));
+            // Подписываемся на все свои сохраненные комнаты
+            localRooms.forEach(r => subscribeToRoom(r));
+            // Если какая-то комната активна, сразу заявляем о себе
+            if(activeRoom) broadcastMyPresence();
+        };
+        ws.onmessage = (e) => {
+            if (e.data instanceof Blob) {
+                const r = new FileReader();
+                r.onload = () => parseMqttPacket(new Uint8Array(r.result));
+                r.readAsArrayBuffer(e.data);
+            }
+        };
+        ws.onclose = () => setTimeout(connectWebSocket, 1500); // Быстрый автореконнект
+    }
+
+    function parseMqttPacket(data) {
+        if ((data[0] & 0xF0) === 0x30) { 
+            let idx = 1, len = 0, mult = 1;
+            do { len += (data[idx] & 127) * mult; mult *= 128; } while ((data[idx++] & 128) != 0);
+            const tLen = (data[idx] << 8) + data[idx+1]; idx += 2;
+            const topic = new TextDecoder().decode(data.subarray(idx, idx + tLen)); idx += tLen;
+            if ((data[0] & 0x06) > 0) idx += 2;
+            const payload = new TextDecoder().decode(data.subarray(idx));
+            try { handleIncomingJson(topic, JSON.parse(payload)); } catch(e){}
+        }
+    }
+
+    function handleIncomingJson(topic, data) {
+        const roomName = topic.replace(CHAT_PREFIX, '');
+        if (!localRooms.includes(roomName)) return;
+
+        // 1. Кто-то отправил сообщение
+        if (data.type === 'MSG') {
+            if (!roomMessages[roomName]) roomMessages[roomName] = [];
+            if (roomMessages[roomName].some(m => m.id === data.id)) return;
+            
+            roomMessages[roomName].push(data);
+            if (activeRoom === roomName) appendMessage(data);
+        }
+
+        // 2. Кто-то зашел в сеть или пингует своим профилем
+        if (data.type === 'PRESENCE') {
+            if (data.uid === userId) return; // Игнорим себя
+            
+            if (!roomMembers[roomName]) roomMembers[roomName] = {};
+            roomMembers[roomName][data.uid] = {
+                nickname: data.nickname,
+                bio: data.bio,
+                ts: Date.now()
+            };
+            
+            if (activeRoom === roomName) renderMembersUI();
+            
+            // Если кент только что спросил кто в сети (PING), отправляем ему ответ (PONG)
+            if (data.action === 'PING') {
+                sendJson(roomName, { type: 'PRESENCE', action: 'PONG', uid: userId, nickname: myNickname, bio: myBio });
+            }
+        }
+    }
+
+    function subscribeToRoom(roomName) {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        const topic = CHAT_PREFIX + roomName;
+        const tBytes = new TextEncoder().encode(topic);
+        ws.send(new Uint8Array([0x82, 5 + tBytes.length, 0, 1, 0, tBytes.length, ...tBytes, 0]));
+    }
+
+    function sendJson(roomName, obj) {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        const topic = CHAT_PREFIX + roomName;
+        const tBytes = new TextEncoder().encode(topic);
+        const pBytes = new TextEncoder().encode(JSON.stringify(obj));
+        const rLen = 2 + tBytes.length + pBytes.length;
+        ws.send(new Uint8Array([0x30, rLen, 0, tBytes.length, ...tBytes, ...pBytes]));
+    }
+
+    function broadcastMyPresence(actionType = 'PONG') {
+        if (activeRoom && ws && ws.readyState === WebSocket.OPEN) {
+            sendJson(activeRoom, { type: 'PRESENCE', action: actionType, uid: userId, nickname: myNickname, bio: myBio });
+        }
+    }
+
+    // --- ВКЛАДКИ ---
     function showTab(tabName) {
         document.getElementById('btnTabRooms').classList.remove('active');
         document.getElementById('btnTabProfile').classList.remove('active');
         document.getElementById('roomsTab').classList.remove('active');
         document.getElementById('profileTab').classList.remove('active');
-        
         if(tabName === 'rooms') {
             document.getElementById('btnTabRooms').classList.add('active');
             document.getElementById('roomsTab').classList.add('active');
@@ -212,42 +262,23 @@
         }
     }
 
-    // --- ПРОФИЛЬ ---
+    // --- УПРАВЛЕНИЕ ПРОФИЛЕМ ---
     function initProfileForm() {
         document.getElementById('inputNick').value = myNickname;
         document.getElementById('inputBio').value = myBio;
         updateAvatarUI();
     }
 
-    async function saveProfile() {
-        const targetNick = document.getElementById('inputNick').value.trim();
-        const targetBio = document.getElementById('inputBio').value.trim();
+    function saveProfile() {
+        myNickname = document.getElementById('inputNick').value.trim() || myNickname;
+        myBio = document.getElementById('inputBio').value.trim() || 'На связи!';
         
-        myNickname = targetNick || myNickname;
-        myBio = targetBio || 'На связи!';
-        
-        // Железно пишем в память браузера
-        localStorage.setItem('tg_v4_nick', myNickname);
-        localStorage.setItem('tg_v4_bio', myBio);
+        localStorage.setItem('tg_v7_nick', myNickname);
+        localStorage.setItem('tg_v7_bio', myBio);
         
         updateAvatarUI();
-        
-        // Пуляем в облако
-        try {
-            await syncProfileWithCloud();
-        } catch(e) { console.log('Облако недоступно, сохранено локально'); }
-        
-        alert('Профиль сохранен!');
-        if(activeRoom) loadRoomMembers();
-    }
-
-    async function syncProfileWithCloud() {
-        await supabase.from('profiles').upsert({
-            id: userId,
-            nickname: myNickname,
-            bio: myBio,
-            last_seen: new Date().toISOString()
-        });
+        broadcastMyPresence('PING'); // Сразу сообщаем всем в активном чате о смене профиля
+        alert('Профиль железно сохранен!');
     }
 
     function updateAvatarUI() {
@@ -258,15 +289,16 @@
 
     // --- КОМНАТЫ ---
     function createOrJoinRoom() {
-        const rName = prompt("Введите имя/ключ секретной комнаты (английские буквы и цифры):");
+        const rName = prompt("Введите секретный ключ комнаты (английские буквы/цифры):");
         if(!rName) return;
         const cleanName = rName.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
         if(!cleanName) return;
 
         if(!localRooms.includes(cleanName)) {
             localRooms.push(cleanName);
-            localStorage.setItem('tg_v4_my_rooms', JSON.stringify(localRooms));
+            localStorage.setItem('tg_v7_my_rooms', JSON.stringify(localRooms));
         }
+        subscribeToRoom(cleanName);
         renderRoomsList();
         selectRoom(cleanName);
     }
@@ -278,92 +310,93 @@
             const div = document.createElement('div');
             div.className = `room-item ${activeRoom === r ? 'active' : ''}`;
             div.onclick = () => selectRoom(r);
-            div.innerHTML = `
-                <div class="room-icon" style="background:${stringToColor(r)}">#</div>
-                <div><h4>${r}</h4><p style="font-size:0.75rem;color:var(--text-muted)">Войти в чат</p></div>
-            `;
+            div.innerHTML = `<div class="room-icon" style="background:${stringToColor(r)}">#</div><div><h4>${r}</h4><p style="font-size:0.75rem;color:var(--text-muted)">Открыть комнату</p></div>`;
             list.appendChild(div);
         });
     }
 
-    // --- РАБОТА С ЧАТОМ (REALTIME) ---
-    async function selectRoom(roomName) {
+    function selectRoom(roomName) {
         activeRoom = roomName;
         renderRoomsList();
-
+        
         document.getElementById('chatHeader').style.visibility = "visible";
         document.getElementById('currentRoomTitle').innerText = `#${roomName}`;
         document.getElementById('msgInput').disabled = false;
         document.getElementById('sendBtn').disabled = false;
-        document.getElementById('messagesContainer').innerHTML = '';
+        
+        const container = document.getElementById('messagesContainer');
+        container.innerHTML = '';
 
-        // Фиксируем участие в БД
-        try {
-            await supabase.from('room_members').upsert({ room_id: activeRoom, user_id: userId });
-        } catch(e){}
+        // Очищаем старых участников для этой комнаты и запрашиваем актуальных через PING
+        roomMembers[activeRoom] = {};
+        renderMembersUI();
+        broadcastMyPresence('PING'); 
 
-        loadMessagesHistory();
-        loadRoomMembers();
-
-        // Сброс старого веб-сокет соединения
-        if (messageChannel) supabase.removeChannel(messageChannel);
-
-        // Включение мгновенного Realtime прослушивания
-        messageChannel = supabase.channel(`room_${activeRoom}`)
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${activeRoom}` }, payload => {
-                appendMessage(payload.new);
-            })
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'room_members' }, () => {
-                loadRoomMembers();
-            })
-            .subscribe();
-    }
-
-    async function loadMessagesHistory() {
-        const { data } = await supabase.from('messages').select('*').eq('room_id', activeRoom).order('created_at', { ascending: true });
-        if(data) {
-            data.forEach(m => appendMessage(m));
+        // Отрисовываем историю сообщений, если они накопились за сессию
+        if (roomMessages[activeRoom]) {
+            roomMessages[activeRoom].forEach(m => appendMessage(m));
         }
     }
 
-    async function loadRoomMembers() {
-        const { data } = await supabase.from('room_members').select('user_id, profiles(nickname, bio)').eq('room_id', activeRoom);
+    function renderMembersUI() {
+        const mList = document.getElementById('membersList');
+        mList.innerHTML = '';
         
-        if(data) {
-            document.getElementById('currentRoomStatus').innerText = `${data.length} пацанов в группе`;
-            const mList = document.getElementById('membersList');
-            mList.innerHTML = '';
-            
-            data.forEach(m => {
-                if(!m.profiles) return;
-                const div = document.createElement('div');
-                div.className = 'member-item';
-                div.innerHTML = `
-                    <div class="member-avatar" style="background:${stringToColor(m.profiles.nickname)}">${m.profiles.nickname.substring(0,1).toUpperCase()}</div>
-                    <div class="member-info">
-                        <b>${escapeHTML(m.profiles.nickname)} ${m.user_id === userId ? '(Вы)' : ''}</b>
-                        <small>${escapeHTML(m.profiles.bio || 'Без статуса')}</small>
-                    </div>
-                `;
-                mList.appendChild(div);
+        // Всегда добавляем себя на первое место
+        let count = 1;
+        appendMemberItem(myNickname, myBio, true);
+
+        // Добавляем остальных, кто активен (не старше 30 секунд)
+        if (roomMembers[activeRoom]) {
+            const now = Date.now();
+            Object.keys(roomMembers[activeRoom]).forEach(uid => {
+                const p = roomMembers[activeRoom][uid];
+                if (now - p.ts < 30000) { // Если кент подавал признаки жизни в последние 30 сек
+                    appendMemberItem(p.nickname, p.bio, false);
+                    count++;
+                }
             });
         }
+
+        document.getElementById('currentRoomStatus').innerText = `${count} пацанов в чате`;
     }
 
-    async function handleSend(e) {
+    function appendMemberItem(nick, bio, isMe) {
+        const mList = document.getElementById('membersList');
+        const div = document.createElement('div');
+        div.className = 'member-item';
+        div.innerHTML = `
+            <div class="member-avatar" style="background:${stringToColor(nick)}">${nick.substring(0,1).toUpperCase()}</div>
+            <div class="member-info">
+                <b>${escapeHTML(nick)} ${isMe ? '(Вы)' : ''}</b>
+                <small>${escapeHTML(bio)}</small>
+            </div>
+        `;
+        mList.appendChild(div);
+    }
+
+    // --- ОТПРАВКА СООБЩЕНИЙ ---
+    function handleSend(e) {
         e.preventDefault();
         const input = document.getElementById('msgInput');
         const text = input.value.trim();
         if(!text || !activeRoom) return;
 
-        await supabase.from('messages').insert({
-            room_id: activeRoom,
-            user_id: userId,
+        const msgData = {
+            id: 'm-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+            type: 'MSG',
+            uid: userId,
             sender_name: myNickname,
             text: text,
             time_str: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-        });
+        };
 
+        if (!roomMessages[activeRoom]) roomMessages[activeRoom] = [];
+        roomMessages[activeRoom].push(msgData);
+        
+        appendMessage(msgData);
+        sendJson(activeRoom, msgData);
+        
         input.value = '';
     }
 
@@ -371,43 +404,20 @@
         const container = document.getElementById('messagesContainer');
         const intro = container.querySelector('.intro-screen');
         if (intro) intro.remove();
-
         if (document.getElementById(`msg-${msg.id}`)) return;
 
-        const isMe = msg.user_id === userId;
+        const isMe = msg.uid === userId;
         const row = document.createElement('div');
         row.className = `message-row ${isMe ? 'out' : 'in'}`;
         row.id = `msg-${msg.id}`;
-
-        row.innerHTML = `
-            <div class="message-bubble">
-                ${!isMe ? `<span class="msg-author" style="color:${stringToColor(msg.sender_name)}">${escapeHTML(msg.sender_name)}</span>` : ''}
-                <div class="msg-text">${escapeHTML(msg.text)}</div>
-                <div class="msg-meta">
-                    <span>${msg.time_str}</span>
-                    ${isMe ? '<i class="fas fa-check-double" title="Доставлено"></i>' : ''}
-                </div>
-            </div>
-        `;
-
+        row.innerHTML = `<div class="message-bubble">${!isMe ? `<span class="msg-author" style="color:${stringToColor(msg.sender_name)}">${escapeHTML(msg.sender_name)}</span>` : ''}<div class="msg-text">${escapeHTML(msg.text)}</div><div class="msg-meta"><span>${msg.time_str}</span>${isMe ? '<i class="fas fa-check-double"></i>' : ''}</div></div>`;
         container.appendChild(row);
         container.scrollTop = container.scrollHeight;
     }
 
-    function toggleMembersList() {
-        document.getElementById('membersSidebar').classList.toggle('open');
-    }
-
-    function stringToColor(str) {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) { hash = str.charCodeAt(i) + ((hash << 5) - hash); }
-        const colors = ['#34d399', '#60a5fa', '#f43f5e', '#fbbf24', '#a78bfa', '#38bdf8', '#f472b6'];
-        return colors[Math.abs(hash) % colors.length];
-    }
-
-    function escapeHTML(str) {
-        return str.replace(/[&<>'"]/g, t => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[t] || t));
-    }
-</script>
+    function toggleMembersList() { document.getElementById('membersSidebar').classList.toggle('open'); }
+    function stringToColor(str) { let hash = 0; for (let i = 0; i < str.length; i++) { hash = str.charCodeAt(i) + ((hash << 5) - hash); } const colors = ['#34d399', '#60a5fa', '#f43f5e', '#fbbf24', '#a78bfa', '#38bdf8', '#f472b6']; return colors[Math.abs(hash) % colors.length]; }
+    function escapeHTML(str) { return str.replace(/[&<>'"]/g, t => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[t] || t)); }
+</style>
 </body>
 </html>
