@@ -3,421 +3,410 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Братский Чат v7 (Без Бэкенда)</title>
+    <title>24Portfolio — Книжная Полка & Игра</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <meta name="theme-color" content="#17212b">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: var(--bg-dark); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
+
+        header { background: var(--bg-card); padding: 20px; text-align: center; border-bottom: 1px solid #334155; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        header h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: 1px; color: var(--text-main); }
+        header h1 span { color: var(--accent); }
+
+        .nav-tabs { display: flex; justify-content: center; background: #111827; padding: 5px; gap: 10px; }
+        .tab-btn { background: none; border: none; color: var(--text-muted); padding: 12px 24px; font-size: 1rem; font-weight: 600; cursor: pointer; border-radius: 8px; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+        .tab-btn.active { background: var(--accent); color: white; }
+
+        .container { flex: 1; max-width: 1200px; width: 100%; margin: 0 auto; padding: 20px; display: none; }
+        .container.active { display: block; }
+
+        /* ИНТЕРФЕЙС КНИГ */
+        .books-layout { display: grid; grid-template-columns: 350px 1fr; gap: 25px; }
+        @media (max-width: 900px) { .books-layout { grid-template-columns: 1fr; } }
+
+        .book-form-card { background: var(--bg-card); padding: 25px; border-radius: 16px; border: 1px solid #334155; height: fit-content; position: sticky; top: 20px; }
+        .book-form-card h3 { margin-bottom: 20px; font-size: 1.3rem; }
+        .form-group { margin-bottom: 16px; display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+        .form-group input, .form-group textarea, .form-group select { background: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 8px; color: white; outline: none; font-size: 0.95rem; }
+        .form-group input:focus { border-color: var(--accent); }
+        
+        .rating-input { display: flex; gap: 8px; font-size: 1.5rem; color: #eab308; cursor: pointer; }
+        .submit-btn { width: 100%; background: var(--accent); color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+        .submit-btn:hover { background: var(--accent-hover); }
+
+        .books-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .book-card { background: var(--bg-card); border-radius: 16px; border: 1px solid #334155; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.3s; position: relative; overflow: hidden; }
+        .book-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+        .book-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--accent); }
+        .book-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; }
+        .book-author { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 12px; }
+        .book-badge { background: #312e81; color: #e0e7ff; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; width: fit-content; margin-bottom: 12px; }
+        .book-notes { font-size: 0.9rem; color: #cbd5e1; background: #0f172a; padding: 10px; border-radius: 8px; margin-bottom: 12px; flex-1: 1; min-height: 60px; word-break: break-word; }
+        .book-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: var(--text-muted); }
+        .book-rating { color: #eab308; }
+        .delete-book-btn { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1rem; padding: 5px; }
+
+        /* ИНТЕРФЕЙС ИГРЫ */
+        .game-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg-card); border-radius: 20px; border: 1px solid #334155; padding: 30px; max-width: 600px; margin: 20px auto; text-align: center; }
+        .game-wrapper h2 { margin-bottom: 10px; }
+        .game-wrapper p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; }
+        .score-board { font-size: 1.5rem; font-weight: bold; margin-bottom: 15px; color: var(--success); }
+        canvas { background: #0f172a; border: 4px solid #334155; border-radius: 12px; box-shadow: inset 0 4px 6px rgba(0,0,0,0.6); display: block; max-width: 100%; }
+        .game-btn { background: var(--success); color: white; border: none; padding: 12px 30px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 15px; transition: 0.2s; }
+        .game-btn:hover { opacity: 0.9; }
+        .game-controls { display: grid; grid-template-columns: repeat(3, 50px); gap: 10px; margin-top: 15px; justify-content: center; }
+        .ctrl-btn { width: 50px; height: 50px; background: #334155; border: none; color: white; border-radius: 8px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .ctrl-btn:active { background: var(--accent); }
+        .empty-state { text-align: center; color: var(--text-muted); padding: 40px; font-size: 1.1rem; grid-column: 1/-1; }
+    </style>
 </head>
 <body>
 
-<div class="app-container">
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <h3 id="btnTabRooms" class="active" onclick="showTab('rooms')"><i class="fas fa-comments"></i> Комнаты</h3>
-            <h3 id="btnTabProfile" onclick="showTab('profile')"><i class="fas fa-user-cog"></i> Профиль</h3>
-        </div>
-        
-        <div id="roomsTab" class="tab-content active">
-            <div class="action-bar">
-                <button onclick="createOrJoinRoom()"><i class="fas fa-plus"></i> Создать / Войти</button>
-            </div>
-            <div class="rooms-list" id="roomsList"></div>
-        </div>
+    <header>
+        <h1>24PORTFOLIO <span>BOOKS</span></h1>
+    </header>
 
-        <div id="profileTab" class="tab-content">
-            <div class="profile-editor">
-                <div class="avatar-big" id="profAvatar">U</div>
-                <div class="input-group">
-                    <label>Ваш Никнейм:</label>
-                    <input type="text" id="inputNick" placeholder="Ник в чате">
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('books')"><i class="fas fa-book"></i> Мои Книги</button>
+        <button class="tab-btn" onclick="switchTab('game')"><i class="fas fa-gamepad"></i> Мини-Игра</button>
+    </div>
+
+    <!-- ВКЛАДКА КНИГ -->
+    <div id="booksSection" class="container active">
+        <div class="books-layout">
+            <div class="book-form-card">
+                <h3><i class="fas fa-feather-alt"></i> Добавить книгу</h3>
+                <form id="bookForm" onsubmit="addBook(event)">
+                    <div class="form-group">
+                        <label>Название книги</label>
+                        <input type="text" id="titleInput" placeholder="Например: Магия утра" required autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>Автор</label>
+                        <input type="text" id="authorInput" placeholder="Хэл Элрод" required autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>Жанр</label>
+                        <select id="genreInput">
+                            <option value="Саморазвитие">Саморазвитие</option>
+                            <option value="Бизнес / Финансы">Бизнес / Финансы</option>
+                            <option value="Фантастика">Фантастика</option>
+                            <option value="Психология">Психология</option>
+                            <option value="Классика">Классика</option>
+                            <option value="Другое">Другое</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Прочитано страниц</label>
+                        <input type="number" id="pagesInput" placeholder="120" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Мои мысли / Заметки</label>
+                        <textarea id="notesInput" rows="3" placeholder="Что зацепило в книге..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Оценка пацана</label>
+                        <div class="rating-input" id="ratingStars">
+                            <i class="fas fa-star" data-value="1"></i>
+                            <i class="fas fa-star" data-value="2"></i>
+                            <i class="fas fa-star" data-value="3"></i>
+                            <i class="fas fa-star" data-value="4"></i>
+                            <i class="fas fa-star" data-value="5"></i>
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-btn">Поставить на полку</button>
+                </form>
+            </div>
+
+            <div>
+                <div class="books-grid" id="booksGrid">
+                    <!-- Сюда прилетают книги из JS -->
                 </div>
-                <div class="input-group">
-                    <label>О себе (Статус):</label>
-                    <input type="text" id="inputBio" placeholder="Например: На связи 24/7">
-                </div>
-                <button type="button" onclick="saveProfile()" class="save-btn"><i class="fas fa-save"></i> Сохранить профиль</button>
             </div>
         </div>
-    </aside>
+    </div>
 
-    <main class="chat-area">
-        <div class="chat-header" id="chatHeader" style="visibility: hidden;">
-            <div class="chat-title-info">
-                <h3 id="currentRoomTitle">#комната</h3>
-                <p id="currentRoomStatus">0 пацанов в группе</p>
+    <!-- ВКЛАДКА ИГРЫ -->
+    <div id="gameSection" class="container">
+        <div class="game-wrapper">
+            <h2><i class="fas fa-bug"></i> Книжный Червь</h2>
+            <p>Управляй червяком стрелочками на клаве (или кнопками ниже). Собирай буквы (знания), чтобы расти и набирать очки!</p>
+            <div class="score-board">Счёт: <span id="scoreText">0</span></div>
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+            <button class="game-btn" id="startBtn" onclick="startGame()">Старт / Сброс</button>
+            
+            <div class="game-controls">
+                <div></div>
+                <button class="ctrl-btn" onclick="pressKey('ArrowUp')"><i class="fas fa-chevron-up"></i></button>
+                <div></div>
+                <button class="ctrl-btn" onclick="pressKey('ArrowLeft')"><i class="fas fa-chevron-left"></i></button>
+                <button class="ctrl-btn" onclick="pressKey('ArrowDown')"><i class="fas fa-chevron-down"></i></button>
+                <button class="ctrl-btn" onclick="pressKey('ArrowRight')"><i class="fas fa-chevron-right"></i></button>
             </div>
-            <button class="members-btn" onclick="toggleMembersList()" title="Пацаны в комнате"><i class="fas fa-users"></i></button>
         </div>
+    </div>
 
-        <div class="messages-container" id="messagesContainer">
-            <div class="intro-screen">
-                <i class="fas fa-bolt plane-icon"></i>
-                <h2>Братский Чат v7</h2>
-                <p>Никаких регистраций и баз данных. Чистый код, который летает сам по себе.</p>
-                <p>1. Зайди в <b>Профиль</b>, настрой ник, статус «О себе» и нажми Сохранить.</p>
-                <p>2. Создай комнату по секретному ключу и позови друзей.</p>
-            </div>
-        </div>
-
-        <div class="members-sidebar" id="membersSidebar">
-            <h4>Пацаны в чате:</h4>
-            <div id="membersList"></div>
-        </div>
-
-        <form class="input-form" onsubmit="handleSend(event)">
-            <input type="text" id="msgInput" placeholder="Напишите сообщение..." autocomplete="off" disabled>
-            <button type="submit" id="sendBtn" disabled><i class="fas fa-arrow-up"></i></button>
-        </form>
-    </main>
-</div>
-
-<style>
-    :root {
-        --bg-main: #0e1621;
-        --bg-sidebar: #17212b;
-        --bg-chat: #0f172a;
-        --text: #f5f5f5;
-        --text-muted: #6c7a89;
-        --accent: #2481cc;
-        --msg-out: #2b5278;
-        --msg-in: #182533;
-        --border: #101924;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-    body { background: var(--bg-main); color: var(--text); height: 100vh; overflow: hidden; }
-    .app-container { display: flex; height: 100vh; width: 100vw; position: relative; }
-    .sidebar { width: 320px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
-    .sidebar-header { display: flex; border-bottom: 1px solid var(--border); background: #111921; }
-    .sidebar-header h3 { flex: 1; text-align: center; padding: 15px 0; font-size: 0.95rem; cursor: pointer; color: var(--text-muted); transition: 0.2s; }
-    .sidebar-header h3.active { color: var(--accent); border-bottom: 2px solid var(--accent); background: var(--bg-sidebar); }
-    .tab-content { display: none; flex: 1; flex-direction: column; overflow-y: auto; }
-    .tab-content.active { display: flex; }
-    .action-bar { padding: 15px; }
-    .action-bar button { width: 100%; background: var(--accent); border: none; color: white; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-    .rooms-list { flex: 1; }
-    .room-item { padding: 15px 20px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 12px; }
-    .room-item:hover, .room-item.active { background: #202b36; }
-    .room-icon { width: 40px; height: 40px; background: #2e3b4e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-    .profile-editor { padding: 25px 20px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
-    .avatar-big { width: 80px; height: 80px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold; }
-    .input-group { width: 100%; display: flex; flex-direction: column; gap: 6px; }
-    .input-group label { font-size: 0.85rem; color: var(--text-muted); }
-    .input-group input { background: var(--bg-main); border: 1px solid var(--border); padding: 12px; border-radius: 6px; color: white; outline: none; font-size: 1rem; }
-    .input-group input:focus { border-color: var(--accent); }
-    .save-btn { width: 100%; background: #10b981; border: none; color: white; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; font-size: 1rem; }
-    .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-chat); position: relative; }
-    .chat-header { padding: 15px 20px; background: var(--bg-sidebar); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-    .chat-title-info h3 { font-size: 1.05rem; }
-    .chat-title-info p { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
-    .members-btn { background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; }
-    .messages-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
-    .intro-screen { margin: auto; text-align: center; max-width: 380px; color: var(--text-muted); line-height: 1.5; }
-    .plane-icon { font-size: 3.5rem; color: var(--accent); margin-bottom: 15px; }
-    .message-row { display: flex; width: 100%; }
-    .message-row.out { justify-content: flex-end; }
-    .message-row.in { justify-content: flex-start; }
-    .message-bubble { max-width: 65%; padding: 8px 14px; border-radius: 14px; position: relative; display: flex; flex-direction: column; }
-    .message-row.out .message-bubble { background: var(--msg-out); border-bottom-right-radius: 2px; }
-    .message-row.in .message-bubble { background: var(--msg-in); border-bottom-left-radius: 2px; }
-    .msg-author { font-size: 0.8rem; font-weight: bold; margin-bottom: 3px; }
-    .msg-text { font-size: 0.95rem; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
-    .msg-meta { display: flex; align-items: center; justify-content: flex-end; gap: 5px; margin-top: 4px; font-size: 0.65rem; color: var(--text-muted); }
-    .msg-meta i { color: #38bdf8; }
-    .members-sidebar { position: absolute; right: -250px; top: 70px; bottom: 74px; width: 250px; background: var(--bg-sidebar); border-left: 1px solid var(--border); padding: 15px; transition: 0.3s; overflow-y: auto; z-index: 5; }
-    .members-sidebar.open { right: 0; }
-    .members-sidebar h4 { font-size: 0.9rem; margin-bottom: 15px; color: var(--text-muted); }
-    .member-item { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 0.9rem; }
-    .member-avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; }
-    .member-info { display: flex; flex-direction: column; }
-    .member-info small { font-size: 0.7rem; color: var(--text-muted); }
-    .input-form { padding: 15px 20px; background: var(--bg-sidebar); display: flex; gap: 10px; z-index: 6; }
-    .input-form input { flex: 1; background: var(--bg-main); border: 1px solid var(--border); padding: 12px 15px; border-radius: 8px; color: white; font-size: 1rem; outline: none; }
-    .input-form button { background: var(--accent); border: none; color: white; width: 44px; height: 44px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
-    @media (max-width: 650px) { .app-container { flex-direction: column; } .sidebar { width: 100%; height: 35%; } .chat-area { height: 65%; } .members-sidebar { top: 50px; bottom: 60px; } }
-</style>
-
-<script>
-    const WS_SERVER = "wss://iot.eclipseorg.io/ws"; 
-    const CHAT_PREFIX = "tg_bratva_v7_";
-
-    let ws = null;
-    let userId = localStorage.getItem('tg_v7_uid') || 'u-' + Math.random().toString(36).substring(2, 9);
-    let myNickname = localStorage.getItem('tg_v7_nick') || 'Бро_' + Math.floor(100 + Math.random() * 900);
-    let myBio = localStorage.getItem('tg_v7_bio') || 'На связи!';
-    let localRooms = JSON.parse(localStorage.getItem('tg_v7_my_rooms')) || [];
-    
-    let activeRoom = null;
-    let roomMembers = {}; // Тут временно храним активных участников
-    let roomMessages = {}; // Локальная история сообщений, пока открыта вкладка
-
-    localStorage.setItem('tg_v7_uid', userId);
-
-    window.addEventListener('DOMContentLoaded', () => {
-        initProfileForm();
-        renderRoomsList();
-        connectWebSocket();
-        
-        // Каждые 10 секунд пингуем чат своим профилем, чтобы другие видели, что мы онлайн
-        setInterval(broadcastMyPresence, 10000);
-    });
-
-    function connectWebSocket() {
-        ws = new WebSocket(WS_SERVER, 'mqtt');
-        ws.onopen = () => {
-            // MQTT коннект пакет
-            ws.send(new Uint8Array([0x10, 12, 0, 4, 77, 81, 84, 84, 4, 2, 0, 60, 0, 0]));
-            // Подписываемся на все свои сохраненные комнаты
-            localRooms.forEach(r => subscribeToRoom(r));
-            // Если какая-то комната активна, сразу заявляем о себе
-            if(activeRoom) broadcastMyPresence();
-        };
-        ws.onmessage = (e) => {
-            if (e.data instanceof Blob) {
-                const r = new FileReader();
-                r.onload = () => parseMqttPacket(new Uint8Array(r.result));
-                r.readAsArrayBuffer(e.data);
-            }
-        };
-        ws.onclose = () => setTimeout(connectWebSocket, 1500); // Быстрый автореконнект
-    }
-
-    function parseMqttPacket(data) {
-        if ((data[0] & 0xF0) === 0x30) { 
-            let idx = 1, len = 0, mult = 1;
-            do { len += (data[idx] & 127) * mult; mult *= 128; } while ((data[idx++] & 128) != 0);
-            const tLen = (data[idx] << 8) + data[idx+1]; idx += 2;
-            const topic = new TextDecoder().decode(data.subarray(idx, idx + tLen)); idx += tLen;
-            if ((data[0] & 0x06) > 0) idx += 2;
-            const payload = new TextDecoder().decode(data.subarray(idx));
-            try { handleIncomingJson(topic, JSON.parse(payload)); } catch(e){}
-        }
-    }
-
-    function handleIncomingJson(topic, data) {
-        const roomName = topic.replace(CHAT_PREFIX, '');
-        if (!localRooms.includes(roomName)) return;
-
-        // 1. Кто-то отправил сообщение
-        if (data.type === 'MSG') {
-            if (!roomMessages[roomName]) roomMessages[roomName] = [];
-            if (roomMessages[roomName].some(m => m.id === data.id)) return;
+    <script>
+        // ЛОГИКА ТАБОВ
+        function switchTab(tab) {
+            document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             
-            roomMessages[roomName].push(data);
-            if (activeRoom === roomName) appendMessage(data);
-        }
-
-        // 2. Кто-то зашел в сеть или пингует своим профилем
-        if (data.type === 'PRESENCE') {
-            if (data.uid === userId) return; // Игнорим себя
-            
-            if (!roomMembers[roomName]) roomMembers[roomName] = {};
-            roomMembers[roomName][data.uid] = {
-                nickname: data.nickname,
-                bio: data.bio,
-                ts: Date.now()
-            };
-            
-            if (activeRoom === roomName) renderMembersUI();
-            
-            // Если кент только что спросил кто в сети (PING), отправляем ему ответ (PONG)
-            if (data.action === 'PING') {
-                sendJson(roomName, { type: 'PRESENCE', action: 'PONG', uid: userId, nickname: myNickname, bio: myBio });
+            if(tab === 'books') {
+                document.getElementById('booksSection').classList.add('active');
+                event.target.classList.add('active');
+                stopGameLoop(); // остановить игру, если ушли с таба
+            } else {
+                document.getElementById('gameSection').classList.add('active');
+                event.target.classList.add('active');
             }
         }
-    }
 
-    function subscribeToRoom(roomName) {
-        if (!ws || ws.readyState !== WebSocket.OPEN) return;
-        const topic = CHAT_PREFIX + roomName;
-        const tBytes = new TextEncoder().encode(topic);
-        ws.send(new Uint8Array([0x82, 5 + tBytes.length, 0, 1, 0, tBytes.length, ...tBytes, 0]));
-    }
-
-    function sendJson(roomName, obj) {
-        if (!ws || ws.readyState !== WebSocket.OPEN) return;
-        const topic = CHAT_PREFIX + roomName;
-        const tBytes = new TextEncoder().encode(topic);
-        const pBytes = new TextEncoder().encode(JSON.stringify(obj));
-        const rLen = 2 + tBytes.length + pBytes.length;
-        ws.send(new Uint8Array([0x30, rLen, 0, tBytes.length, ...tBytes, ...pBytes]));
-    }
-
-    function broadcastMyPresence(actionType = 'PONG') {
-        if (activeRoom && ws && ws.readyState === WebSocket.OPEN) {
-            sendJson(activeRoom, { type: 'PRESENCE', action: actionType, uid: userId, nickname: myNickname, bio: myBio });
-        }
-    }
-
-    // --- ВКЛАДКИ ---
-    function showTab(tabName) {
-        document.getElementById('btnTabRooms').classList.remove('active');
-        document.getElementById('btnTabProfile').classList.remove('active');
-        document.getElementById('roomsTab').classList.remove('active');
-        document.getElementById('profileTab').classList.remove('active');
-        if(tabName === 'rooms') {
-            document.getElementById('btnTabRooms').classList.add('active');
-            document.getElementById('roomsTab').classList.add('active');
-        } else {
-            document.getElementById('btnTabProfile').classList.add('active');
-            document.getElementById('profileTab').classList.add('active');
-        }
-    }
-
-    // --- УПРАВЛЕНИЕ ПРОФИЛЕМ ---
-    function initProfileForm() {
-        document.getElementById('inputNick').value = myNickname;
-        document.getElementById('inputBio').value = myBio;
-        updateAvatarUI();
-    }
-
-    function saveProfile() {
-        myNickname = document.getElementById('inputNick').value.trim() || myNickname;
-        myBio = document.getElementById('inputBio').value.trim() || 'На связи!';
-        
-        localStorage.setItem('tg_v7_nick', myNickname);
-        localStorage.setItem('tg_v7_bio', myBio);
-        
-        updateAvatarUI();
-        broadcastMyPresence('PING'); // Сразу сообщаем всем в активном чате о смене профиля
-        alert('Профиль железно сохранен!');
-    }
-
-    function updateAvatarUI() {
-        const av = document.getElementById('profAvatar');
-        av.innerText = myNickname.substring(0,1).toUpperCase();
-        av.style.background = stringToColor(myNickname);
-    }
-
-    // --- КОМНАТЫ ---
-    function createOrJoinRoom() {
-        const rName = prompt("Введите секретный ключ комнаты (английские буквы/цифры):");
-        if(!rName) return;
-        const cleanName = rName.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-        if(!cleanName) return;
-
-        if(!localRooms.includes(cleanName)) {
-            localRooms.push(cleanName);
-            localStorage.setItem('tg_v7_my_rooms', JSON.stringify(localRooms));
-        }
-        subscribeToRoom(cleanName);
-        renderRoomsList();
-        selectRoom(cleanName);
-    }
-
-    function renderRoomsList() {
-        const list = document.getElementById('roomsList');
-        list.innerHTML = '';
-        localRooms.forEach(r => {
-            const div = document.createElement('div');
-            div.className = `room-item ${activeRoom === r ? 'active' : ''}`;
-            div.onclick = () => selectRoom(r);
-            div.innerHTML = `<div class="room-icon" style="background:${stringToColor(r)}">#</div><div><h4>${r}</h4><p style="font-size:0.75rem;color:var(--text-muted)">Открыть комнату</p></div>`;
-            list.appendChild(div);
+        // ЛОГИКА ЗВЕЗДОЧЕК В ФОРМЕ
+        let currentSelectedRating = 5;
+        const stars = document.querySelectorAll('#ratingStars i');
+        stars.forEach(star => {
+            star.addEventListener('click', (e) => {
+                currentSelectedRating = parseInt(e.target.getAttribute('data-value'));
+                updateStarsUI(currentSelectedRating);
+            });
         });
-    }
 
-    function selectRoom(roomName) {
-        activeRoom = roomName;
-        renderRoomsList();
-        
-        document.getElementById('chatHeader').style.visibility = "visible";
-        document.getElementById('currentRoomTitle').innerText = `#${roomName}`;
-        document.getElementById('msgInput').disabled = false;
-        document.getElementById('sendBtn').disabled = false;
-        
-        const container = document.getElementById('messagesContainer');
-        container.innerHTML = '';
-
-        // Очищаем старых участников для этой комнаты и запрашиваем актуальных через PING
-        roomMembers[activeRoom] = {};
-        renderMembersUI();
-        broadcastMyPresence('PING'); 
-
-        // Отрисовываем историю сообщений, если они накопились за сессию
-        if (roomMessages[activeRoom]) {
-            roomMessages[activeRoom].forEach(m => appendMessage(m));
-        }
-    }
-
-    function renderMembersUI() {
-        const mList = document.getElementById('membersList');
-        mList.innerHTML = '';
-        
-        // Всегда добавляем себя на первое место
-        let count = 1;
-        appendMemberItem(myNickname, myBio, true);
-
-        // Добавляем остальных, кто активен (не старше 30 секунд)
-        if (roomMembers[activeRoom]) {
-            const now = Date.now();
-            Object.keys(roomMembers[activeRoom]).forEach(uid => {
-                const p = roomMembers[activeRoom][uid];
-                if (now - p.ts < 30000) { // Если кент подавал признаки жизни в последние 30 сек
-                    appendMemberItem(p.nickname, p.bio, false);
-                    count++;
+        function updateStarsUI(rating) {
+            stars.forEach(s => {
+                const val = parseInt(s.getAttribute('data-value'));
+                if(val <= rating) {
+                    s.classList.remove('far');
+                    s.classList.add('fas');
+                } else {
+                    s.classList.remove('fas');
+                    s.classList.add('far');
                 }
             });
         }
 
-        document.getElementById('currentRoomStatus').innerText = `${count} пацанов в чате`;
-    }
+        // ЛОГИКА ХРАНЕНИЯ КНИГ (Local Storage)
+        let books = JSON.parse(localStorage.getItem('24p_library')) || [];
 
-    function appendMemberItem(nick, bio, isMe) {
-        const mList = document.getElementById('membersList');
-        const div = document.createElement('div');
-        div.className = 'member-item';
-        div.innerHTML = `
-            <div class="member-avatar" style="background:${stringToColor(nick)}">${nick.substring(0,1).toUpperCase()}</div>
-            <div class="member-info">
-                <b>${escapeHTML(nick)} ${isMe ? '(Вы)' : ''}</b>
-                <small>${escapeHTML(bio)}</small>
-            </div>
-        `;
-        mList.appendChild(div);
-    }
+        window.addEventListener('DOMContentLoaded', () => {
+            renderBooks();
+            updateStarsUI(5);
+        });
 
-    // --- ОТПРАВКА СООБЩЕНИЙ ---
-    function handleSend(e) {
-        e.preventDefault();
-        const input = document.getElementById('msgInput');
-        const text = input.value.trim();
-        if(!text || !activeRoom) return;
+        function addBook(e) {
+            e.preventDefault();
+            const title = document.getElementById('titleInput').value.trim();
+            const author = document.getElementById('authorInput').value.trim();
+            const genre = document.getElementById('genreInput').value;
+            const pages = document.getElementById('pagesInput').value || 'Не указано';
+            const notes = document.getElementById('notesInput').value.trim() || 'Без заметок.';
 
-        const msgData = {
-            id: 'm-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
-            type: 'MSG',
-            uid: userId,
-            sender_name: myNickname,
-            text: text,
-            time_str: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-        };
+            const newBook = {
+                id: Date.now(),
+                title,
+                author,
+                genre,
+                pages,
+                notes,
+                rating: currentSelectedRating
+            };
 
-        if (!roomMessages[activeRoom]) roomMessages[activeRoom] = [];
-        roomMessages[activeRoom].push(msgData);
-        
-        appendMessage(msgData);
-        sendJson(activeRoom, msgData);
-        
-        input.value = '';
-    }
+            books.push(newBook);
+            localStorage.setItem('24p_library', JSON.stringify(books));
+            
+            document.getElementById('bookForm').reset();
+            currentSelectedRating = 5;
+            updateStarsUI(5);
+            renderBooks();
+        }
 
-    function appendMessage(msg) {
-        const container = document.getElementById('messagesContainer');
-        const intro = container.querySelector('.intro-screen');
-        if (intro) intro.remove();
-        if (document.getElementById(`msg-${msg.id}`)) return;
+        function deleteBook(id) {
+            if(confirm('Удалить книгу с полки, бро?')) {
+                books = books.filter(b => b.id !== id);
+                localStorage.setItem('24p_library', JSON.stringify(books));
+                renderBooks();
+            }
+        }
 
-        const isMe = msg.uid === userId;
-        const row = document.createElement('div');
-        row.className = `message-row ${isMe ? 'out' : 'in'}`;
-        row.id = `msg-${msg.id}`;
-        row.innerHTML = `<div class="message-bubble">${!isMe ? `<span class="msg-author" style="color:${stringToColor(msg.sender_name)}">${escapeHTML(msg.sender_name)}</span>` : ''}<div class="msg-text">${escapeHTML(msg.text)}</div><div class="msg-meta"><span>${msg.time_str}</span>${isMe ? '<i class="fas fa-check-double"></i>' : ''}</div></div>`;
-        container.appendChild(row);
-        container.scrollTop = container.scrollHeight;
-    }
+        function renderBooks() {
+            const grid = document.getElementById('booksGrid');
+            grid.innerHTML = '';
 
-    function toggleMembersList() { document.getElementById('membersSidebar').classList.toggle('open'); }
-    function stringToColor(str) { let hash = 0; for (let i = 0; i < str.length; i++) { hash = str.charCodeAt(i) + ((hash << 5) - hash); } const colors = ['#34d399', '#60a5fa', '#f43f5e', '#fbbf24', '#a78bfa', '#38bdf8', '#f472b6']; return colors[Math.abs(hash) % colors.length]; }
-    function escapeHTML(str) { return str.replace(/[&<>'"]/g, t => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[t] || t)); }
-</style>
+            if(books.length === 0) {
+                grid.innerHTML = `<div class="empty-state"><i class="fas fa-book-open" style="font-size: 3rem; margin-bottom: 15px; color: var(--accent);"></i><br>Полка пуста. Самое время закинуть сюда первую книгу, бро!</div>`;
+                return;
+            }
+
+            books.forEach(b => {
+                let starsHtml = '';
+                for(let i=1; i<=5; i++) {
+                    starsHtml += i <= b.rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>';
+                }
+
+                const card = document.createElement('div');
+                card.className = 'book-card';
+                card.innerHTML = `
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+                            <div class="book-title">${escapeHTML(b.title)}</div>
+                            <button class="delete-book-btn" onclick="deleteBook(${b.id})"><i class="fas fa-trash"></i></button>
+                        </div>
+                        <div class="book-author">от ${escapeHTML(b.author)}</div>
+                        <div class="book-badge">${b.genre}</div>
+                        <div class="book-notes">"${escapeHTML(b.notes)}"</div>
+                    </div>
+                    <div class="book-meta">
+                        <span><i class="fas fa-file-alt"></i> Стр: ${b.pages}</span>
+                        <div class="book-rating">${starsHtml}</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function escapeHTML(str) { return str.replace(/[&<>'"]/g, t => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[t] || t)); }
+
+
+        // ================= ИГРА «КНИЖНЫЙ ЧЕРВЬ» =================
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const gridSize = 20;
+        const tileCount = canvas.width / gridSize;
+
+        let worm = [];
+        let food = { x: 5, y: 5, letter: 'A' };
+        let dx = gridSize;
+        let dy = 0;
+        let score = 0;
+        let gameInterval = null;
+        let isGameRunning = false;
+        const alphabet = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЭЮЯ";
+
+        function startGame() {
+            stopGameLoop();
+            worm = [
+                { x: gridSize * 5, y: gridSize * 5 },
+                { x: gridSize * 4, y: gridSize * 5 },
+                { x: gridSize * 3, y: gridSize * 5 }
+            ];
+            dx = gridSize;
+            dy = 0;
+            score = 0;
+            document.getElementById('scoreText').innerText = score;
+            generateFood();
+            isGameRunning = true;
+            gameInterval = setInterval(updateGame, 120);
+        }
+
+        function stopGameLoop() {
+            if(gameInterval) clearInterval(gameInterval);
+            isGameRunning = false;
+        }
+
+        function generateFood() {
+            food.x = Math.floor(Math.random() * tileCount) * gridSize;
+            food.y = Math.floor(Math.random() * tileCount) * gridSize;
+            food.letter = alphabet[Math.floor(Math.random() * alphabet.length)];
+            
+            // Проверка, чтоб еда не легла на червяка
+            worm.forEach(part => {
+                if(part.x === food.x && part.y === food.y) generateFood();
+            });
+        }
+
+        function updateGame() {
+            // Двигаем голову червяка
+            const head = { x: worm[0].x + dx, y: worm[0].y + dy };
+            
+            // Проверка столкновения со стенами
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+                gameOver();
+                return;
+            }
+
+            // Проверка самопересечения
+            for (let i = 0; i < worm.length; i++) {
+                if (worm[i].x === head.x && worm[i].y === head.y) {
+                    gameOver();
+                    return;
+                }
+            }
+
+            worm.unshift(head); // Вставляем новую голову
+
+            // Проверка: сожрал ли букву?
+            if (head.x === food.x && head.y === food.y) {
+                score += 10;
+                document.getElementById('scoreText').innerText = score;
+                generateFood();
+            } else {
+                worm.pop(); // Если не сожрал, убираем хвост
+            }
+
+            drawGame();
+        }
+
+        function drawGame() {
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Рисуем червяка
+            worm.forEach((part, index) => {
+                ctx.fillStyle = index === 0 ? '#818cf8' : '#6366f1'; // голова светлее
+                ctx.fillRect(part.x, part.y, gridSize - 2, gridSize - 2);
+            });
+
+            // Рисуем еду (букву знания)
+            ctx.fillStyle = '#10b981';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(food.letter, food.x + gridSize/2, food.y + gridSize/2);
+        }
+
+        function gameOver() {
+            stopGameLoop();
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#ef4444';
+            ctx.font = 'bold 24px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('ИГРА ОКОНЧЕНА', canvas.width / 2, canvas.height / 2 - 10);
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '16px sans-serif';
+            ctx.fillText(`Ты набрал знаний на ${score} очков!`, canvas.width / 2, canvas.height / 2 + 20);
+        }
+
+        // Управление клавиатурой
+        window.addEventListener('keydown', e => {
+            if(!isGameRunning) return;
+            handleDirection(e.key);
+        });
+
+        function pressKey(keyName) {
+            if(!isGameRunning) return;
+            handleDirection(keyName);
+        }
+
+        function handleDirection(key) {
+            if (key === 'ArrowUp' && dy === 0) { dx = 0; dy = -gridSize; }
+            else if (key === 'ArrowDown' && dy === 0) { dx = 0; dy = gridSize; }
+            else if (key === 'ArrowLeft' && dx === 0) { dx = -gridSize; dy = 0; }
+            else if (key === 'ArrowRight' && dx === 0) { dx = gridSize; dy = 0; }
+        }
+    </script>
 </body>
 </html>
