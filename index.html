@@ -3,410 +3,373 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>24Portfolio — Книжная Полка & Игра</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>24Portfolio — CyberShelf Premium</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #0f172a;
-            --bg-card: #1e293b;
-            --accent: #6366f1;
-            --accent-hover: #4f46e5;
+            --bg-glow: #020617;
+            --glass-bg: rgba(15, 23, 42, 0.65);
+            --glass-border: rgba(99, 102, 241, 0.15);
+            --neon-cyan: #06b6d4;
+            --neon-purple: #6366f1;
+            --neon-pink: #d946ef;
             --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --success: #10b981;
+            --text-glow: #e2e8f0;
+            --text-muted: #64748b;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background: var(--bg-dark); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
-
-        header { background: var(--bg-card); padding: 20px; text-align: center; border-bottom: 1px solid #334155; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        header h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: 1px; color: var(--text-main); }
-        header h1 span { color: var(--accent); }
-
-        .nav-tabs { display: flex; justify-content: center; background: #111827; padding: 5px; gap: 10px; }
-        .tab-btn { background: none; border: none; color: var(--text-muted); padding: 12px 24px; font-size: 1rem; font-weight: 600; cursor: pointer; border-radius: 8px; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
-        .tab-btn.active { background: var(--accent); color: white; }
-
-        .container { flex: 1; max-width: 1200px; width: 100%; margin: 0 auto; padding: 20px; display: none; }
-        .container.active { display: block; }
-
-        /* ИНТЕРФЕЙС КНИГ */
-        .books-layout { display: grid; grid-template-columns: 350px 1fr; gap: 25px; }
-        @media (max-width: 900px) { .books-layout { grid-template-columns: 1fr; } }
-
-        .book-form-card { background: var(--bg-card); padding: 25px; border-radius: 16px; border: 1px solid #334155; height: fit-content; position: sticky; top: 20px; }
-        .book-form-card h3 { margin-bottom: 20px; font-size: 1.3rem; }
-        .form-group { margin-bottom: 16px; display: flex; flex-direction: column; gap: 6px; }
-        .form-group label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
-        .form-group input, .form-group textarea, .form-group select { background: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 8px; color: white; outline: none; font-size: 0.95rem; }
-        .form-group input:focus { border-color: var(--accent); }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
         
-        .rating-input { display: flex; gap: 8px; font-size: 1.5rem; color: #eab308; cursor: pointer; }
-        .submit-btn { width: 100%; background: var(--accent); color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.2s; margin-top: 10px; }
-        .submit-btn:hover { background: var(--accent-hover); }
+        body { 
+            background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, var(--bg-glow) 70%);
+            color: var(--text-main); 
+            min-height: 100vh; 
+            padding: 40px 20px;
+            overflow-x: hidden;
+        }
 
-        .books-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .book-card { background: var(--bg-card); border-radius: 16px; border: 1px solid #334155; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.3s; position: relative; overflow: hidden; }
-        .book-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
-        .book-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--accent); }
-        .book-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; }
-        .book-author { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 12px; }
-        .book-badge { background: #312e81; color: #e0e7ff; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; width: fit-content; margin-bottom: 12px; }
-        .book-notes { font-size: 0.9rem; color: #cbd5e1; background: #0f172a; padding: 10px; border-radius: 8px; margin-bottom: 12px; flex-1: 1; min-height: 60px; word-break: break-word; }
-        .book-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: var(--text-muted); }
-        .book-rating { color: #eab308; }
-        .delete-book-btn { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1rem; padding: 5px; }
+        /* Задний неоновый фон */
+        .blur-glow {
+            position: absolute; width: 400px; height: 400px; background: var(--neon-purple);
+            filter: blur(150px); opacity: 0.15; top: -100px; left: 50%; transform: translateX(-50%); z-index: -1;
+        }
 
-        /* ИНТЕРФЕЙС ИГРЫ */
-        .game-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg-card); border-radius: 20px; border: 1px solid #334155; padding: 30px; max-width: 600px; margin: 20px auto; text-align: center; }
-        .game-wrapper h2 { margin-bottom: 10px; }
-        .game-wrapper p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; }
-        .score-board { font-size: 1.5rem; font-weight: bold; margin-bottom: 15px; color: var(--success); }
-        canvas { background: #0f172a; border: 4px solid #334155; border-radius: 12px; box-shadow: inset 0 4px 6px rgba(0,0,0,0.6); display: block; max-width: 100%; }
-        .game-btn { background: var(--success); color: white; border: none; padding: 12px 30px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 15px; transition: 0.2s; }
-        .game-btn:hover { opacity: 0.9; }
-        .game-controls { display: grid; grid-template-columns: repeat(3, 50px); gap: 10px; margin-top: 15px; justify-content: center; }
-        .ctrl-btn { width: 50px; height: 50px; background: #334155; border: none; color: white; border-radius: 8px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .ctrl-btn:active { background: var(--accent); }
-        .empty-state { text-align: center; color: var(--text-muted); padding: 40px; font-size: 1.1rem; grid-column: 1/-1; }
+        .wrapper { max-width: 1300px; margin: 0 auto; position: relative; }
+
+        /* HEADER БОМБА */
+        header { 
+            text-align: center; margin-bottom: 40px; animation: fadeInDown 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        header h1 { 
+            font-size: 3rem; font-weight: 900; letter-spacing: 3px; 
+            background: linear-gradient(to right, var(--neon-cyan), var(--neon-purple), var(--neon-pink));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 40px rgba(99,102,241,0.3); margin-bottom: 8px;
+        }
+        header p { color: var(--text-muted); font-size: 1.1rem; letter-spacing: 1px; }
+
+        /* ПАНЕЛЬ СТАТИСТИКИ */
+        .stats-panel {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;
+            margin-bottom: 40px; animation: fadeIn 1s ease-out;
+        }
+        .stat-card {
+            background: var(--glass-bg); backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border); padding: 20px; border-radius: 20px;
+            display: flex; align-items: center; gap: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .stat-card:hover { transform: translateY(-3px); border-color: rgba(6, 182, 212, 0.4); box-shadow: 0 0 20px rgba(6, 182, 212, 0.15); }
+        .stat-icon { width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+        .stat-icon.blue { background: rgba(6, 182, 212, 0.1); color: var(--neon-cyan); }
+        .stat-icon.purple { background: rgba(99, 102, 241, 0.1); color: var(--neon-purple); }
+        .stat-icon.pink { background: rgba(217, 70, 239, 0.1); color: var(--neon-pink); }
+        .stat-info h4 { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+        .stat-info p { font-size: 1.6rem; font-weight: 800; color: var(--text-glow); }
+
+        /* ОСНОВНОЙ ЛЕЙАУТ */
+        .main-layout { display: grid; grid-template-columns: 400px 1fr; gap: 40px; }
+        @media (max-width: 1024px) { .main-layout { grid-template-columns: 1fr; } }
+
+        /* СТИЛЬНАЯ GLASS ФОРМА */
+        .form-container {
+            background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border);
+            padding: 35px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            height: fit-content; position: sticky; top: 40px; animation: fadeInLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .form-container h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; color: var(--text-glow); }
+        .form-container h2 i { color: var(--neon-cyan); }
+        
+        .input-group { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
+        .input-group label { font-size: 0.85rem; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+        .input-group input, .input-group textarea, .input-group select {
+            background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08); padding: 14px 16px;
+            border-radius: 12px; color: white; font-size: 1rem; transition: 0.3s; outline: none;
+        }
+        .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
+            border-color: var(--neon-purple); box-shadow: 0 0 15px rgba(99, 102, 241, 0.25); background: rgba(15, 23, 42, 0.9);
+        }
+        
+        /* Премиум Рейтинг Звёзды */
+        .premium-rating { display: flex; gap: 10px; font-size: 1.6rem; color: #475569; transition: 0.2s; }
+        .premium-rating i { cursor: pointer; transition: transform 0.2s, color 0.2s; }
+        .premium-rating i:hover { transform: scale(1.2); }
+        .premium-rating i.active { color: #f59e0b; text-shadow: 0 0 15px rgba(245, 158, 11, 0.5); }
+
+        .btn-glow {
+            width: 100%; background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
+            color: white; border: none; padding: 16px; border-radius: 14px; font-size: 1rem; font-weight: 700;
+            cursor: pointer; margin-top: 15px; transition: 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(217, 70, 239, 0.3);
+        }
+        .btn-glow:hover {
+            transform: translateY(-2px); box-shadow: 0 6px 30px rgba(217, 70, 239, 0.5); opacity: 0.95;
+        }
+        .btn-glow:active { transform: translateY(1px); }
+
+        /* СЕТКА КНИГ ОБНОВЛЕННАЯ */
+        .shelf-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; perspective: 1000px; }
+        
+        /* 3D НЕОН КАРТОЧКА КНИГИ */
+        .premium-card {
+            background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--glass-border);
+            border-radius: 24px; padding: 25px; display: flex; flex-direction: column; justify-content: space-between;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); transition: box-shadow 0.3s, border-color 0.3s;
+            position: relative; transform-style: preserve-3d; transform: translateZ(0);
+            animation: cardSpawn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        .premium-card:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 15px 35px rgba(99, 102, 241, 0.15), 0 0 25px rgba(99,102,241,0.05);
+        }
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        .tag { background: rgba(6, 182, 212, 0.15); color: var(--neon-cyan); padding: 5px 14px; border-radius: 30px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+        
+        .trash-btn { background: rgba(239, 68, 68, 0.1); border: none; width: 36px; height: 36px; border-radius: 10px; color: #ef4444; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .trash-btn:hover { background: rgba(239, 68, 68, 0.25); transform: scale(1.05); }
+
+        .card-title { font-size: 1.4rem; font-weight: 800; color: var(--text-glow); margin-bottom: 4px; line-height: 1.3; }
+        .card-author { color: var(--text-muted); font-size: 0.95rem; font-weight: 500; margin-bottom: 20px; }
+        
+        .card-comment { background: rgba(15, 23, 42, 0.4); border-left: 3px solid var(--neon-purple); padding: 12px 16px; border-radius: 0 12px 12px 0; font-size: 0.95rem; color: #cbd5e1; font-style: italic; margin-bottom: 20px; word-break: break-word; min-height: 55px; }
+        
+        .card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; }
+        .pages-indicator { font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+        .pages-indicator i { color: var(--neon-pink); }
+        .stars-display { color: #f59e0b; font-size: 0.95rem; letter-spacing: 2px; }
+
+        .empty-shelf { grid-column: 1/-1; text-align: center; padding: 60px; color: var(--text-muted); font-size: 1.2rem; }
+        .empty-shelf i { font-size: 4rem; background: linear-gradient(to bottom, var(--neon-cyan), var(--neon-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; display: inline-block; animation: float 3s ease-in-out infinite; }
+
+        /* ШИКАРНЫЕ АНИМАЦИИ */
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInLeft { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes cardSpawn { from { opacity: 0; transform: translateY(30px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        
+        .fade-out { opacity: 0 !important; transform: scale(0.8) !important; transition: 0.4s ease; }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>24PORTFOLIO <span>BOOKS</span></h1>
-    </header>
+    <div class="blur-glow"></div>
 
-    <div class="nav-tabs">
-        <button class="tab-btn active" onclick="switchTab('books')"><i class="fas fa-book"></i> Мои Книги</button>
-        <button class="tab-btn" onclick="switchTab('game')"><i class="fas fa-gamepad"></i> Мини-Игра</button>
-    </div>
+    <div class="wrapper">
+        <header>
+            <h1>CYBERSHELF PREMIUM</h1>
+            <p>Твоя умная интерактивная библиотека нового поколения</p>
+        </header>
 
-    <!-- ВКЛАДКА КНИГ -->
-    <div id="booksSection" class="container active">
-        <div class="books-layout">
-            <div class="book-form-card">
-                <h3><i class="fas fa-feather-alt"></i> Добавить книгу</h3>
-                <form id="bookForm" onsubmit="addBook(event)">
-                    <div class="form-group">
-                        <label>Название книги</label>
-                        <input type="text" id="titleInput" placeholder="Например: Магия утра" required autocomplete="off">
-                    </div>
-                    <div class="form-group">
-                        <label>Автор</label>
-                        <input type="text" id="authorInput" placeholder="Хэл Элрод" required autocomplete="off">
-                    </div>
-                    <div class="form-group">
-                        <label>Жанр</label>
-                        <select id="genreInput">
-                            <option value="Саморазвитие">Саморазвитие</option>
-                            <option value="Бизнес / Финансы">Бизнес / Финансы</option>
-                            <option value="Фантастика">Фантастика</option>
-                            <option value="Психология">Психология</option>
-                            <option value="Классика">Классика</option>
-                            <option value="Другое">Другое</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Прочитано страниц</label>
-                        <input type="number" id="pagesInput" placeholder="120" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label>Мои мысли / Заметки</label>
-                        <textarea id="notesInput" rows="3" placeholder="Что зацепило в книге..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Оценка пацана</label>
-                        <div class="rating-input" id="ratingStars">
-                            <i class="fas fa-star" data-value="1"></i>
-                            <i class="fas fa-star" data-value="2"></i>
-                            <i class="fas fa-star" data-value="3"></i>
-                            <i class="fas fa-star" data-value="4"></i>
-                            <i class="fas fa-star" data-value="5"></i>
-                        </div>
-                    </div>
-                    <button type="submit" class="submit-btn">Поставить на полку</button>
-                </form>
+        <!-- ПАНЕЛЬ АНАЛИТИКИ -->
+        <div class="stats-panel">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fas fa-layer-group"></i></div>
+                <div class="stat-info">
+                    <h4>Всего книг</h4>
+                    <p id="statTotal">0</p>
+                </div>
             </div>
-
-            <div>
-                <div class="books-grid" id="booksGrid">
-                    <!-- Сюда прилетают книги из JS -->
+            <div class="stat-card">
+                <div class="stat-icon purple"><i class="fas fa-book-open"></i></div>
+                <div class="stat-info">
+                    <h4>Прочитано страниц</h4>
+                    <p id="statPages">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon pink"><i class="fas fa-star-half-alt"></i></div>
+                <div class="stat-info">
+                    <h4>Средний балл</h4>
+                    <p id="statRating">0.0</p>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- ВКЛАДКА ИГРЫ -->
-    <div id="gameSection" class="container">
-        <div class="game-wrapper">
-            <h2><i class="fas fa-bug"></i> Книжный Червь</h2>
-            <p>Управляй червяком стрелочками на клаве (или кнопками ниже). Собирай буквы (знания), чтобы расти и набирать очки!</p>
-            <div class="score-board">Счёт: <span id="scoreText">0</span></div>
-            <canvas id="gameCanvas" width="400" height="400"></canvas>
-            <button class="game-btn" id="startBtn" onclick="startGame()">Старт / Сброс</button>
-            
-            <div class="game-controls">
-                <div></div>
-                <button class="ctrl-btn" onclick="pressKey('ArrowUp')"><i class="fas fa-chevron-up"></i></button>
-                <div></div>
-                <button class="ctrl-btn" onclick="pressKey('ArrowLeft')"><i class="fas fa-chevron-left"></i></button>
-                <button class="ctrl-btn" onclick="pressKey('ArrowDown')"><i class="fas fa-chevron-down"></i></button>
-                <button class="ctrl-btn" onclick="pressKey('ArrowRight')"><i class="fas fa-chevron-right"></i></button>
+        <!-- ОСНОВНОЙ КОНТЕНТ -->
+        <div class="main-layout">
+            <!-- ФОРМА -->
+            <div class="form-container">
+                <h2><i class="fas fa-plus-circle"></i> Добавить шедевр</h2>
+                <form id="cyberForm" onsubmit="createNewBook(event)">
+                    <div class="input-group">
+                        <label>Название произведения</label>
+                        <input type="text" id="title" placeholder="Экзистенциальная комедия..." required autocomplete="off">
+                    </div>
+                    <div class="input-group">
+                        <label>Автор</label>
+                        <input type="text" id="author" placeholder="Федор Достоевский..." required autocomplete="off">
+                    </div>
+                    <div class="input-group">
+                        <label>Категория / Жанр</label>
+                        <select id="genre">
+                            <option value="Саморазвитие">Саморазвитие</option>
+                            <option value="Философия">Философия</option>
+                            <option value="Бизнес & Финансы">Бизнес & Финансы</option>
+                            <option value="Фантастика / Научпоп">Фантастика / Научпоп</option>
+                            <option value="Художественная">Художественная</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Количество страниц</label>
+                        <input type="number" id="pages" placeholder="380" min="1" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Инсайт / Личная рецензия</label>
+                        <textarea id="notes" rows="3" placeholder="Главная мысль, которая перевернула сознание..."></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label>Оценка качества контента</label>
+                        <div class="premium-rating" id="ratingContainer">
+                            <i class="fas fa-star" data-v="1"></i>
+                            <i class="fas fa-star" data-v="2"></i>
+                            <i class="fas fa-star" data-v="3"></i>
+                            <i class="fas fa-star" data-v="4"></i>
+                            <i class="fas fa-star" data-v="5"></i>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-glow">Поместить в архив</button>
+                </form>
+            </div>
+
+            <!-- ПОЛКА С КНИГАМИ -->
+            <div class="shelf-container" id="shelfGrid">
+                <!-- Карточки генерируются скриптом -->
             </div>
         </div>
     </div>
 
     <script>
-        // ЛОГИКА ТАБОВ
-        function switchTab(tab) {
-            document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            
-            if(tab === 'books') {
-                document.getElementById('booksSection').classList.add('active');
-                event.target.classList.add('active');
-                stopGameLoop(); // остановить игру, если ушли с таба
-            } else {
-                document.getElementById('gameSection').classList.add('active');
-                event.target.classList.add('active');
-            }
-        }
+        let selectedRating = 5;
+        let library = JSON.parse(localStorage.getItem('cybershelf_data')) || [];
 
-        // ЛОГИКА ЗВЕЗДОЧЕК В ФОРМЕ
-        let currentSelectedRating = 5;
-        const stars = document.querySelectorAll('#ratingStars i');
-        stars.forEach(star => {
+        // Инициализация звезд формы
+        const formStars = document.querySelectorAll('#ratingContainer i');
+        formStars.forEach(star => {
             star.addEventListener('click', (e) => {
-                currentSelectedRating = parseInt(e.target.getAttribute('data-value'));
-                updateStarsUI(currentSelectedRating);
+                selectedRating = parseInt(e.target.getAttribute('data-v'));
+                renderFormStars();
             });
         });
 
-        function updateStarsUI(rating) {
-            stars.forEach(s => {
-                const val = parseInt(s.getAttribute('data-value'));
-                if(val <= rating) {
-                    s.classList.remove('far');
-                    s.classList.add('fas');
-                } else {
-                    s.classList.remove('fas');
-                    s.classList.add('far');
-                }
+        function renderFormStars() {
+            formStars.forEach(s => {
+                const v = parseInt(s.getAttribute('data-v'));
+                s.classList.toggle('active', v <= selectedRating);
             });
         }
 
-        // ЛОГИКА ХРАНЕНИЯ КНИГ (Local Storage)
-        let books = JSON.parse(localStorage.getItem('24p_library')) || [];
-
-        window.addEventListener('DOMContentLoaded', () => {
-            renderBooks();
-            updateStarsUI(5);
-        });
-
-        function addBook(e) {
+        // Создание книги
+        function createNewBook(e) {
             e.preventDefault();
-            const title = document.getElementById('titleInput').value.trim();
-            const author = document.getElementById('authorInput').value.trim();
-            const genre = document.getElementById('genreInput').value;
-            const pages = document.getElementById('pagesInput').value || 'Не указано';
-            const notes = document.getElementById('notesInput').value.trim() || 'Без заметок.';
-
             const newBook = {
                 id: Date.now(),
-                title,
-                author,
-                genre,
-                pages,
-                notes,
-                rating: currentSelectedRating
+                title: document.getElementById('title').value.trim(),
+                author: document.getElementById('author').value.trim(),
+                genre: document.getElementById('genre').value,
+                pages: parseInt(document.getElementById('pages').value) || 0,
+                notes: document.getElementById('notes').value.trim() || 'Инсайты не записаны.',
+                rating: selectedRating
             };
 
-            books.push(newBook);
-            localStorage.setItem('24p_library', JSON.stringify(books));
+            library.push(newBook);
+            saveAndRefresh();
             
-            document.getElementById('bookForm').reset();
-            currentSelectedRating = 5;
-            updateStarsUI(5);
-            renderBooks();
+            document.getElementById('cyberForm').reset();
+            selectedRating = 5;
+            renderFormStars();
         }
 
-        function deleteBook(id) {
-            if(confirm('Удалить книгу с полки, бро?')) {
-                books = books.filter(b => b.id !== id);
-                localStorage.setItem('24p_library', JSON.stringify(books));
-                renderBooks();
-            }
+        // Удаление с красивой анимацией исчезновения
+        function removeBook(id, cardElement) {
+            cardElement.classList.add('fade-out');
+            setTimeout(() => {
+                library = library.filter(b => b.id !== id);
+                saveAndRefresh();
+            }, 400);
         }
 
-        function renderBooks() {
-            const grid = document.getElementById('booksGrid');
+        function saveAndRefresh() {
+            localStorage.setItem('cybershelf_data', JSON.stringify(library));
+            renderLibrary();
+            updateStats();
+        }
+
+        // Подсчет статистики в реальном времени
+        function updateStats() {
+            document.getElementById('statTotal').innerText = library.length;
+            const totalPages = library.reduce((sum, book) => sum + book.pages, 0);
+            document.getElementById('statPages').innerText = totalPages.toLocaleString('ru-RU');
+            
+            const avgRating = library.length ? (library.reduce((sum, book) => sum + book.rating, 0) / library.length).toFixed(1) : '0.0';
+            document.getElementById('statRating').innerText = avgRating;
+        }
+
+        // Генерация карточек
+        function renderLibrary() {
+            const grid = document.getElementById('shelfGrid');
             grid.innerHTML = '';
 
-            if(books.length === 0) {
-                grid.innerHTML = `<div class="empty-state"><i class="fas fa-book-open" style="font-size: 3rem; margin-bottom: 15px; color: var(--accent);"></i><br>Полка пуста. Самое время закинуть сюда первую книгу, бро!</div>`;
+            if (library.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-shelf">
+                        <i class="fas fa-box-open"></i>
+                        <p>Ваш цифровой архив пуст. Заполните его первыми инсайтами.</p>
+                    </div>`;
                 return;
             }
 
-            books.forEach(b => {
-                let starsHtml = '';
-                for(let i=1; i<=5; i++) {
-                    starsHtml += i <= b.rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>';
-                }
+            library.forEach(b => {
+                let stars = '';
+                for(let i=1; i<=5; i++) stars += i <= b.rating ? '★' : '☆';
 
                 const card = document.createElement('div');
-                card.className = 'book-card';
+                card.className = 'premium-card';
                 card.innerHTML = `
-                    <div>
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
-                            <div class="book-title">${escapeHTML(b.title)}</div>
-                            <button class="delete-book-btn" onclick="deleteBook(${b.id})"><i class="fas fa-trash"></i></button>
+                    <div class="card-inner">
+                        <div class="card-top">
+                            <span class="tag">${b.genre}</span>
+                            <button class="trash-btn" onclick="removeBook(${b.id}, this.closest('.premium-card'))">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
                         </div>
-                        <div class="book-author">от ${escapeHTML(b.author)}</div>
-                        <div class="book-badge">${b.genre}</div>
-                        <div class="book-notes">"${escapeHTML(b.notes)}"</div>
+                        <h3 class="card-title">${escapeHTML(b.title)}</h3>
+                        <p class="card-author">автор: ${escapeHTML(b.author)}</p>
+                        <p class="card-comment">"${escapeHTML(b.notes)}"</p>
                     </div>
-                    <div class="book-meta">
-                        <span><i class="fas fa-file-alt"></i> Стр: ${b.pages}</span>
-                        <div class="book-rating">${starsHtml}</div>
+                    <div class="card-footer">
+                        <span class="pages-indicator"><i class="fas fa-file-invoice"></i> ${b.pages} стр.</span>
+                        <span class="stars-display">${stars}</span>
                     </div>
                 `;
+
+                // Навешиваем премиальный 3D-эффект наклона карточки при движении мыши
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const xc = rect.width / 2;
+                    const yc = rect.height / 2;
+                    const angleX = (yc - y) / 10;
+                    const angleY = (x - xc) / 10;
+                    card.style.transform = `perspective(1000px) rotateX(${angleX}deg) rotateY(${angleY}deg) translateZ(10px)`;
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0px)';
+                });
+
                 grid.appendChild(card);
             });
         }
 
         function escapeHTML(str) { return str.replace(/[&<>'"]/g, t => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[t] || t)); }
 
-
-        // ================= ИГРА «КНИЖНЫЙ ЧЕРВЬ» =================
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const gridSize = 20;
-        const tileCount = canvas.width / gridSize;
-
-        let worm = [];
-        let food = { x: 5, y: 5, letter: 'A' };
-        let dx = gridSize;
-        let dy = 0;
-        let score = 0;
-        let gameInterval = null;
-        let isGameRunning = false;
-        const alphabet = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЭЮЯ";
-
-        function startGame() {
-            stopGameLoop();
-            worm = [
-                { x: gridSize * 5, y: gridSize * 5 },
-                { x: gridSize * 4, y: gridSize * 5 },
-                { x: gridSize * 3, y: gridSize * 5 }
-            ];
-            dx = gridSize;
-            dy = 0;
-            score = 0;
-            document.getElementById('scoreText').innerText = score;
-            generateFood();
-            isGameRunning = true;
-            gameInterval = setInterval(updateGame, 120);
-        }
-
-        function stopGameLoop() {
-            if(gameInterval) clearInterval(gameInterval);
-            isGameRunning = false;
-        }
-
-        function generateFood() {
-            food.x = Math.floor(Math.random() * tileCount) * gridSize;
-            food.y = Math.floor(Math.random() * tileCount) * gridSize;
-            food.letter = alphabet[Math.floor(Math.random() * alphabet.length)];
-            
-            // Проверка, чтоб еда не легла на червяка
-            worm.forEach(part => {
-                if(part.x === food.x && part.y === food.y) generateFood();
-            });
-        }
-
-        function updateGame() {
-            // Двигаем голову червяка
-            const head = { x: worm[0].x + dx, y: worm[0].y + dy };
-            
-            // Проверка столкновения со стенами
-            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
-                gameOver();
-                return;
-            }
-
-            // Проверка самопересечения
-            for (let i = 0; i < worm.length; i++) {
-                if (worm[i].x === head.x && worm[i].y === head.y) {
-                    gameOver();
-                    return;
-                }
-            }
-
-            worm.unshift(head); // Вставляем новую голову
-
-            // Проверка: сожрал ли букву?
-            if (head.x === food.x && head.y === food.y) {
-                score += 10;
-                document.getElementById('scoreText').innerText = score;
-                generateFood();
-            } else {
-                worm.pop(); // Если не сожрал, убираем хвост
-            }
-
-            drawGame();
-        }
-
-        function drawGame() {
-            ctx.fillStyle = '#0f172a';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Рисуем червяка
-            worm.forEach((part, index) => {
-                ctx.fillStyle = index === 0 ? '#818cf8' : '#6366f1'; // голова светлее
-                ctx.fillRect(part.x, part.y, gridSize - 2, gridSize - 2);
-            });
-
-            // Рисуем еду (букву знания)
-            ctx.fillStyle = '#10b981';
-            ctx.font = 'bold 16px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(food.letter, food.x + gridSize/2, food.y + gridSize/2);
-        }
-
-        function gameOver() {
-            stopGameLoop();
-            ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.fillStyle = '#ef4444';
-            ctx.font = 'bold 24px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('ИГРА ОКОНЧЕНА', canvas.width / 2, canvas.height / 2 - 10);
-            
-            ctx.fillStyle = '#ffffff';
-            ctx.font = '16px sans-serif';
-            ctx.fillText(`Ты набрал знаний на ${score} очков!`, canvas.width / 2, canvas.height / 2 + 20);
-        }
-
-        // Управление клавиатурой
-        window.addEventListener('keydown', e => {
-            if(!isGameRunning) return;
-            handleDirection(e.key);
+        // Первичный запуск
+        window.addEventListener('DOMContentLoaded', () => {
+            renderFormStars();
+            renderLibrary();
+            updateStats();
         });
-
-        function pressKey(keyName) {
-            if(!isGameRunning) return;
-            handleDirection(keyName);
-        }
-
-        function handleDirection(key) {
-            if (key === 'ArrowUp' && dy === 0) { dx = 0; dy = -gridSize; }
-            else if (key === 'ArrowDown' && dy === 0) { dx = 0; dy = gridSize; }
-            else if (key === 'ArrowLeft' && dx === 0) { dx = -gridSize; dy = 0; }
-            else if (key === 'ArrowRight' && dx === 0) { dx = gridSize; dy = 0; }
-        }
     </script>
 </body>
 </html>
