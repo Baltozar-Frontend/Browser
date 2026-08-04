@@ -5,15 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Carbon Tycoon</title>
 
-  <!-- iOS PWA Specific Meta Tags -->
+  <!-- 1. Главный переключатель PWA для iOS Safari -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Carbon Game">
+  <meta name="apple-mobile-web-app-title" content="Carbon">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#0b0c10">
-  
-  <!-- Inline PWA Manifest (Standalone Mode) -->
-  <link rel="manifest" href='data:application/manifest+json,{"name":"Carbon Cyber Tycoon","short_name":"CarbonGame","start_url":"./","display":"standalone","background_color":"#0b0c10","theme_color":"#0b0c10","orientation":"portrait","icons":[{"src":"data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230b0c10%22/><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>","sizes":"512x512","type":"image/svg+xml"}]}'>
+
+  <!-- 2. Встроенная Иконка (Вшита в код через SVG Data URL - без внешних файлов) -->
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230b0c10'/><text x='50%' y='68%' font-size='65' text-anchor='middle'>⚡</text></svg>">
+
+  <!-- 3. Встроенный PWA Manifest (Вшит прямо в один файл) -->
+  <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Carbon%20Tycoon%22,%22short_name%22:%22Carbon%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230b0c10%22,%22theme_color%22:%22%230b0c10%22}">
 
   <style>
     :root {
@@ -48,7 +51,6 @@
     body {
       display: flex;
       flex-direction: column;
-      /* Настоящий Карбоновый Фон */
       background-image: 
         radial-gradient(rgba(0,0,0,0.8) 15%, transparent 16%),
         radial-gradient(rgba(255,255,255,0.04) 15%, transparent 16%),
@@ -58,7 +60,6 @@
       background-position: 0 0, 4px 4px, 0 0, 0 0;
     }
 
-    /* Поддержка Safe Area для чёлок и шторки iPhone */
     .app-container {
       flex: 1;
       display: flex;
@@ -237,7 +238,7 @@
     <header>
       <div class="title-bar">
         <h1>Carbon Tycoon</h1>
-        <span class="status-badge" id="pwaStatus">iOS PWA</span>
+        <span class="status-badge">Carbon PWA</span>
       </div>
       <div class="stat-display">
         <div>
@@ -283,32 +284,7 @@
   </div>
 
   <script>
-    // --- 1. iOS PWA FIX (Предотвращает вылет в Safari) ---
-    if (("standalone" in window.navigator) && window.navigator.standalone) {
-      document.getElementById('pwaStatus').textContent = "PWA Standalone";
-      let a = document.getElementsByTagName("a");
-      for (let i = 0; i < a.length; i++) {
-        a[i].addEventListener("click", function(e) {
-          if (this.href.indexOf(location.hostname) > -1) {
-            e.preventDefault();
-            location.href = this.href;
-          }
-        }, false);
-      }
-    }
-
-    // --- 2. SERVICE WORKER (Регистрируем оффлайн-режим прямо из кода) ---
-    if ('serviceWorker' in navigator) {
-      const swCode = `
-        self.addEventListener('install', e => e.waitUntil(self.skipWaiting()));
-        self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
-        self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => new Response('Offline'))));
-      `;
-      const blob = new Blob([swCode], { type: 'text/javascript' });
-      navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
-    }
-
-    // --- 3. ИГРОВАЯ ЛОГИКА ---
+    // Игровая логика
     let state = {
       balance: 0,
       cps: 0,
