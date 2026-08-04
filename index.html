@@ -3,23 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Carbon Cyber Tycoon</title>
-  
-  <!-- PWA Meta Tags для убирания адресной строки -->
+  <title>Carbon Tycoon</title>
+
+  <!-- iOS PWA Specific Meta Tags -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Carbon Game">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#0d0d11">
+  <meta name="theme-color" content="#0b0c10">
   
-  <!-- Inline Web App Manifest -->
-  <link rel="manifest" href='data:application/json,{"name":"Carbon Cyber Tycoon","short_name":"CarbonTycoon","start_url":".","display":"standalone","background_color":"#0d0d11","theme_color":"#0d0d11","orientation":"portrait"}'>
+  <!-- Inline PWA Manifest (Standalone Mode) -->
+  <link rel="manifest" href='data:application/manifest+json,{"name":"Carbon Cyber Tycoon","short_name":"CarbonGame","start_url":"./","display":"standalone","background_color":"#0b0c10","theme_color":"#0b0c10","orientation":"portrait","icons":[{"src":"data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230b0c10%22/><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>","sizes":"512x512","type":"image/svg+xml"}]}'>
 
   <style>
     :root {
       --bg-dark: #0b0c10;
-      --carbon-1: #1f232a;
-      --carbon-2: #16191f;
+      --carbon-1: #1a1d24;
+      --carbon-2: #121419;
       --accent-cyan: #00f0ff;
       --accent-green: #00ff88;
       --accent-purple: #7000ff;
@@ -33,248 +33,201 @@
       padding: 0;
       user-select: none;
       -webkit-user-select: none;
+      -webkit-touch-callout: none;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    body {
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
       background-color: var(--bg-dark);
       color: var(--text-main);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      /* Текстура карбонового волокна */
-      background-image: 
-        radial-gradient(rgba(0,0,0,0.7) 15%, transparent 16%),
-        radial-gradient(rgba(255,255,255,0.03) 15%, transparent 16%),
-        linear-gradient(45deg, transparent 48%, rgba(20,20,25,0.8) 50%, transparent 52%),
-        linear-gradient(-45deg, transparent 48%, rgba(20,20,25,0.8) 50%, transparent 52%);
-      background-size: 10px 10px, 10px 10px, 20px 20px, 20px 20px;
-      background-position: 0 0, 5px 5px, 0 0, 0 0;
     }
 
+    body {
+      display: flex;
+      flex-direction: column;
+      /* Настоящий Карбоновый Фон */
+      background-image: 
+        radial-gradient(rgba(0,0,0,0.8) 15%, transparent 16%),
+        radial-gradient(rgba(255,255,255,0.04) 15%, transparent 16%),
+        linear-gradient(45deg, transparent 48%, rgba(20,24,30,0.9) 50%, transparent 52%),
+        linear-gradient(-45deg, transparent 48%, rgba(20,24,30,0.9) 50%, transparent 52%);
+      background-size: 8px 8px, 8px 8px, 16px 16px, 16px 16px;
+      background-position: 0 0, 4px 4px, 0 0, 0 0;
+    }
+
+    /* Поддержка Safe Area для чёлок и шторки iPhone */
     .app-container {
       flex: 1;
       display: flex;
       flex-direction: column;
-      padding: env(safe-area-inset-top, 20px) 16px env(safe-area-inset-bottom, 20px) 16px;
+      padding-top: max(env(safe-area-inset-top), 20px);
+      padding-bottom: max(env(safe-area-inset-bottom), 16px);
+      padding-left: 16px;
+      padding-right: 16px;
       max-width: 500px;
       margin: 0 auto;
       width: 100%;
       height: 100vh;
     }
 
-    /* Шапка со статистикой */
     header {
       background: linear-gradient(135deg, var(--carbon-1), var(--carbon-2));
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(0, 240, 255, 0.15);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
       border-radius: 20px;
-      padding: 18px;
-      margin-bottom: 16px;
-      backdrop-filter: blur(10px);
+      padding: 16px;
+      margin-bottom: 14px;
     }
 
     .title-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .title-bar h1 {
-      font-size: 16px;
+      font-size: 15px;
       letter-spacing: 2px;
       text-transform: uppercase;
       color: var(--accent-cyan);
-      text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+      text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
     }
 
-    .badge {
+    .status-badge {
       font-size: 10px;
-      padding: 4px 8px;
+      padding: 3px 8px;
       background: rgba(0, 255, 136, 0.1);
       border: 1px solid var(--accent-green);
       color: var(--accent-green);
-      border-radius: 12px;
-      text-transform: uppercase;
+      border-radius: 10px;
       font-weight: bold;
     }
 
     .stat-display {
       display: flex;
       justify-content: space-between;
-      align-items: baseline;
-    }
-
-    .balance-label {
-      font-size: 12px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      align-items: flex-end;
     }
 
     .balance-val {
-      font-size: 32px;
+      font-size: 30px;
       font-weight: 900;
       color: #fff;
-      text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
     }
 
     .cps-val {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--accent-green);
       font-weight: 600;
-      margin-top: 4px;
     }
 
-    /* Навигационные вкладки */
     .nav-tabs {
       display: flex;
       gap: 8px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
 
     .tab-btn {
       flex: 1;
-      padding: 10px;
+      padding: 12px 0;
       background: var(--carbon-2);
       border: 1px solid rgba(255, 255, 255, 0.05);
       color: var(--text-muted);
-      border-radius: 12px;
-      font-size: 13px;
+      border-radius: 14px;
+      font-size: 12px;
       font-weight: 700;
       text-transform: uppercase;
       cursor: pointer;
-      transition: all 0.2s ease;
       text-align: center;
+      transition: all 0.2s ease;
     }
 
     .tab-btn.active {
-      background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(112, 0, 255, 0.15));
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(112, 0, 255, 0.2));
       border-color: var(--accent-cyan);
       color: var(--accent-cyan);
-      box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
     }
 
-    /* Основной контент */
     .content-area {
       flex: 1;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 12px;
     }
 
-    /* Зона кликера */
     .clicker-zone {
       flex: 1;
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
       position: relative;
     }
 
     .carbon-core {
-      width: 200px;
-      height: 200px;
+      width: 190px;
+      height: 190px;
       border-radius: 50%;
-      background: radial-gradient(circle, #2a2f3a 0%, #121418 100%);
+      background: radial-gradient(circle, #252a34 0%, #0f1115 100%);
       border: 3px solid var(--accent-cyan);
-      box-shadow: 0 0 30px rgba(0, 240, 255, 0.3), inset 0 0 20px rgba(0, 0, 0, 0.8);
+      box-shadow: 0 0 35px rgba(0, 240, 255, 0.35), inset 0 0 25px rgba(0, 0, 0, 0.9);
       display: flex;
       justify-content: center;
       align-items: center;
       cursor: pointer;
-      position: relative;
       transition: transform 0.05s ease;
-      background-image: 
-        repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0, rgba(255,255,255,0.03) 2px, transparent 0, transparent 4px),
-        repeating-linear-gradient(-45deg, rgba(0,0,0,0.5) 0, rgba(0,0,0,0.5) 2px, transparent 0, transparent 4px);
+      touch-action: manipulation;
     }
 
     .carbon-core:active {
-      transform: scale(0.94);
-      box-shadow: 0 0 50px rgba(0, 240, 255, 0.6), inset 0 0 30px rgba(0, 0, 0, 0.9);
+      transform: scale(0.92);
     }
 
     .core-icon {
-      font-size: 64px;
-      filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.6));
+      font-size: 60px;
     }
 
-    /* Карточки апгрейдов */
     .upgrade-card {
       background: linear-gradient(135deg, var(--carbon-1), var(--carbon-2));
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
       padding: 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .upgrade-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; width: 4px; height: 100%;
-      background: var(--accent-cyan);
-      opacity: 0.5;
+      margin-bottom: 10px;
     }
 
     .upgrade-card.disabled {
-      opacity: 0.5;
-      filter: grayscale(0.8);
-    }
-
-    .upgrade-info h3 {
-      font-size: 14px;
-      color: #fff;
-      margin-bottom: 4px;
-    }
-
-    .upgrade-info p {
-      font-size: 11px;
-      color: var(--text-muted);
+      opacity: 0.4;
     }
 
     .upgrade-btn {
       background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
       border: none;
       color: #fff;
-      padding: 8px 14px;
+      padding: 8px 12px;
       border-radius: 10px;
       font-weight: bold;
       font-size: 12px;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0, 240, 255, 0.2);
     }
 
-    /* Всплывающие цифры при клике */
     .float-num {
       position: absolute;
       font-weight: 900;
-      font-size: 22px;
+      font-size: 24px;
       color: var(--accent-cyan);
-      text-shadow: 0 0 10px rgba(0,240,255,0.8);
       pointer-events: none;
-      animation: floatUp 0.8s ease-out forwards;
+      animation: floatUp 0.7s ease-out forwards;
     }
 
     @keyframes floatUp {
-      0% { opacity: 1; transform: translateY(0) scale(1); }
-      100% { opacity: 0; transform: translateY(-60px) scale(1.3); }
-    }
-
-    .pwa-hint {
-      margin-top: 12px;
-      font-size: 10px;
-      text-align: center;
-      color: var(--text-muted);
-      letter-spacing: 0.5px;
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-50px); }
     }
   </style>
 </head>
@@ -284,189 +237,179 @@
     <header>
       <div class="title-bar">
         <h1>Carbon Tycoon</h1>
-        <span class="badge">Offline PWA</span>
+        <span class="status-badge" id="pwaStatus">iOS PWA</span>
       </div>
       <div class="stat-display">
         <div>
-          <div class="balance-label">Активы (CRB)</div>
+          <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Баланс CRB</div>
           <div class="balance-val" id="balance">0</div>
         </div>
         <div style="text-align: right;">
-          <div class="balance-label">Доход в сек</div>
           <div class="cps-val" id="cps">+0 /сек</div>
         </div>
       </div>
     </header>
 
     <div class="nav-tabs">
-      <div class="tab-btn active" onclick="switchTab('clicker')">Майнинг</div>
-      <div class="tab-btn" onclick="switchTab('upgrades')">Апгрейды</div>
-      <div class="tab-btn" onclick="switchTab('stats')">Статс</div>
+      <div class="tab-btn active" onclick="switchTab('clicker', event)">Майнинг</div>
+      <div class="tab-btn" onclick="switchTab('upgrades', event)">Апгрейды</div>
+      <div class="tab-btn" onclick="switchTab('stats', event)">Инфо</div>
     </div>
 
     <div class="content-area">
-      <!-- ВКЛАДКА МАЙНИНГА -->
       <div id="tab-clicker" class="clicker-zone">
         <div class="carbon-core" id="coreBtn">
           <div class="core-icon">⚡</div>
         </div>
       </div>
 
-      <!-- ВКЛАДКА АПГРЕЙДОВ -->
-      <div id="tab-upgrades" style="display: none; flex-direction: column; gap: 10px;">
-        <!-- Апгрейды рендерятся из JS -->
-      </div>
+      <div id="tab-upgrades" style="display: none; flex-direction: column;"></div>
 
-      <!-- ВКЛАДКА СТАТИСТИКИ -->
-      <div id="tab-stats" style="display: none; flex-direction: column; gap: 10px;">
+      <div id="tab-stats" style="display: none; flex-direction: column;">
         <div class="upgrade-card">
-          <div class="upgrade-info">
-            <h3>Всего кликов</h3>
-            <p id="totalClicks">0</p>
+          <div>
+            <h3 style="font-size: 14px;">Всего кликов</h3>
+            <p style="font-size: 12px; color: var(--text-muted);" id="totalClicks">0</p>
           </div>
         </div>
-        <div class="upgrade-card">
-          <div class="upgrade-info">
-            <h3>Сила клика</h3>
-            <p id="clickPower">1 CRB</p>
-          </div>
-        </div>
-        <div class="upgrade-card" style="cursor: pointer;" onclick="resetProgress()">
-          <div class="upgrade-info">
-            <h3 style="color: #ff4757;">Сбросить прогресс</h3>
-            <p>Начать заново</p>
+        <div class="upgrade-card" onclick="resetProgress()" style="cursor: pointer;">
+          <div>
+            <h3 style="font-size: 14px; color: #ff4757;">Сбросить Прогресс</h3>
+            <p style="font-size: 11px; color: var(--text-muted);">Начать заново</p>
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="pwa-hint">
-      Нажми "Поделиться" ➔ "На экран Домой" для полноэкранного режима
     </div>
   </div>
 
   <script>
+    // --- 1. iOS PWA FIX (Предотвращает вылет в Safari) ---
+    if (("standalone" in window.navigator) && window.navigator.standalone) {
+      document.getElementById('pwaStatus').textContent = "PWA Standalone";
+      let a = document.getElementsByTagName("a");
+      for (let i = 0; i < a.length; i++) {
+        a[i].addEventListener("click", function(e) {
+          if (this.href.indexOf(location.hostname) > -1) {
+            e.preventDefault();
+            location.href = this.href;
+          }
+        }, false);
+      }
+    }
+
+    // --- 2. SERVICE WORKER (Регистрируем оффлайн-режим прямо из кода) ---
+    if ('serviceWorker' in navigator) {
+      const swCode = `
+        self.addEventListener('install', e => e.waitUntil(self.skipWaiting()));
+        self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+        self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => new Response('Offline'))));
+      `;
+      const blob = new Blob([swCode], { type: 'text/javascript' });
+      navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
+    }
+
+    // --- 3. ИГРОВАЯ ЛОГИКА ---
     let state = {
       balance: 0,
       cps: 0,
       clickPower: 1,
       totalClicks: 0,
       upgrades: [
-        { id: 'gpu', name: 'Карбоновый Чип', cost: 15, cps: 1, count: 0, icon: '💎' },
-        { id: 'rig', name: 'Кибер Массив', cost: 100, cps: 8, count: 0, icon: '🖥️' },
-        { id: 'ai', name: 'ИИ Маркетолог', cost: 1100, cps: 40, count: 0, icon: '🤖' },
-        { id: 'quantum', name: 'Квантовый Сервер', cost: 12000, cps: 260, count: 0, icon: '🌌' }
+        { name: 'Карбоновый Чип', cost: 15, cps: 1, count: 0, icon: '💎' },
+        { name: 'Кибер Массив', cost: 100, cps: 8, count: 0, icon: '🖥️' },
+        { name: 'ИИ Маркетолог', cost: 1100, cps: 40, count: 0, icon: '🤖' }
       ]
     };
 
-    // Загрузка
-    const saved = localStorage.getItem('carbon_game_save');
-    if (saved) {
-      try { state = JSON.parse(saved); } catch(e){}
-    }
+    const saved = localStorage.getItem('carbon_pwa_save');
+    if (saved) { try { state = JSON.parse(saved); } catch(e){} }
 
-    const balanceEl = document.getElementById('balance');
-    const cpsEl = document.getElementById('cps');
-    const coreBtn = document.getElementById('coreBtn');
-    const upgradesContainer = document.getElementById('tab-upgrades');
+    function save() { localStorage.setItem('carbon_pwa_save', JSON.stringify(state)); }
 
-    function saveGame() {
-      localStorage.setItem('carbon_game_save', JSON.stringify(state));
-    }
-
-    function formatNum(num) {
+    function format(num) {
       if (num >= 1e6) return (num/1e6).toFixed(2) + 'M';
       if (num >= 1e3) return (num/1e3).toFixed(1) + 'K';
-      return Math.floor(num).toLocaleString();
+      return Math.floor(num);
     }
 
     function updateUI() {
-      balanceEl.textContent = formatNum(state.balance);
-      cpsEl.textContent = '+' + formatNum(state.cps) + ' /сек';
+      document.getElementById('balance').textContent = format(state.balance);
+      document.getElementById('cps').textContent = '+' + format(state.cps) + ' /сек';
       document.getElementById('totalClicks').textContent = state.totalClicks;
-      document.getElementById('clickPower').textContent = formatNum(state.clickPower) + ' CRB';
       renderUpgrades();
     }
 
     function renderUpgrades() {
-      upgradesContainer.innerHTML = '';
+      const container = document.getElementById('tab-upgrades');
+      container.innerHTML = '';
       state.upgrades.forEach((up, idx) => {
         const canAfford = state.balance >= up.cost;
-        const card = document.createElement('div');
-        card.className = 'upgrade-card' + (canAfford ? '' : ' disabled');
-        card.innerHTML = `
-          <div class="upgrade-info">
-            <h3>${up.icon} ${up.name} (${up.count})</h3>
-            <p>+${up.cps} CRB/сек | Цена: ${formatNum(up.cost)}</p>
+        const div = document.createElement('div');
+        div.className = 'upgrade-card' + (canAfford ? '' : ' disabled');
+        div.innerHTML = `
+          <div>
+            <h3 style="font-size:14px;">${up.icon} ${up.name} (${up.count})</h3>
+            <p style="font-size:11px; color: var(--text-muted);">+${up.cps}/сек | Цена: ${format(up.cost)}</p>
           </div>
-          <button class="upgrade-btn" onclick="buyUpgrade(${idx})">Купить</button>
+          <button class="upgrade-btn" onclick="buy(${idx})">Купить</button>
         `;
-        upgradesContainer.appendChild(card);
+        container.appendChild(div);
       });
     }
 
-    // Клик по ядру
+    const coreBtn = document.getElementById('coreBtn');
     coreBtn.addEventListener('click', (e) => {
       state.balance += state.clickPower;
       state.totalClicks++;
-      
+
       const rect = coreBtn.getBoundingClientRect();
-      const x = e.clientX || (rect.left + rect.width/2);
-      const y = e.clientY || (rect.top + rect.height/2);
-      
-      const numEl = document.createElement('div');
-      numEl.className = 'float-num';
-      numEl.textContent = '+' + state.clickPower;
-      numEl.style.left = (x - 15) + 'px';
-      numEl.style.top = (y - 30) + 'px';
-      document.body.appendChild(numEl);
-      
-      setTimeout(() => numEl.remove(), 800);
+      const num = document.createElement('div');
+      num.className = 'float-num';
+      num.textContent = '+' + state.clickPower;
+      num.style.left = (e.clientX || (rect.left + 80)) + 'px';
+      num.style.top = ((e.clientY || rect.top) - 20) + 'px';
+      document.body.appendChild(num);
+      setTimeout(() => num.remove(), 700);
 
-      if (navigator.vibrate) navigator.vibrate(15);
-
+      if (navigator.vibrate) navigator.vibrate(12);
       updateUI();
-      saveGame();
+      save();
     });
 
-    window.buyUpgrade = function(idx) {
+    window.buy = function(idx) {
       const up = state.upgrades[idx];
       if (state.balance >= up.cost) {
         state.balance -= up.cost;
         up.count++;
         state.cps += up.cps;
-        up.cost = Math.floor(up.cost * 1.15);
-        state.clickPower += Math.ceil(up.cps * 0.1);
-
-        if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
+        up.cost = Math.floor(up.cost * 1.2);
         updateUI();
-        saveGame();
+        save();
       }
     };
 
-    window.switchTab = function(tabName) {
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    window.switchTab = function(name, e) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.getElementById('tab-clicker').style.display = 'none';
       document.getElementById('tab-upgrades').style.display = 'none';
       document.getElementById('tab-stats').style.display = 'none';
 
-      event.target.classList.add('active');
-      document.getElementById('tab-' + tabName).style.display = 'flex';
+      e.target.classList.add('active');
+      document.getElementById('tab-' + name).style.display = 'flex';
     };
 
     window.resetProgress = function() {
-      if (confirm('Сбросить прогресс?')) {
-        localStorage.removeItem('carbon_game_save');
+      if (confirm('Очистить данные?')) {
+        localStorage.removeItem('carbon_pwa_save');
         location.reload();
       }
     };
 
-    // Пассивный доход
     setInterval(() => {
       if (state.cps > 0) {
         state.balance += state.cps;
         updateUI();
-        saveGame();
+        save();
       }
     }, 1000);
 
