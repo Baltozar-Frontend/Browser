@@ -3,30 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Carbon Tycoon</title>
+  <title>Carbon Tycoon Ultra</title>
 
-  <!-- 1. Главный переключатель PWA для iOS Safari -->
+  <!-- PWA iOS Setup -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Carbon">
+  <meta name="apple-mobile-web-app-title" content="Carbon Ultra">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#0b0c10">
+  <meta name="theme-color" content="#08090c">
 
-  <!-- 2. Встроенная Иконка (Вшита в код через SVG Data URL - без внешних файлов) -->
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230b0c10'/><text x='50%' y='68%' font-size='65' text-anchor='middle'>⚡</text></svg>">
-
-  <!-- 3. Встроенный PWA Manifest (Вшит прямо в один файл) -->
-  <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Carbon%20Tycoon%22,%22short_name%22:%22Carbon%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230b0c10%22,%22theme_color%22:%22%230b0c10%22}">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2308090c'/><text x='50%' y='68%' font-size='65' text-anchor='middle'>⚡</text></svg>">
+  <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Carbon%20Tycoon%20Ultra%22,%22short_name%22:%22Carbon%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%2308090c%22,%22theme_color%22:%22%2308090c%22}">
 
   <style>
     :root {
-      --bg-dark: #0b0c10;
-      --carbon-1: #1a1d24;
-      --carbon-2: #121419;
+      --bg-dark: #08090c;
+      --carbon-card: #12151e;
       --accent-cyan: #00f0ff;
       --accent-green: #00ff88;
-      --accent-purple: #7000ff;
-      --text-main: #e2e8f0;
+      --accent-purple: #9d00ff;
+      --accent-gold: #ffaa00;
+      --text-main: #f1f5f9;
       --text-muted: #64748b;
     }
 
@@ -52,59 +49,61 @@
       display: flex;
       flex-direction: column;
       background-image: 
-        radial-gradient(rgba(0,0,0,0.8) 15%, transparent 16%),
-        radial-gradient(rgba(255,255,255,0.04) 15%, transparent 16%),
-        linear-gradient(45deg, transparent 48%, rgba(20,24,30,0.9) 50%, transparent 52%),
-        linear-gradient(-45deg, transparent 48%, rgba(20,24,30,0.9) 50%, transparent 52%);
-      background-size: 8px 8px, 8px 8px, 16px 16px, 16px 16px;
-      background-position: 0 0, 4px 4px, 0 0, 0 0;
+        radial-gradient(circle at 50% 30%, rgba(0, 240, 255, 0.05), transparent 70%),
+        radial-gradient(rgba(255,255,255,0.03) 15%, transparent 16%),
+        linear-gradient(45deg, transparent 48%, rgba(25, 30, 42, 0.6) 50%, transparent 52%);
+      background-size: 100% 100%, 8px 8px, 14px 14px;
     }
 
     .app-container {
       flex: 1;
       display: flex;
       flex-direction: column;
-      padding-top: max(env(safe-area-inset-top), 20px);
-      padding-bottom: max(env(safe-area-inset-bottom), 16px);
+      padding-top: max(env(safe-area-inset-top), 16px);
+      padding-bottom: max(env(safe-area-inset-bottom), 12px);
       padding-left: 16px;
       padding-right: 16px;
       max-width: 500px;
       margin: 0 auto;
       width: 100%;
       height: 100vh;
+      position: relative;
     }
 
+    /* Верхняя панель */
     header {
-      background: linear-gradient(135deg, var(--carbon-1), var(--carbon-2));
-      border: 1px solid rgba(0, 240, 255, 0.15);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      background: rgba(18, 21, 30, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
       border-radius: 20px;
-      padding: 16px;
-      margin-bottom: 14px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
     }
 
     .title-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .title-bar h1 {
-      font-size: 15px;
+      font-size: 13px;
       letter-spacing: 2px;
       text-transform: uppercase;
       color: var(--accent-cyan);
-      text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+      text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
     }
 
-    .status-badge {
-      font-size: 10px;
+    .prestige-badge {
+      font-size: 11px;
       padding: 3px 8px;
-      background: rgba(0, 255, 136, 0.1);
-      border: 1px solid var(--accent-green);
-      color: var(--accent-green);
-      border-radius: 10px;
+      background: rgba(157, 0, 255, 0.2);
+      border: 1px solid var(--accent-purple);
+      color: #d8b4fe;
+      border-radius: 12px;
       font-weight: bold;
     }
 
@@ -115,43 +114,74 @@
     }
 
     .balance-val {
-      font-size: 30px;
+      font-size: 28px;
       font-weight: 900;
       color: #fff;
+      letter-spacing: -0.5px;
     }
 
     .cps-val {
       font-size: 12px;
       color: var(--accent-green);
-      font-weight: 600;
+      font-weight: 700;
     }
 
+    /* Шкала Комбо */
+    .combo-container {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      margin-top: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .combo-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-gold));
+      box-shadow: 0 0 10px var(--accent-cyan);
+      transition: width 0.1s linear;
+    }
+
+    .combo-text {
+      position: absolute;
+      right: 0;
+      top: -16px;
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--accent-gold);
+      display: none;
+    }
+
+    /* Навигация */
     .nav-tabs {
       display: flex;
       gap: 8px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .tab-btn {
       flex: 1;
-      padding: 12px 0;
-      background: var(--carbon-2);
+      padding: 10px 0;
+      background: var(--carbon-card);
       border: 1px solid rgba(255, 255, 255, 0.05);
       color: var(--text-muted);
-      border-radius: 14px;
-      font-size: 12px;
-      font-weight: 700;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 800;
       text-transform: uppercase;
       cursor: pointer;
       text-align: center;
-      transition: all 0.2s ease;
+      transition: all 0.2s;
     }
 
     .tab-btn.active {
-      background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(112, 0, 255, 0.2));
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(157, 0, 255, 0.15));
       border-color: var(--accent-cyan);
       color: var(--accent-cyan);
-      box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
     }
 
     .content-area {
@@ -159,76 +189,123 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
+      position: relative;
     }
 
+    /* Кликер зона */
     .clicker-zone {
       flex: 1;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       position: relative;
     }
 
     .carbon-core {
-      width: 190px;
-      height: 190px;
+      width: 210px;
+      height: 210px;
       border-radius: 50%;
-      background: radial-gradient(circle, #252a34 0%, #0f1115 100%);
-      border: 3px solid var(--accent-cyan);
-      box-shadow: 0 0 35px rgba(0, 240, 255, 0.35), inset 0 0 25px rgba(0, 0, 0, 0.9);
+      background: radial-gradient(circle, #1a1f2c 0%, #0a0c10 100%);
+      border: 4px solid var(--accent-cyan);
+      box-shadow: 0 0 40px rgba(0, 240, 255, 0.3), inset 0 0 30px rgba(0, 0, 0, 0.9);
       display: flex;
       justify-content: center;
       align-items: center;
       cursor: pointer;
-      transition: transform 0.05s ease;
+      transition: transform 0.05s ease, border-color 0.3s, box-shadow 0.3s;
       touch-action: manipulation;
+      position: relative;
+    }
+
+    .carbon-core.overdrive {
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 50px rgba(255, 170, 0, 0.6), inset 0 0 30px rgba(255, 170, 0, 0.4);
+      animation: pulseCore 0.6s infinite alternate;
+    }
+
+    @keyframes pulseCore {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.03); }
     }
 
     .carbon-core:active {
-      transform: scale(0.92);
+      transform: scale(0.91) !important;
     }
 
     .core-icon {
-      font-size: 60px;
+      font-size: 70px;
+      filter: drop-shadow(0 0 10px rgba(0,240,255,0.6));
     }
 
+    /* Апгрейды */
     .upgrade-card {
-      background: linear-gradient(135deg, var(--carbon-1), var(--carbon-2));
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--carbon-card);
+      border: 1px solid rgba(255, 255, 255, 0.06);
       border-radius: 14px;
-      padding: 14px;
+      padding: 12px 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
-    .upgrade-card.disabled {
-      opacity: 0.4;
-    }
+    .upgrade-card.disabled { opacity: 0.4; }
 
     .upgrade-btn {
       background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
       border: none;
       color: #fff;
-      padding: 8px 12px;
+      padding: 8px 14px;
       border-radius: 10px;
-      font-weight: bold;
-      font-size: 12px;
+      font-weight: 800;
+      font-size: 11px;
     }
 
+    /* Вылетающие цифры */
     .float-num {
       position: absolute;
       font-weight: 900;
       font-size: 24px;
       color: var(--accent-cyan);
       pointer-events: none;
-      animation: floatUp 0.7s ease-out forwards;
+      animation: floatAnim 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+      text-shadow: 0 0 8px rgba(0, 240, 255, 0.8);
+      z-index: 100;
     }
 
-    @keyframes floatUp {
-      0% { opacity: 1; transform: translateY(0); }
-      100% { opacity: 0; transform: translateY(-50px); }
+    .float-num.crit {
+      color: var(--accent-gold);
+      font-size: 34px;
+      text-shadow: 0 0 15px rgba(255, 170, 0, 1);
+    }
+
+    @keyframes floatAnim {
+      0% { opacity: 1; transform: translate(0, 0) scale(1); }
+      100% { opacity: 0; transform: translate(var(--dx), -60px) scale(1.2); }
+    }
+
+    /* Случайный Дроп (Сфера) */
+    .random-drop {
+      position: absolute;
+      width: 44px;
+      height: 44px;
+      background: radial-gradient(circle, #ff0077, #7000ff);
+      border: 2px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 20px #ff0077;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+      cursor: pointer;
+      z-index: 99;
+      animation: popDrop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popDrop {
+      0% { transform: scale(0); }
+      100% { transform: scale(1); }
     }
   </style>
 </head>
@@ -237,46 +314,56 @@
   <div class="app-container">
     <header>
       <div class="title-bar">
-        <h1>Carbon Tycoon</h1>
-        <span class="status-badge">Carbon PWA</span>
+        <h1>Carbon Tycoon Ultra</h1>
+        <span class="prestige-badge" id="prestigeBadge">🌌 0 ТМ</span>
       </div>
       <div class="stat-display">
         <div>
-          <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Баланс CRB</div>
+          <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Баланс CRB</div>
           <div class="balance-val" id="balance">0</div>
         </div>
         <div style="text-align: right;">
           <div class="cps-val" id="cps">+0 /сек</div>
         </div>
       </div>
+      <div class="combo-container">
+        <div class="combo-bar" id="comboBar"></div>
+        <div class="combo-text" id="comboText">OVERDRIVE x2</div>
+      </div>
     </header>
 
     <div class="nav-tabs">
       <div class="tab-btn active" onclick="switchTab('clicker', event)">Майнинг</div>
       <div class="tab-btn" onclick="switchTab('upgrades', event)">Апгрейды</div>
-      <div class="tab-btn" onclick="switchTab('stats', event)">Инфо</div>
+      <div class="tab-btn" onclick="switchTab('prestige', event)">Перерождение</div>
     </div>
 
     <div class="content-area">
+      <!-- Главный Кликер -->
       <div id="tab-clicker" class="clicker-zone">
         <div class="carbon-core" id="coreBtn">
           <div class="core-icon">⚡</div>
         </div>
       </div>
 
+      <!-- Апгрейды -->
       <div id="tab-upgrades" style="display: none; flex-direction: column;"></div>
 
-      <div id="tab-stats" style="display: none; flex-direction: column;">
-        <div class="upgrade-card">
-          <div>
-            <h3 style="font-size: 14px;">Всего кликов</h3>
-            <p style="font-size: 12px; color: var(--text-muted);" id="totalClicks">0</p>
-          </div>
+      <!-- Престиж -->
+      <div id="tab-prestige" style="display: none; flex-direction: column; gap: 10px;">
+        <div class="upgrade-card" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+          <h3 style="color: var(--accent-purple); font-size: 15px;">🌌 Квантовый Сброс</h3>
+          <p style="font-size: 11px; color: var(--text-muted);">
+            Сбрось свой баланс и апгрейды, чтобы получить **Тёмную Материю (ТМ)**. Каждая единица ТМ увеличивает весь доход на **+10% НАВСЕГДА**.
+          </p>
+          <div style="font-size: 12px; font-weight: bold;" id="prestigeGain">Получишь при сбросе: +0 ТМ</div>
+          <button class="upgrade-btn" style="width: 100%; margin-top: 5px;" onclick="doPrestige()">Переродиться</button>
         </div>
-        <div class="upgrade-card" onclick="resetProgress()" style="cursor: pointer;">
+
+        <div class="upgrade-card" onclick="resetProgress()" style="cursor: pointer; margin-top: 20px;">
           <div>
-            <h3 style="font-size: 14px; color: #ff4757;">Сбросить Прогресс</h3>
-            <p style="font-size: 11px; color: var(--text-muted);">Начать заново</p>
+            <h3 style="font-size: 13px; color: #ff4757;">⚠️ Полный Сброс</h3>
+            <p style="font-size: 10px; color: var(--text-muted);">Очистить всё и начать с нуля</p>
           </div>
         </div>
       </div>
@@ -284,34 +371,92 @@
   </div>
 
   <script>
-    // Игровая логика
+    // --- 1. WEB AUDIO SYNTHESIZER (Звуки без внешних файлов) ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) audioCtx = new AudioContext();
+    }
+
+    function playSound(type) {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      const now = audioCtx.currentTime;
+
+      if (type === 'click') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.exponentialRampToValueAtTime(120, now + 0.05);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+        osc.start(now);
+        osc.stop(now + 0.05);
+      } else if (type === 'crit') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.exponentialRampToValueAtTime(900, now + 0.12);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
+        osc.start(now);
+        osc.stop(now + 0.12);
+      } else if (type === 'drop') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.linearRampToValueAtTime(800, now + 0.2);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now);
+        osc.stop(now + 0.2);
+      }
+    }
+
+    // --- 2. ИГРОВОЕ СОСТОЯНИЕ ---
     let state = {
       balance: 0,
       cps: 0,
       clickPower: 1,
-      totalClicks: 0,
+      darkMatter: 0,
       upgrades: [
         { name: 'Карбоновый Чип', cost: 15, cps: 1, count: 0, icon: '💎' },
         { name: 'Кибер Массив', cost: 100, cps: 8, count: 0, icon: '🖥️' },
-        { name: 'ИИ Маркетолог', cost: 1100, cps: 40, count: 0, icon: '🤖' }
+        { name: 'Нейро-Оптимизатор', cost: 1100, cps: 45, count: 0, icon: '⚡' },
+        { name: 'Квантовая Ферма', cost: 12000, cps: 260, count: 0, icon: '🌀' },
+        { name: 'ИИ Маркетолог', cost: 130000, cps: 1400, count: 0, icon: '🤖' }
       ]
     };
 
-    const saved = localStorage.getItem('carbon_pwa_save');
+    let comboHits = 0;
+    let comboTimer = null;
+    let multiplier = 1;
+
+    const saved = localStorage.getItem('carbon_ultra_save');
     if (saved) { try { state = JSON.parse(saved); } catch(e){} }
 
-    function save() { localStorage.setItem('carbon_pwa_save', JSON.stringify(state)); }
+    function save() { localStorage.setItem('carbon_ultra_save', JSON.stringify(state)); }
 
     function format(num) {
+      if (num >= 1e9) return (num/1e9).toFixed(2) + 'B';
       if (num >= 1e6) return (num/1e6).toFixed(2) + 'M';
       if (num >= 1e3) return (num/1e3).toFixed(1) + 'K';
       return Math.floor(num);
     }
 
+    // --- 3. РЕНДЕР И ОБНОВЛЕНИЕ ---
     function updateUI() {
+      const dmBoost = 1 + (state.darkMatter * 0.1);
       document.getElementById('balance').textContent = format(state.balance);
-      document.getElementById('cps').textContent = '+' + format(state.cps) + ' /сек';
-      document.getElementById('totalClicks').textContent = state.totalClicks;
+      document.getElementById('cps').textContent = '+' + format(state.cps * dmBoost * multiplier) + ' /сек';
+      document.getElementById('prestigeBadge').textContent = `🌌 ${state.darkMatter} ТМ`;
+
+      // Расчет Престижа
+      const prestigeGain = Math.max(0, Math.floor(Math.sqrt(state.balance / 100000)));
+      document.getElementById('prestigeGain').textContent = `Получишь при сбросе: +${prestigeGain} ТМ`;
+
       renderUpgrades();
     }
 
@@ -324,8 +469,8 @@
         div.className = 'upgrade-card' + (canAfford ? '' : ' disabled');
         div.innerHTML = `
           <div>
-            <h3 style="font-size:14px;">${up.icon} ${up.name} (${up.count})</h3>
-            <p style="font-size:11px; color: var(--text-muted);">+${up.cps}/сек | Цена: ${format(up.cost)}</p>
+            <h3 style="font-size:13px;">${up.icon} ${up.name} (${up.count})</h3>
+            <p style="font-size:10px; color: var(--text-muted);">+${up.cps}/сек | Цена: ${format(up.cost)}</p>
           </div>
           <button class="upgrade-btn" onclick="buy(${idx})">Купить</button>
         `;
@@ -333,32 +478,124 @@
       });
     }
 
+    // --- 4. КЛИКИ И КОМБО ---
     const coreBtn = document.getElementById('coreBtn');
     coreBtn.addEventListener('click', (e) => {
-      state.balance += state.clickPower;
-      state.totalClicks++;
+      initAudio();
 
+      // Нарастание комбо
+      comboHits++;
+      clearTimeout(comboTimer);
+      comboTimer = setTimeout(() => {
+        comboHits = 0;
+        multiplier = 1;
+        document.getElementById('comboBar').style.width = '0%';
+        document.getElementById('comboText').style.display = 'none';
+        coreBtn.classList.remove('overdrive');
+      }, 1200);
+
+      const comboPercent = Math.min(100, (comboHits / 20) * 100);
+      document.getElementById('comboBar').style.width = comboPercent + '%';
+
+      if (comboHits >= 20) {
+        multiplier = 2;
+        document.getElementById('comboText').style.display = 'block';
+        coreBtn.classList.add('overdrive');
+      }
+
+      // Расчет Крит Клика (10% шанс на х5)
+      const isCrit = Math.random() < 0.10;
+      const dmBoost = 1 + (state.darkMatter * 0.1);
+      const added = state.clickPower * (isCrit ? 5 : 1) * multiplier * dmBoost;
+
+      state.balance += added;
+
+      // Вылет Цифр
       const rect = coreBtn.getBoundingClientRect();
       const num = document.createElement('div');
-      num.className = 'float-num';
-      num.textContent = '+' + state.clickPower;
-      num.style.left = (e.clientX || (rect.left + 80)) + 'px';
-      num.style.top = ((e.clientY || rect.top) - 20) + 'px';
+      num.className = 'float-num' + (isCrit ? ' crit' : '');
+      num.textContent = (isCrit ? 'CRIT! +' : '+') + format(added);
+      
+      const dx = (Math.random() - 0.5) * 80;
+      num.style.setProperty('--dx', dx + 'px');
+      num.style.left = ((e.clientX || (rect.left + 90)) - 20) + 'px';
+      num.style.top = ((e.clientY || rect.top) - 30) + 'px';
+      
       document.body.appendChild(num);
       setTimeout(() => num.remove(), 700);
 
-      if (navigator.vibrate) navigator.vibrate(12);
+      // Звук + Вибрация
+      playSound(isCrit ? 'crit' : 'click');
+      if (navigator.vibrate) navigator.vibrate(isCrit ? 30 : 10);
+
       updateUI();
       save();
     });
 
+    // --- 5. СПАВН СЛУЧАЙНЫХ ДРОПОВ ---
+    function spawnRandomDrop() {
+      if (Math.random() > 0.4) return;
+
+      const drop = document.createElement('div');
+      drop.className = 'random-drop';
+      drop.textContent = '💎';
+      
+      const zone = document.getElementById('tab-clicker');
+      const maxX = zone.clientWidth - 50;
+      const maxY = zone.clientHeight - 50;
+      
+      drop.style.left = Math.max(10, Math.random() * maxX) + 'px';
+      drop.style.top = Math.max(10, Math.random() * maxY) + 'px';
+
+      drop.onclick = (e) => {
+        e.stopPropagation();
+        initAudio();
+        playSound('drop');
+        const reward = Math.max(50, Math.floor(state.balance * 0.2) + 100);
+        state.balance += reward;
+        
+        if (navigator.vibrate) navigator.vibrate([20, 50, 20]);
+        drop.remove();
+        updateUI();
+        save();
+      };
+
+      zone.appendChild(drop);
+      setTimeout(() => { if (drop.parentElement) drop.remove(); }, 4000);
+    }
+    setInterval(spawnRandomDrop, 12000);
+
+    // --- 6. ПОКУПКИ И ПРЕСТИЖ ---
     window.buy = function(idx) {
+      initAudio();
       const up = state.upgrades[idx];
       if (state.balance >= up.cost) {
         state.balance -= up.cost;
         up.count++;
         state.cps += up.cps;
-        up.cost = Math.floor(up.cost * 1.2);
+        up.cost = Math.floor(up.cost * 1.25);
+        if (navigator.vibrate) navigator.vibrate(15);
+        updateUI();
+        save();
+      }
+    };
+
+    window.doPrestige = function() {
+      const prestigeGain = Math.floor(Math.sqrt(state.balance / 100000));
+      if (prestigeGain < 1) {
+        alert('Нужно заработать больше CRB для сброса!');
+        return;
+      }
+
+      if (confirm(`Сбросить прогресс ради +${prestigeGain} Тёмной Материи?`)) {
+        state.darkMatter += prestigeGain;
+        state.balance = 0;
+        state.cps = 0;
+        state.clickPower = 1;
+        state.upgrades.forEach(u => {
+          u.count = 0;
+          u.cost = Math.floor(u.cost / Math.pow(1.25, u.count)); // Ресет цен
+        });
         updateUI();
         save();
       }
@@ -368,22 +605,24 @@
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.getElementById('tab-clicker').style.display = 'none';
       document.getElementById('tab-upgrades').style.display = 'none';
-      document.getElementById('tab-stats').style.display = 'none';
+      document.getElementById('tab-prestige').style.display = 'none';
 
       e.target.classList.add('active');
       document.getElementById('tab-' + name).style.display = 'flex';
     };
 
     window.resetProgress = function() {
-      if (confirm('Очистить данные?')) {
-        localStorage.removeItem('carbon_pwa_save');
+      if (confirm('Очистить ВЕСЬ прогресс без бонусов?')) {
+        localStorage.removeItem('carbon_ultra_save');
         location.reload();
       }
     };
 
+    // Таймер дохода
     setInterval(() => {
       if (state.cps > 0) {
-        state.balance += state.cps;
+        const dmBoost = 1 + (state.darkMatter * 0.1);
+        state.balance += (state.cps * dmBoost * multiplier);
         updateUI();
         save();
       }
