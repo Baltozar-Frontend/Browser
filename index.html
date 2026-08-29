@@ -1,634 +1,268 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Carbon Tycoon Ultra</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crash Game Pro</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0f172a; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .container { background: #1e293b; padding: 25px; border-radius: 16px; width: 100%; max-width: 480px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #334155; }
+        
+        .balance-card { background: #334155; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px; border: 1px solid #475569; }
+        .balance-title { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+        .balance-value { font-size: 28px; font-weight: bold; color: #38bdf8; margin-top: 5px; }
 
-  <!-- PWA iOS Setup -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Carbon Ultra">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#08090c">
+        .display-area { background: #090d16; height: 160px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; margin-bottom: 15px; border: 1px solid #1e293b; }
+        .multiplier { font-size: 48px; font-weight: 900; color: #f8fafc; text-shadow: 0 0 15px rgba(56, 189, 248, 0.4); }
+        .status { font-size: 14px; margin-top: 8px; font-weight: bold; }
+        .status.crashed { color: #ef4444; }
+        .status.running { color: #22c55e; }
+        .status.waiting { color: #94a3b8; }
 
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2308090c'/><text x='50%' y='68%' font-size='65' text-anchor='middle'>⚡</text></svg>">
-  <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Carbon%20Tycoon%20Ultra%22,%22short_name%22:%22Carbon%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%2308090c%22,%22theme_color%22:%22%2308090c%22}">
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 5px; }
+        .input-group input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 15px; outline: none; }
 
-  <style>
-    :root {
-      --bg-dark: #08090c;
-      --carbon-card: #12151e;
-      --accent-cyan: #00f0ff;
-      --accent-green: #00ff88;
-      --accent-purple: #9d00ff;
-      --accent-gold: #ffaa00;
-      --text-main: #f1f5f9;
-      --text-muted: #64748b;
-    }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; transition: all 0.2s; margin-bottom: 8px; }
+        .btn-main { background: #0284c7; color: white; }
+        .btn-main:hover { background: #0369a1; }
+        .btn-cashout { background: #16a34a; color: white; }
+        .btn-cashout:hover { background: #15803d; }
+        .btn-donate { background: #f97316; color: white; }
+        .btn-donate:hover { background: #ea580c; }
+        .btn-reward { background: #8b5cf6; color: white; }
+        .btn-reward:hover { background: #7c3aed; }
+        .btn-secondary { background: #334155; color: #38bdf8; border: 1px solid #0284c7; }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      user-select: none;
-      -webkit-user-select: none;
-      -webkit-touch-callout: none;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
-
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background-color: var(--bg-dark);
-      color: var(--text-main);
-    }
-
-    body {
-      display: flex;
-      flex-direction: column;
-      background-image: 
-        radial-gradient(circle at 50% 30%, rgba(0, 240, 255, 0.05), transparent 70%),
-        radial-gradient(rgba(255,255,255,0.03) 15%, transparent 16%),
-        linear-gradient(45deg, transparent 48%, rgba(25, 30, 42, 0.6) 50%, transparent 52%);
-      background-size: 100% 100%, 8px 8px, 14px 14px;
-    }
-
-    .app-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      padding-top: max(env(safe-area-inset-top), 16px);
-      padding-bottom: max(env(safe-area-inset-bottom), 12px);
-      padding-left: 16px;
-      padding-right: 16px;
-      max-width: 500px;
-      margin: 0 auto;
-      width: 100%;
-      height: 100vh;
-      position: relative;
-    }
-
-    /* Верхняя панель */
-    header {
-      background: rgba(18, 21, 30, 0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(0, 240, 255, 0.2);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
-      border-radius: 20px;
-      padding: 14px 16px;
-      margin-bottom: 12px;
-    }
-
-    .title-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-
-    .title-bar h1 {
-      font-size: 13px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--accent-cyan);
-      text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
-    }
-
-    .prestige-badge {
-      font-size: 11px;
-      padding: 3px 8px;
-      background: rgba(157, 0, 255, 0.2);
-      border: 1px solid var(--accent-purple);
-      color: #d8b4fe;
-      border-radius: 12px;
-      font-weight: bold;
-    }
-
-    .stat-display {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-    }
-
-    .balance-val {
-      font-size: 28px;
-      font-weight: 900;
-      color: #fff;
-      letter-spacing: -0.5px;
-    }
-
-    .cps-val {
-      font-size: 12px;
-      color: var(--accent-green);
-      font-weight: 700;
-    }
-
-    /* Шкала Комбо */
-    .combo-container {
-      width: 100%;
-      height: 6px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 10px;
-      margin-top: 10px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .combo-bar {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-gold));
-      box-shadow: 0 0 10px var(--accent-cyan);
-      transition: width 0.1s linear;
-    }
-
-    .combo-text {
-      position: absolute;
-      right: 0;
-      top: -16px;
-      font-size: 10px;
-      font-weight: 800;
-      color: var(--accent-gold);
-      display: none;
-    }
-
-    /* Навигация */
-    .nav-tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .tab-btn {
-      flex: 1;
-      padding: 10px 0;
-      background: var(--carbon-card);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      color: var(--text-muted);
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: 800;
-      text-transform: uppercase;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.2s;
-    }
-
-    .tab-btn.active {
-      background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(157, 0, 255, 0.15));
-      border-color: var(--accent-cyan);
-      color: var(--accent-cyan);
-      box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
-    }
-
-    .content-area {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-    }
-
-    /* Кликер зона */
-    .clicker-zone {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-    }
-
-    .carbon-core {
-      width: 210px;
-      height: 210px;
-      border-radius: 50%;
-      background: radial-gradient(circle, #1a1f2c 0%, #0a0c10 100%);
-      border: 4px solid var(--accent-cyan);
-      box-shadow: 0 0 40px rgba(0, 240, 255, 0.3), inset 0 0 30px rgba(0, 0, 0, 0.9);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      transition: transform 0.05s ease, border-color 0.3s, box-shadow 0.3s;
-      touch-action: manipulation;
-      position: relative;
-    }
-
-    .carbon-core.overdrive {
-      border-color: var(--accent-gold);
-      box-shadow: 0 0 50px rgba(255, 170, 0, 0.6), inset 0 0 30px rgba(255, 170, 0, 0.4);
-      animation: pulseCore 0.6s infinite alternate;
-    }
-
-    @keyframes pulseCore {
-      0% { transform: scale(1); }
-      100% { transform: scale(1.03); }
-    }
-
-    .carbon-core:active {
-      transform: scale(0.91) !important;
-    }
-
-    .core-icon {
-      font-size: 70px;
-      filter: drop-shadow(0 0 10px rgba(0,240,255,0.6));
-    }
-
-    /* Апгрейды */
-    .upgrade-card {
-      background: var(--carbon-card);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 14px;
-      padding: 12px 14px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-
-    .upgrade-card.disabled { opacity: 0.4; }
-
-    .upgrade-btn {
-      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-      border: none;
-      color: #fff;
-      padding: 8px 14px;
-      border-radius: 10px;
-      font-weight: 800;
-      font-size: 11px;
-    }
-
-    /* Вылетающие цифры */
-    .float-num {
-      position: absolute;
-      font-weight: 900;
-      font-size: 24px;
-      color: var(--accent-cyan);
-      pointer-events: none;
-      animation: floatAnim 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
-      text-shadow: 0 0 8px rgba(0, 240, 255, 0.8);
-      z-index: 100;
-    }
-
-    .float-num.crit {
-      color: var(--accent-gold);
-      font-size: 34px;
-      text-shadow: 0 0 15px rgba(255, 170, 0, 1);
-    }
-
-    @keyframes floatAnim {
-      0% { opacity: 1; transform: translate(0, 0) scale(1); }
-      100% { opacity: 0; transform: translate(var(--dx), -60px) scale(1.2); }
-    }
-
-    /* Случайный Дроп (Сфера) */
-    .random-drop {
-      position: absolute;
-      width: 44px;
-      height: 44px;
-      background: radial-gradient(circle, #ff0077, #7000ff);
-      border: 2px solid #fff;
-      border-radius: 50%;
-      box-shadow: 0 0 20px #ff0077;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 20px;
-      cursor: pointer;
-      z-index: 99;
-      animation: popDrop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    @keyframes popDrop {
-      0% { transform: scale(0); }
-      100% { transform: scale(1); }
-    }
-  </style>
+        .row { display: flex; gap: 8px; }
+        .row input { flex: 1; }
+        .row button { width: auto; padding: 0 15px; margin-bottom: 0; }
+        
+        .daily-box { background: #1e1b4b; border: 1px solid #4338ca; padding: 12px; border-radius: 10px; margin-bottom: 15px; text-align: center; }
+        .daily-title { font-size: 12px; color: #a5b4fc; font-weight: bold; margin-bottom: 4px; }
+        .daily-streak { font-size: 11px; color: #cbd5e1; margin-bottom: 8px; }
+    </style>
 </head>
 <body>
 
-  <div class="app-container">
-    <header>
-      <div class="title-bar">
-        <h1>Carbon Tycoon Ultra</h1>
-        <span class="prestige-badge" id="prestigeBadge">🌌 0 ТМ</span>
-      </div>
-      <div class="stat-display">
-        <div>
-          <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Баланс CRB</div>
-          <div class="balance-val" id="balance">0</div>
-        </div>
-        <div style="text-align: right;">
-          <div class="cps-val" id="cps">+0 /сек</div>
-        </div>
-      </div>
-      <div class="combo-container">
-        <div class="combo-bar" id="comboBar"></div>
-        <div class="combo-text" id="comboText">OVERDRIVE x2</div>
-      </div>
-    </header>
-
-    <div class="nav-tabs">
-      <div class="tab-btn active" onclick="switchTab('clicker', event)">Майнинг</div>
-      <div class="tab-btn" onclick="switchTab('upgrades', event)">Апгрейды</div>
-      <div class="tab-btn" onclick="switchTab('prestige', event)">Перерождение</div>
+<div class="container">
+    <div class="balance-card">
+        <div class="balance-title">Ваш Баланс</div>
+        <div class="balance-value" id="balanceDisplay">100.00 ₽</div>
     </div>
 
-    <div class="content-area">
-      <!-- Главный Кликер -->
-      <div id="tab-clicker" class="clicker-zone">
-        <div class="carbon-core" id="coreBtn">
-          <div class="core-icon">⚡</div>
-        </div>
-      </div>
-
-      <!-- Апгрейды -->
-      <div id="tab-upgrades" style="display: none; flex-direction: column;"></div>
-
-      <!-- Престиж -->
-      <div id="tab-prestige" style="display: none; flex-direction: column; gap: 10px;">
-        <div class="upgrade-card" style="flex-direction: column; align-items: flex-start; gap: 8px;">
-          <h3 style="color: var(--accent-purple); font-size: 15px;">🌌 Квантовый Сброс</h3>
-          <p style="font-size: 11px; color: var(--text-muted);">
-            Сбрось свой баланс и апгрейды, чтобы получить **Тёмную Материю (ТМ)**. Каждая единица ТМ увеличивает весь доход на **+10% НАВСЕГДА**.
-          </p>
-          <div style="font-size: 12px; font-weight: bold;" id="prestigeGain">Получишь при сбросе: +0 ТМ</div>
-          <button class="upgrade-btn" style="width: 100%; margin-top: 5px;" onclick="doPrestige()">Переродиться</button>
-        </div>
-
-        <div class="upgrade-card" onclick="resetProgress()" style="cursor: pointer; margin-top: 20px;">
-          <div>
-            <h3 style="font-size: 13px; color: #ff4757;">⚠️ Полный Сброс</h3>
-            <p style="font-size: 10px; color: var(--text-muted);">Очистить всё и начать с нуля</p>
-          </div>
-        </div>
-      </div>
+    <!-- Ежедневные подарки -->
+    <div class="daily-box">
+        <div class="daily-title">🎁 Ежедневный подарок</div>
+        <div class="daily-streak" id="streakInfo">Загрузка...</div>
+        <button class="btn btn-reward" id="rewardBtn" onclick="claimDailyReward()">Забрать подарок</button>
     </div>
-  </div>
 
-  <script>
-    // --- 1. WEB AUDIO SYNTHESIZER (Звуки без внешних файлов) ---
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    let audioCtx = null;
+    <!-- Поле игры -->
+    <div class="display-area">
+        <div class="multiplier" id="multDisplay">1.00x</div>
+        <div class="status waiting" id="statusDisplay">Сделайте ставку</div>
+    </div>
 
-    function initAudio() {
-      if (!audioCtx) audioCtx = new AudioContext();
-    }
+    <div class="input-group">
+        <label>Сумма ставки (₽)</label>
+        <input type="number" id="betAmount" value="10" min="1">
+    </div>
 
-    function playSound(type) {
-      if (!audioCtx) return;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
+    <button class="btn btn-main" id="actionBtn" onclick="handleAction()">Сделать ставку</button>
+    <button class="btn btn-donate" onclick="openDonatePage()">💳 Пополнить через DonationAlerts</button>
 
-      const now = audioCtx.currentTime;
+    <div class="input-group" style="margin-top: 15px;">
+        <label>Промокод</label>
+        <div class="row">
+            <input type="text" id="promoInput" placeholder="Введите код">
+            <button class="btn btn-secondary" onclick="applyPromo()">ОК</button>
+        </div>
+    </div>
+</div>
 
-      if (type === 'click') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(300, now);
-        osc.frequency.exponentialRampToValueAtTime(120, now + 0.05);
-        gain.gain.setValueAtTime(0.15, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
-        osc.start(now);
-        osc.stop(now + 0.05);
-      } else if (type === 'crit') {
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(600, now);
-        osc.frequency.exponentialRampToValueAtTime(900, now + 0.12);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
-        osc.start(now);
-        osc.stop(now + 0.12);
-      } else if (type === 'drop') {
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(400, now);
-        osc.frequency.linearRampToValueAtTime(800, now + 0.2);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
-        osc.start(now);
-        osc.stop(now + 0.2);
-      }
-    }
+<script>
+    // ===== ВСТАВЬТЕ СЮДА ССЫЛКУ НА ВАШ DONATIONALERTS =====
+    const DONATION_ALERTS_URL = 'https://www.donationalerts.com/r/YOUR_USERNAME';
 
-    // --- 2. ИГРОВОЕ СОСТОЯНИЕ ---
-    let state = {
-      balance: 0,
-      cps: 0,
-      clickPower: 1,
-      darkMatter: 0,
-      upgrades: [
-        { name: 'Карбоновый Чип', cost: 15, cps: 1, count: 0, icon: '💎' },
-        { name: 'Кибер Массив', cost: 100, cps: 8, count: 0, icon: '🖥️' },
-        { name: 'Нейро-Оптимизатор', cost: 1100, cps: 45, count: 0, icon: '⚡' },
-        { name: 'Квантовая Ферма', cost: 12000, cps: 260, count: 0, icon: '🌀' },
-        { name: 'ИИ Маркетолог', cost: 130000, cps: 1400, count: 0, icon: '🤖' }
-      ]
+    // Встроенные промокоды
+    const PROMO_CODES = {
+        'START100': 100,
+        'SECRET500': 500,
+        'VIP1000': 1000,
+        'VIBECODER': 2500
     };
 
-    let comboHits = 0;
-    let comboTimer = null;
-    let multiplier = 1;
+    // Награды по дням серии
+    const DAILY_REWARDS = [50, 100, 200, 350, 500, 750, 1000];
 
-    const saved = localStorage.getItem('carbon_ultra_save');
-    if (saved) { try { state = JSON.parse(saved); } catch(e){} }
+    // Состояние из памяти браузера
+    let balance = parseFloat(localStorage.getItem('crash_balance')) || 100.00;
+    let streak = parseInt(localStorage.getItem('crash_streak')) || 0;
+    let lastClaimTime = parseInt(localStorage.getItem('crash_last_claim')) || 0;
 
-    function save() { localStorage.setItem('carbon_ultra_save', JSON.stringify(state)); }
+    let gameState = 'IDLE'; 
+    let currentMult = 1.00;
+    let crashPoint = 1.00;
+    let gameInterval = null;
+    let speed = 50; 
+    let betValue = 0;
 
-    function format(num) {
-      if (num >= 1e9) return (num/1e9).toFixed(2) + 'B';
-      if (num >= 1e6) return (num/1e6).toFixed(2) + 'M';
-      if (num >= 1e3) return (num/1e3).toFixed(1) + 'K';
-      return Math.floor(num);
+    function updateBalanceUI() {
+        document.getElementById('balanceDisplay').innerText = balance.toFixed(2) + ' ₽';
+        localStorage.setItem('crash_balance', balance.toString());
     }
 
-    // --- 3. РЕНДЕР И ОБНОВЛЕНИЕ ---
-    function updateUI() {
-      const dmBoost = 1 + (state.darkMatter * 0.1);
-      document.getElementById('balance').textContent = format(state.balance);
-      document.getElementById('cps').textContent = '+' + format(state.cps * dmBoost * multiplier) + ' /сек';
-      document.getElementById('prestigeBadge').textContent = `🌌 ${state.darkMatter} ТМ`;
+    function updateDailyRewardUI() {
+        const now = Date.now();
+        const oneDay = 24 * 60 * 60 * 1000;
+        const rewardBtn = document.getElementById('rewardBtn');
+        const streakInfo = document.getElementById('streakInfo');
 
-      // Расчет Престижа
-      const prestigeGain = Math.max(0, Math.floor(Math.sqrt(state.balance / 100000)));
-      document.getElementById('prestigeGain').textContent = `Получишь при сбросе: +${prestigeGain} ТМ`;
+        const rewardIndex = Math.min(streak, DAILY_REWARDS.length - 1);
+        const nextReward = DAILY_REWARDS[rewardIndex];
 
-      renderUpgrades();
+        if (now - lastClaimTime >= oneDay) {
+            // Если пропустил более 48 часов, сбрасываем серию
+            if (now - lastClaimTime >= oneDay * 2) {
+                streak = 0;
+                localStorage.setItem('crash_streak', '0');
+            }
+            rewardBtn.disabled = false;
+            rewardBtn.innerText = `Забрать ${nextReward} ₽ (День ${streak + 1})`;
+            streakInfo.innerText = `Серия: ${streak} дн. Доступен бонус: ${nextReward} ₽`;
+        } else {
+            rewardBtn.disabled = true;
+            const hoursLeft = Math.ceil((oneDay - (now - lastClaimTime)) / (1000 * 60 * 60));
+            rewardBtn.innerText = `Забрано (Осталось ${hoursLeft} ч.)`;
+            streakInfo.innerText = `Серия: ${streak} дн. Завтра бонус: ${DAILY_REWARDS[Math.min(streak, DAILY_REWARDS.length - 1)]} ₽`;
+        }
     }
 
-    function renderUpgrades() {
-      const container = document.getElementById('tab-upgrades');
-      container.innerHTML = '';
-      state.upgrades.forEach((up, idx) => {
-        const canAfford = state.balance >= up.cost;
-        const div = document.createElement('div');
-        div.className = 'upgrade-card' + (canAfford ? '' : ' disabled');
-        div.innerHTML = `
-          <div>
-            <h3 style="font-size:13px;">${up.icon} ${up.name} (${up.count})</h3>
-            <p style="font-size:10px; color: var(--text-muted);">+${up.cps}/сек | Цена: ${format(up.cost)}</p>
-          </div>
-          <button class="upgrade-btn" onclick="buy(${idx})">Купить</button>
-        `;
-        container.appendChild(div);
-      });
+    function claimDailyReward() {
+        const now = Date.now();
+        const rewardIndex = Math.min(streak, DAILY_REWARDS.length - 1);
+        const reward = DAILY_REWARDS[rewardIndex];
+
+        balance += reward;
+        streak += 1;
+        lastClaimTime = now;
+
+        localStorage.setItem('crash_streak', streak.toString());
+        localStorage.setItem('crash_last_claim', lastClaimTime.toString());
+
+        updateBalanceUI();
+        updateDailyRewardUI();
+        alert(`🎉 Зачислено: ${reward} ₽! Заходите завтра.`);
     }
 
-    // --- 4. КЛИКИ И КОМБО ---
-    const coreBtn = document.getElementById('coreBtn');
-    coreBtn.addEventListener('click', (e) => {
-      initAudio();
+    function handleAction() {
+        const btn = document.getElementById('actionBtn');
+        const status = document.getElementById('statusDisplay');
 
-      // Нарастание комбо
-      comboHits++;
-      clearTimeout(comboTimer);
-      comboTimer = setTimeout(() => {
-        comboHits = 0;
-        multiplier = 1;
-        document.getElementById('comboBar').style.width = '0%';
-        document.getElementById('comboText').style.display = 'none';
-        coreBtn.classList.remove('overdrive');
-      }, 1200);
+        if (gameState === 'IDLE') {
+            betValue = parseFloat(document.getElementById('betAmount').value);
+            if (isNaN(betValue) || betValue <= 0) {
+                alert('Введите корректную сумму ставки');
+                return;
+            }
+            if (betValue > balance) {
+                alert('Недостаточно средств на балансе');
+                return;
+            }
 
-      const comboPercent = Math.min(100, (comboHits / 20) * 100);
-      document.getElementById('comboBar').style.width = comboPercent + '%';
+            balance -= betValue;
+            updateBalanceUI();
 
-      if (comboHits >= 20) {
-        multiplier = 2;
-        document.getElementById('comboText').style.display = 'block';
-        coreBtn.classList.add('overdrive');
-      }
+            const e = 2 ** 32;
+            const h = crypto.getRandomValues(new Uint32Array(1))[0];
+            crashPoint = Math.max(1.01, Math.floor((100 * e - h) / (e - h)) / 100);
+            
+            gameState = 'RUNNING';
+            currentMult = 1.00;
+            speed = 50;
+            
+            btn.innerText = 'Забрать выигрыш';
+            btn.className = 'btn btn-cashout';
+            status.innerText = 'В игре...';
+            status.className = 'status running';
 
-      // Расчет Крит Клика (10% шанс на х5)
-      const isCrit = Math.random() < 0.10;
-      const dmBoost = 1 + (state.darkMatter * 0.1);
-      const added = state.clickPower * (isCrit ? 5 : 1) * multiplier * dmBoost;
+            startGameLoop();
 
-      state.balance += added;
+        } else if (gameState === 'RUNNING') {
+            clearInterval(gameInterval);
+            const winAmount = betValue * currentMult;
+            balance += winAmount;
+            updateBalanceUI();
 
-      // Вылет Цифр
-      const rect = coreBtn.getBoundingClientRect();
-      const num = document.createElement('div');
-      num.className = 'float-num' + (isCrit ? ' crit' : '');
-      num.textContent = (isCrit ? 'CRIT! +' : '+') + format(added);
-      
-      const dx = (Math.random() - 0.5) * 80;
-      num.style.setProperty('--dx', dx + 'px');
-      num.style.left = ((e.clientX || (rect.left + 90)) - 20) + 'px';
-      num.style.top = ((e.clientY || rect.top) - 30) + 'px';
-      
-      document.body.appendChild(num);
-      setTimeout(() => num.remove(), 700);
-
-      // Звук + Вибрация
-      playSound(isCrit ? 'crit' : 'click');
-      if (navigator.vibrate) navigator.vibrate(isCrit ? 30 : 10);
-
-      updateUI();
-      save();
-    });
-
-    // --- 5. СПАВН СЛУЧАЙНЫХ ДРОПОВ ---
-    function spawnRandomDrop() {
-      if (Math.random() > 0.4) return;
-
-      const drop = document.createElement('div');
-      drop.className = 'random-drop';
-      drop.textContent = '💎';
-      
-      const zone = document.getElementById('tab-clicker');
-      const maxX = zone.clientWidth - 50;
-      const maxY = zone.clientHeight - 50;
-      
-      drop.style.left = Math.max(10, Math.random() * maxX) + 'px';
-      drop.style.top = Math.max(10, Math.random() * maxY) + 'px';
-
-      drop.onclick = (e) => {
-        e.stopPropagation();
-        initAudio();
-        playSound('drop');
-        const reward = Math.max(50, Math.floor(state.balance * 0.2) + 100);
-        state.balance += reward;
-        
-        if (navigator.vibrate) navigator.vibrate([20, 50, 20]);
-        drop.remove();
-        updateUI();
-        save();
-      };
-
-      zone.appendChild(drop);
-      setTimeout(() => { if (drop.parentElement) drop.remove(); }, 4000);
+            status.innerText = `Вы выиграли ${winAmount.toFixed(2)} ₽!`;
+            status.className = 'status running';
+            resetGameUI();
+        }
     }
-    setInterval(spawnRandomDrop, 12000);
 
-    // --- 6. ПОКУПКИ И ПРЕСТИЖ ---
-    window.buy = function(idx) {
-      initAudio();
-      const up = state.upgrades[idx];
-      if (state.balance >= up.cost) {
-        state.balance -= up.cost;
-        up.count++;
-        state.cps += up.cps;
-        up.cost = Math.floor(up.cost * 1.25);
-        if (navigator.vibrate) navigator.vibrate(15);
-        updateUI();
-        save();
-      }
-    };
+    function startGameLoop() {
+        gameInterval = setInterval(() => {
+            currentMult += 0.01;
+            
+            if (currentMult > 2.0) speed = 30;
+            if (currentMult > 5.0) speed = 15;
+            if (currentMult > 10.0) speed = 5;
 
-    window.doPrestige = function() {
-      const prestigeGain = Math.floor(Math.sqrt(state.balance / 100000));
-      if (prestigeGain < 1) {
-        alert('Нужно заработать больше CRB для сброса!');
-        return;
-      }
+            document.getElementById('multDisplay').innerText = currentMult.toFixed(2) + 'x';
 
-      if (confirm(`Сбросить прогресс ради +${prestigeGain} Тёмной Материи?`)) {
-        state.darkMatter += prestigeGain;
-        state.balance = 0;
-        state.cps = 0;
-        state.clickPower = 1;
-        state.upgrades.forEach(u => {
-          u.count = 0;
-          u.cost = Math.floor(u.cost / Math.pow(1.25, u.count)); // Ресет цен
-        });
-        updateUI();
-        save();
-      }
-    };
+            if (currentMult >= crashPoint) {
+                clearInterval(gameInterval);
+                gameState = 'CRASHED';
+                
+                const status = document.getElementById('statusDisplay');
+                status.innerText = `КРАШ на ${crashPoint.toFixed(2)}x!`;
+                status.className = 'status crashed';
+                
+                resetGameUI();
+            }
+        }, speed);
+    }
 
-    window.switchTab = function(name, e) {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('tab-clicker').style.display = 'none';
-      document.getElementById('tab-upgrades').style.display = 'none';
-      document.getElementById('tab-prestige').style.display = 'none';
+    function resetGameUI() {
+        const btn = document.getElementById('actionBtn');
+        btn.innerText = 'Сделать ставку';
+        btn.className = 'btn btn-main';
+        gameState = 'IDLE';
+    }
 
-      e.target.classList.add('active');
-      document.getElementById('tab-' + name).style.display = 'flex';
-    };
+    function applyPromo() {
+        const input = document.getElementById('promoInput');
+        const code = input.value.trim().toUpperCase();
 
-    window.resetProgress = function() {
-      if (confirm('Очистить ВЕСЬ прогресс без бонусов?')) {
-        localStorage.removeItem('carbon_ultra_save');
-        location.reload();
-      }
-    };
+        let usedPromos = JSON.parse(localStorage.getItem('crash_used_promos') || '[]');
 
-    // Таймер дохода
-    setInterval(() => {
-      if (state.cps > 0) {
-        const dmBoost = 1 + (state.darkMatter * 0.1);
-        state.balance += (state.cps * dmBoost * multiplier);
-        updateUI();
-        save();
-      }
-    }, 1000);
+        if (usedPromos.includes(code)) {
+            alert('Вы уже активировали этот промокод!');
+            return;
+        }
 
-    updateUI();
-  </script>
+        if (PROMO_CODES[code]) {
+            const reward = PROMO_CODES[code];
+            balance += reward;
+            usedPromos.push(code);
+            localStorage.setItem('crash_used_promos', JSON.stringify(usedPromos));
+            
+            updateBalanceUI();
+            alert(`✅ Промокод активирован! Зачислено: ${reward} ₽`);
+            input.value = '';
+        } else {
+            alert('❌ Неверный промокод');
+        }
+    }
+
+    function openDonatePage() {
+        window.open(DONATION_ALERTS_URL, '_blank');
+    }
+
+    updateBalanceUI();
+    updateDailyRewardUI();
+</script>
 </body>
 </html>
