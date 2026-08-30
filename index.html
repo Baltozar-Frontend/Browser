@@ -3,266 +3,699 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crash Game Pro</title>
+    <title>CRASH & MINES VIBE</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #0f172a; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        .container { background: #1e293b; padding: 25px; border-radius: 16px; width: 100%; max-width: 480px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #334155; }
-        
-        .balance-card { background: #334155; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px; border: 1px solid #475569; }
-        .balance-title { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
-        .balance-value { font-size: 28px; font-weight: bold; color: #38bdf8; margin-top: 5px; }
+        :root {
+            --bg: #0b0e14;
+            --card-bg: #151a23;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --accent-purple: #7c4dff;
+            --text-main: #ffffff;
+            --text-muted: #9e9e9e;
+            --border: #232a37;
+        }
 
-        .display-area { background: #090d16; height: 160px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; margin-bottom: 15px; border: 1px solid #1e293b; }
-        .multiplier { font-size: 48px; font-weight: 900; color: #f8fafc; text-shadow: 0 0 15px rgba(56, 189, 248, 0.4); }
-        .status { font-size: 14px; margin-top: 8px; font-weight: bold; }
-        .status.crashed { color: #ef4444; }
-        .status.running { color: #22c55e; }
-        .status.waiting { color: #94a3b8; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
 
-        .input-group { margin-bottom: 12px; }
-        .input-group label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 5px; }
-        .input-group input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 15px; outline: none; }
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
 
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; transition: all 0.2s; margin-bottom: 8px; }
-        .btn-main { background: #0284c7; color: white; }
-        .btn-main:hover { background: #0369a1; }
-        .btn-cashout { background: #16a34a; color: white; }
-        .btn-cashout:hover { background: #15803d; }
-        .btn-donate { background: #f97316; color: white; }
-        .btn-donate:hover { background: #ea580c; }
-        .btn-reward { background: #8b5cf6; color: white; }
-        .btn-reward:hover { background: #7c3aed; }
-        .btn-secondary { background: #334155; color: #38bdf8; border: 1px solid #0284c7; }
+        .game-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 24px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+        }
 
-        .row { display: flex; gap: 8px; }
-        .row input { flex: 1; }
-        .row button { width: auto; padding: 0 15px; margin-bottom: 0; }
-        
-        .daily-box { background: #1e1b4b; border: 1px solid #4338ca; padding: 12px; border-radius: 10px; margin-bottom: 15px; text-align: center; }
-        .daily-title { font-size: 12px; color: #a5b4fc; font-weight: bold; margin-bottom: 4px; }
-        .daily-streak { font-size: 11px; color: #cbd5e1; margin-bottom: 8px; }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            background: linear-gradient(45deg, var(--accent-green), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .balance-box {
+            background: #1c2331;
+            padding: 8px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            font-weight: 700;
+            color: var(--accent-green);
+            font-size: 16px;
+        }
+
+        /* Табы переключения игр */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            background: #0d1117;
+            padding: 4px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-weight: 800;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: var(--card-bg);
+            color: var(--text-main);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-view { display: none; }
+        .game-view.active { display: block; }
+
+        /* Canvas График */
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 240px;
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        canvas { display: block; width: 100%; height: 100%; }
+
+        .multiplier-overlay {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: 900;
+            color: var(--text-main);
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .multiplier-overlay.crashed {
+            color: var(--accent-red);
+            text-shadow: 0 0 20px rgba(255, 23, 68, 0.5);
+        }
+
+        /* Игра Mines */
+        .mines-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .mine-tile {
+            aspect-ratio: 1;
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s, background-color 0.2s;
+        }
+
+        .mine-tile:hover:not(.revealed) {
+            transform: scale(1.05);
+            border-color: var(--accent-purple);
+        }
+
+        .mine-tile.revealed-gem {
+            background: #052e16;
+            border-color: var(--accent-green);
+        }
+
+        .mine-tile.revealed-bomb {
+            background: #3b0712;
+            border-color: var(--accent-red);
+        }
+
+        /* Общие контролы */
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 14px;
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+            outline: none;
+        }
+
+        input:focus, select:focus { border-color: var(--accent-purple); }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 800;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .btn-start {
+            background: var(--accent-purple);
+            color: white;
+            box-shadow: 0 8px 25px rgba(124, 77, 255, 0.3);
+        }
+
+        .btn-cashout {
+            background: var(--accent-green);
+            color: #000;
+            box-shadow: 0 8px 25px rgba(0, 230, 118, 0.4);
+        }
+
+        .btn-daily {
+            background: #1c2331;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            margin-bottom: 12px;
+        }
+
+        .donate-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+            color: white;
+            border-radius: 14px;
+            font-weight: 800;
+            text-decoration: none;
+            box-shadow: 0 6px 20px rgba(255, 152, 0, 0.3);
+        }
+
+        .rate-label {
+            text-align: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-top: 6px;
+            margin-bottom: 16px;
+        }
+
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+        .section {
+            background: #0d1117;
+            border-radius: 14px;
+            padding: 14px;
+            border: 1px solid var(--border);
+        }
+
+        .flex-row { display: flex; gap: 8px; }
+
+        .msg { font-size: 12px; margin-top: 8px; font-weight: 700; }
+        .msg.success { color: var(--accent-green); }
+        .msg.error { color: var(--accent-red); }
+
+        .admin-panel {
+            display: none;
+            background: #1c102b;
+            border: 1px solid var(--accent-purple);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .admin-panel.active { display: block; }
+        .admin-title { color: var(--accent-purple); font-weight: 800; font-size: 14px; margin-bottom: 10px; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="balance-card">
-        <div class="balance-title">Ваш Баланс</div>
-        <div class="balance-value" id="balanceDisplay">100.00 ₽</div>
+<div class="game-card">
+    <div class="header">
+        <div class="title" id="logoTitle" title="Кликни 3 раза для админки">🚀 VIBE GAMES</div>
+        <div class="balance-box"><span id="balance">1000</span> 🪙</div>
     </div>
 
-    <!-- Ежедневные подарки -->
-    <div class="daily-box">
-        <div class="daily-title">🎁 Ежедневный подарок</div>
-        <div class="daily-streak" id="streakInfo">Загрузка...</div>
-        <button class="btn btn-reward" id="rewardBtn" onclick="claimDailyReward()">Забрать подарок</button>
-    </div>
-
-    <!-- Поле игры -->
-    <div class="display-area">
-        <div class="multiplier" id="multDisplay">1.00x</div>
-        <div class="status waiting" id="statusDisplay">Сделайте ставку</div>
-    </div>
-
-    <div class="input-group">
-        <label>Сумма ставки (₽)</label>
-        <input type="number" id="betAmount" value="10" min="1">
-    </div>
-
-    <button class="btn btn-main" id="actionBtn" onclick="handleAction()">Сделать ставку</button>
-    <button class="btn btn-donate" onclick="openDonatePage()">💳 Пополнить через DonationAlerts</button>
-
-    <div class="input-group" style="margin-top: 15px;">
-        <label>Промокод</label>
-        <div class="row">
-            <input type="text" id="promoInput" placeholder="Введите код">
-            <button class="btn btn-secondary" onclick="applyPromo()">ОК</button>
+    <!-- Админка -->
+    <div class="admin-panel" id="adminPanel">
+        <div class="admin-title">⚡ ADMIN PANEL</div>
+        <div class="flex-row">
+            <input type="number" id="adminCoinsInput" placeholder="Монеты..." style="padding: 10px;">
+            <button class="btn btn-start" id="addCoinsBtn" style="width: auto; padding: 0 16px;">+ Начислить</button>
         </div>
+    </div>
+
+    <!-- Переключатель Режимов -->
+    <div class="tabs">
+        <button class="tab-btn active" id="tabCrashBtn" onclick="switchGame('crash')">🚀 CRASH</button>
+        <button class="tab-btn" id="tabMinesBtn" onclick="switchGame('mines')">💣 MINES</button>
+    </div>
+
+    <!-- РЕЖИМ: CRASH -->
+    <div id="crashGame" class="game-view active">
+        <div class="canvas-container">
+            <div class="multiplier-overlay" id="multDisplay">1.00x</div>
+            <canvas id="gameCanvas"></canvas>
+        </div>
+
+        <div class="controls">
+            <input type="number" id="betAmount" value="100" min="10" placeholder="Ставка">
+            <button class="btn btn-start" id="actionBtn">СТАВКА</button>
+        </div>
+    </div>
+
+    <!-- РЕЖИМ: MINES -->
+    <div id="minesGame" class="game-view">
+        <div class="mines-grid" id="minesGrid"></div>
+
+        <div class="controls">
+            <input type="number" id="minesBetAmount" value="100" min="10" placeholder="Ставка">
+            <select id="minesCount">
+                <option value="2">2 Мины</option>
+                <option value="3" selected>3 Мины</option>
+                <option value="5">5 Мин</option>
+                <option value="10">10 Мин</option>
+            </select>
+        </div>
+        <button class="btn btn-start" id="minesActionBtn" style="margin-bottom: 16px;">ИГРАТЬ</button>
+    </div>
+
+    <!-- Пополнение -->
+    <a href="https://www.donationalerts.com/r/vibebotdev" target="_blank" class="donate-btn">
+        ☕ ПОПОЛНИТЬ (DonationAlerts)
+    </a>
+    <div class="rate-label">1🪙 = 0.25₽</div>
+
+    <!-- Ежедневная награда -->
+    <button class="btn btn-daily" id="dailyBtn">🎁 Ежедневный бонус (+500 🪙)</button>
+
+    <!-- Промокоды -->
+    <div class="section">
+        <div class="flex-row">
+            <input type="text" id="promoInput" placeholder="Промокод..." style="padding: 10px 14px;">
+            <button class="btn btn-start" id="promoBtn" style="width: auto; padding: 0 20px;">ОК</button>
+        </div>
+        <div id="promoMsg" class="msg"></div>
     </div>
 </div>
 
 <script>
-    // ===== ВСТАВЬТЕ СЮДА ССЫЛКУ НА ВАШ DONATIONALERTS =====
-    const DONATION_ALERTS_URL = 'https://www.donationalerts.com/r/YOUR_USERNAME';
+    let balance = parseInt(localStorage.getItem('vibe_crash_bal')) || 1000;
+    let lastDaily = localStorage.getItem('vibe_crash_daily') || 0;
+    let usedPromos = JSON.parse(localStorage.getItem('vibe_crash_promos')) || [];
+    const PROMOS = { 'START': 500, 'VIBE': 1000, 'WIN': 2000 };
 
-    // Встроенные промокоды
-    const PROMO_CODES = {
-        'START100': 100,
-        'SECRET500': 500,
-        'VIP1000': 1000,
-        'VIBECODER': 2500
+    function updateUI() {
+        document.getElementById('balance').textContent = balance;
+        localStorage.setItem('vibe_crash_bal', balance);
+        localStorage.setItem('vibe_crash_promos', JSON.stringify(usedPromos));
+    }
+
+    // Переключение режимов
+    function switchGame(game) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.game-view').forEach(g => g.classList.remove('active'));
+
+        if (game === 'crash') {
+            document.getElementById('tabCrashBtn').classList.add('active');
+            document.getElementById('crashGame').classList.add('active');
+        } else {
+            document.getElementById('tabMinesBtn').classList.add('active');
+            document.getElementById('minesGame').classList.add('active');
+        }
+    }
+
+    // Админ-панель
+    let logoClicks = 0;
+    document.getElementById('logoTitle').addEventListener('click', () => {
+        logoClicks++;
+        if (logoClicks >= 3) {
+            document.getElementById('adminPanel').classList.toggle('active');
+            logoClicks = 0;
+        }
+    });
+
+    document.getElementById('addCoinsBtn').addEventListener('click', () => {
+        const amount = parseInt(document.getElementById('adminCoinsInput').value);
+        if (!isNaN(amount)) {
+            balance += amount;
+            updateUI();
+            document.getElementById('adminCoinsInput').value = '';
+        }
+    });
+
+    /* ============================================================
+       1. ЛОГИКА CRASH (С прежними сбалансированными шансами)
+       ============================================================ */
+    let isRunning = false;
+    let currentMult = 1.00;
+    let crashPoint = 0;
+    let animationId = null;
+    let startTime = 0;
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const multDisplay = document.getElementById('multDisplay');
+    const actionBtn = document.getElementById('actionBtn');
+    const betInput = document.getElementById('betAmount');
+
+    function resizeCanvas() {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+    }
+    resizeCanvas();
+    window.onresize = resizeCanvas;
+
+    function drawGraph(mult, isCrashed = false) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const w = canvas.width;
+        const h = canvas.height;
+        const maxMult = Math.max(2.0, mult * 1.25);
+
+        ctx.strokeStyle = '#1c2331';
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= 5; i++) {
+            const y = h - (i / 5) * (h - 40) - 20;
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+            ctx.stroke();
+        }
+
+        const progressX = Math.min((mult - 1) / (maxMult - 1), 0.85);
+        const endX = 30 + progressX * (w - 60);
+        const endY = h - 20 - ((mult - 1) / (maxMult - 1)) * (h - 50);
+
+        ctx.beginPath();
+        ctx.moveTo(30, h - 20);
+        ctx.quadraticCurveTo(endX / 2 + 15, h - 20, endX, endY);
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = isCrashed ? '#ff1744' : '#00e676';
+        ctx.stroke();
+
+        ctx.lineTo(endX, h - 20);
+        ctx.lineTo(30, h - 20);
+        const gradient = ctx.createLinearGradient(0, 0, 0, h);
+        gradient.addColorStop(0, isCrashed ? 'rgba(255, 23, 68, 0.35)' : 'rgba(0, 230, 118, 0.35)');
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        if (!isCrashed) {
+            ctx.beginPath();
+            ctx.arc(endX, endY, 7, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#00e676';
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+    }
+
+    function gameLoop(timestamp) {
+        if (!startTime) startTime = timestamp;
+        const runtime = (timestamp - startTime) / 1000;
+        currentMult = 1.00 + Math.pow(runtime, 1.7) * 0.25;
+
+        if (currentMult >= crashPoint) {
+            isRunning = false;
+            multDisplay.textContent = 'CRASHED!';
+            multDisplay.classList.add('crashed');
+            drawGraph(currentMult, true);
+            actionBtn.textContent = 'СТАВКА';
+            actionBtn.className = 'btn btn-start';
+            betInput.disabled = false;
+        } else {
+            multDisplay.textContent = currentMult.toFixed(2) + 'x';
+            drawGraph(currentMult, false);
+            animationId = requestAnimationFrame(gameLoop);
+        }
+    }
+
+    actionBtn.onclick = () => {
+        const bet = parseInt(betInput.value);
+
+        if (!isRunning) {
+            if (isNaN(bet) || bet <= 0 || bet > balance) {
+                alert('Недостаточно монет!');
+                return;
+            }
+
+            balance -= bet;
+            updateUI();
+
+            isRunning = true;
+            multDisplay.classList.remove('crashed');
+            
+            // Старые исходные шансы
+            const rand = Math.random();
+            if (rand < 0.5) {
+                crashPoint = 1.1 + Math.random() * 1.5;
+            } else if (rand < 0.85) {
+                crashPoint = 2.5 + Math.random() * 5.0;
+            } else {
+                crashPoint = 7.5 + Math.random() * 25.0;
+            }
+
+            actionBtn.textContent = 'ЗАБРАТЬ!';
+            actionBtn.className = 'btn btn-cashout';
+            betInput.disabled = true;
+
+            startTime = 0;
+            animationId = requestAnimationFrame(gameLoop);
+
+        } else {
+            cancelAnimationFrame(animationId);
+            isRunning = false;
+
+            const win = Math.floor(bet * currentMult);
+            balance += win;
+            updateUI();
+
+            multDisplay.textContent = `+${win} 🪙`;
+            actionBtn.textContent = 'СТАВКА';
+            actionBtn.className = 'btn btn-start';
+            betInput.disabled = false;
+        }
     };
 
-    // Награды по дням серии
-    const DAILY_REWARDS = [50, 100, 200, 350, 500, 750, 1000];
+    /* ============================================================
+       2. ЛОГИКА МИНИ-ИГРЫ MINES
+       ============================================================ */
+    let minesActive = false;
+    let minesBoard = [];
+    let revealedSafe = 0;
+    let minesBet = 0;
+    let totalMinesCount = 3;
+    let minesCurrentMult = 1.0;
 
-    // Состояние из памяти браузера
-    let balance = parseFloat(localStorage.getItem('crash_balance')) || 100.00;
-    let streak = parseInt(localStorage.getItem('crash_streak')) || 0;
-    let lastClaimTime = parseInt(localStorage.getItem('crash_last_claim')) || 0;
+    const gridEl = document.getElementById('minesGrid');
+    const minesActionBtn = document.getElementById('minesActionBtn');
 
-    let gameState = 'IDLE'; 
-    let currentMult = 1.00;
-    let crashPoint = 1.00;
-    let gameInterval = null;
-    let speed = 50; 
-    let betValue = 0;
-
-    function updateBalanceUI() {
-        document.getElementById('balanceDisplay').innerText = balance.toFixed(2) + ' ₽';
-        localStorage.setItem('crash_balance', balance.toString());
+    function createMinesGrid() {
+        gridEl.innerHTML = '';
+        for (let i = 0; i < 25; i++) {
+            const tile = document.createElement('div');
+            tile.className = 'mine-tile';
+            tile.dataset.index = i;
+            tile.onclick = () => onTileClick(i);
+            gridEl.appendChild(tile);
+        }
     }
 
-    function updateDailyRewardUI() {
-        const now = Date.now();
-        const oneDay = 24 * 60 * 60 * 1000;
-        const rewardBtn = document.getElementById('rewardBtn');
-        const streakInfo = document.getElementById('streakInfo');
+    function calculateMinesMultiplier(gemsFound, totalMines) {
+        let mult = 1.0;
+        let safeTiles = 25 - totalMines;
+        for (let i = 0; i < gemsFound; i++) {
+            mult *= (25 - i) / (safeTiles - i);
+        }
+        return parseFloat(mult.toFixed(2));
+    }
 
-        const rewardIndex = Math.min(streak, DAILY_REWARDS.length - 1);
-        const nextReward = DAILY_REWARDS[rewardIndex];
+    minesActionBtn.onclick = () => {
+        if (!minesActive) {
+            minesBet = parseInt(document.getElementById('minesBetAmount').value);
+            totalMinesCount = parseInt(document.getElementById('minesCount').value);
 
-        if (now - lastClaimTime >= oneDay) {
-            // Если пропустил более 48 часов, сбрасываем серию
-            if (now - lastClaimTime >= oneDay * 2) {
-                streak = 0;
-                localStorage.setItem('crash_streak', '0');
+            if (isNaN(minesBet) || minesBet <= 0 || minesBet > balance) {
+                alert('Недостаточно монет!');
+                return;
             }
-            rewardBtn.disabled = false;
-            rewardBtn.innerText = `Забрать ${nextReward} ₽ (День ${streak + 1})`;
-            streakInfo.innerText = `Серия: ${streak} дн. Доступен бонус: ${nextReward} ₽`;
+
+            balance -= minesBet;
+            updateUI();
+
+            minesActive = true;
+            revealedSafe = 0;
+            minesCurrentMult = 1.0;
+
+            // Генерация мин
+            minesBoard = Array(25).fill('gem');
+            let placed = 0;
+            while (placed < totalMinesCount) {
+                let idx = Math.floor(Math.random() * 25);
+                if (minesBoard[idx] !== 'bomb') {
+                    minesBoard[idx] = 'bomb';
+                    placed++;
+                }
+            }
+
+            createMinesGrid();
+            document.getElementById('minesBetAmount').disabled = true;
+            document.getElementById('minesCount').disabled = true;
+            minesActionBtn.textContent = 'ЗАБРАТЬ (1.00x)';
+            minesActionBtn.className = 'btn btn-cashout';
+            minesActionBtn.disabled = true; // Сначала нужно открыть 1 ячейку
         } else {
-            rewardBtn.disabled = true;
-            const hoursLeft = Math.ceil((oneDay - (now - lastClaimTime)) / (1000 * 60 * 60));
-            rewardBtn.innerText = `Забрано (Осталось ${hoursLeft} ч.)`;
-            streakInfo.innerText = `Серия: ${streak} дн. Завтра бонус: ${DAILY_REWARDS[Math.min(streak, DAILY_REWARDS.length - 1)]} ₽`;
+            // Забрать выигрыш
+            const win = Math.floor(minesBet * minesCurrentMult);
+            balance += win;
+            updateUI();
+            alert(`🎉 Поздравляем! Вы забрали ${win} 🪙 (${minesCurrentMult}x)`);
+            endMinesGame(true);
+        }
+    };
+
+    function onTileClick(idx) {
+        if (!minesActive) return;
+        const tiles = gridEl.children;
+        const tile = tiles[idx];
+
+        if (tile.classList.contains('revealed')) return;
+
+        tile.classList.add('revealed');
+
+        if (minesBoard[idx] === 'bomb') {
+            tile.classList.add('revealed-bomb');
+            tile.textContent = '💣';
+            alert('💥 ВЗРЫВ! Вы потеряли ставку.');
+            endMinesGame(false);
+        } else {
+            tile.classList.add('revealed-gem');
+            tile.textContent = '💎';
+            revealedSafe++;
+
+            minesCurrentMult = calculateMinesMultiplier(revealedSafe, totalMinesCount);
+            minesActionBtn.disabled = false;
+            minesActionBtn.textContent = `ЗАБРАТЬ (${minesCurrentMult}x)`;
+
+            if (revealedSafe === 25 - totalMinesCount) {
+                alert('🏆 Вы открыли все алмазы!');
+                minesActionBtn.click();
+            }
         }
     }
 
-    function claimDailyReward() {
+    function endMinesGame(win) {
+        minesActive = false;
+        const tiles = gridEl.children;
+
+        // Показать все остальные ячейки
+        for (let i = 0; i < 25; i++) {
+            if (!tiles[i].classList.contains('revealed')) {
+                tiles[i].classList.add('revealed');
+                if (minesBoard[i] === 'bomb') {
+                    tiles[i].classList.add('revealed-bomb');
+                    tiles[i].textContent = '💣';
+                } else {
+                    tiles[i].textContent = '💎';
+                    tiles[i].style.opacity = '0.4';
+                }
+            }
+        }
+
+        document.getElementById('minesBetAmount').disabled = false;
+        document.getElementById('minesCount').disabled = false;
+        minesActionBtn.textContent = 'ИГРАТЬ';
+        minesActionBtn.className = 'btn btn-start';
+        minesActionBtn.disabled = false;
+    }
+
+    // Бонус и Промо
+    document.getElementById('dailyBtn').onclick = () => {
         const now = Date.now();
-        const rewardIndex = Math.min(streak, DAILY_REWARDS.length - 1);
-        const reward = DAILY_REWARDS[rewardIndex];
-
-        balance += reward;
-        streak += 1;
-        lastClaimTime = now;
-
-        localStorage.setItem('crash_streak', streak.toString());
-        localStorage.setItem('crash_last_claim', lastClaimTime.toString());
-
-        updateBalanceUI();
-        updateDailyRewardUI();
-        alert(`🎉 Зачислено: ${reward} ₽! Заходите завтра.`);
-    }
-
-    function handleAction() {
-        const btn = document.getElementById('actionBtn');
-        const status = document.getElementById('statusDisplay');
-
-        if (gameState === 'IDLE') {
-            betValue = parseFloat(document.getElementById('betAmount').value);
-            if (isNaN(betValue) || betValue <= 0) {
-                alert('Введите корректную сумму ставки');
-                return;
-            }
-            if (betValue > balance) {
-                alert('Недостаточно средств на балансе');
-                return;
-            }
-
-            balance -= betValue;
-            updateBalanceUI();
-
-            const e = 2 ** 32;
-            const h = crypto.getRandomValues(new Uint32Array(1))[0];
-            crashPoint = Math.max(1.01, Math.floor((100 * e - h) / (e - h)) / 100);
-            
-            gameState = 'RUNNING';
-            currentMult = 1.00;
-            speed = 50;
-            
-            btn.innerText = 'Забрать выигрыш';
-            btn.className = 'btn btn-cashout';
-            status.innerText = 'В игре...';
-            status.className = 'status running';
-
-            startGameLoop();
-
-        } else if (gameState === 'RUNNING') {
-            clearInterval(gameInterval);
-            const winAmount = betValue * currentMult;
-            balance += winAmount;
-            updateBalanceUI();
-
-            status.innerText = `Вы выиграли ${winAmount.toFixed(2)} ₽!`;
-            status.className = 'status running';
-            resetGameUI();
+        if (now - lastDaily >= 86400000) {
+            balance += 500;
+            lastDaily = now;
+            localStorage.setItem('vibe_crash_daily', lastDaily);
+            updateUI();
+            alert('🎉 Вы получили +500 монет!');
+        } else {
+            alert('⏳ Бонус доступен раз в 24 часа!');
         }
-    }
+    };
 
-    function startGameLoop() {
-        gameInterval = setInterval(() => {
-            currentMult += 0.01;
-            
-            if (currentMult > 2.0) speed = 30;
-            if (currentMult > 5.0) speed = 15;
-            if (currentMult > 10.0) speed = 5;
-
-            document.getElementById('multDisplay').innerText = currentMult.toFixed(2) + 'x';
-
-            if (currentMult >= crashPoint) {
-                clearInterval(gameInterval);
-                gameState = 'CRASHED';
-                
-                const status = document.getElementById('statusDisplay');
-                status.innerText = `КРАШ на ${crashPoint.toFixed(2)}x!`;
-                status.className = 'status crashed';
-                
-                resetGameUI();
-            }
-        }, speed);
-    }
-
-    function resetGameUI() {
-        const btn = document.getElementById('actionBtn');
-        btn.innerText = 'Сделать ставку';
-        btn.className = 'btn btn-main';
-        gameState = 'IDLE';
-    }
-
-    function applyPromo() {
+    document.getElementById('promoBtn').onclick = () => {
         const input = document.getElementById('promoInput');
         const code = input.value.trim().toUpperCase();
+        const msg = document.getElementById('promoMsg');
 
-        let usedPromos = JSON.parse(localStorage.getItem('crash_used_promos') || '[]');
-
-        if (usedPromos.includes(code)) {
-            alert('Вы уже активировали этот промокод!');
-            return;
-        }
-
-        if (PROMO_CODES[code]) {
-            const reward = PROMO_CODES[code];
-            balance += reward;
+        if (PROMOS[code] && !usedPromos.includes(code)) {
+            balance += PROMOS[code];
             usedPromos.push(code);
-            localStorage.setItem('crash_used_promos', JSON.stringify(usedPromos));
-            
-            updateBalanceUI();
-            alert(`✅ Промокод активирован! Зачислено: ${reward} ₽`);
+            updateUI();
+            msg.className = 'msg success';
+            msg.textContent = `Успех! +${PROMOS[code]} 🪙`;
             input.value = '';
         } else {
-            alert('❌ Неверный промокод');
+            msg.className = 'msg error';
+            msg.textContent = 'Неверный или использованный код!';
         }
-    }
+    };
 
-    function openDonatePage() {
-        window.open(DONATION_ALERTS_URL, '_blank');
-    }
-
-    updateBalanceUI();
-    updateDailyRewardUI();
+    createMinesGrid();
+    drawGraph(1.00);
+    updateUI();
 </script>
+
 </body>
 </html>
